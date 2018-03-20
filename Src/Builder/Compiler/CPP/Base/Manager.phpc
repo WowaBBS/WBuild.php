@@ -1,0 +1,1 @@
+<?  $Loader->Parent_Class('/Object');   class C_Builder_Compiler_CPP_Base_Manager extends C_Object  {    Var $IsPrepared=false;        Function Prepare()    {      $IsPrepared=&$this->IsPrepared;      if($IsPrepared)        return;      $IsPrepared=true;      $this->_Prepare();    }        Function _Prepare() {}  }?>

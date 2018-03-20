@@ -1,0 +1,1 @@
+<?  $Loader->Parent_Class('/Builder/Asset/FS/Path');  class C_Builder_Asset_Module_Path extends C_Builder_Asset_FS_Path  {    Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }        Protected Function _GetSearchPathClass()    {      return [];    }  };?>

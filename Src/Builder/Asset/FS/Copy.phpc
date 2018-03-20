@@ -1,0 +1,1 @@
+<?  $Loader->Parent_Class('/Builder/Asset/Base');  // TODO:  class C_Builder_Asset_FS_Copy extends C_Builder_Asset_Base  {  };?>

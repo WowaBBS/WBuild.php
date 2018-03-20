@@ -1,0 +1,1 @@
+<? $Loader->Parent_Class('/Builder/Condition/Base');  class C_Builder_Condition_Error extends C_Builder_Condition_Base {   function CheckContext(C_Builder_Context $Context, $Args)   {     return False;   } }?>

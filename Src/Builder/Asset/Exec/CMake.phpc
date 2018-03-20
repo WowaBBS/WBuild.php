@@ -1,0 +1,1 @@
+<?  $Loader->Parent_Class('/Builder/Asset/Base');  // TODO:  class C_Builder_Asset_Exec_CMake extends C_Builder_Asset_Base  {  };?>
