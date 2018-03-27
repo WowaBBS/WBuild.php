@@ -1,1 +1,1 @@
-<?  $Loader->Parent_Class('/Builder/Asset/Inline');    class C_Builder_Asset_Private extends C_Builder_Asset_Inline  {    Function _ParseParams($Args)    {      $Args['Outer']->IsPublic=false;      return [];     }  };?>
+<?  $Loader->Parent_Class('/Builder/Asset/Inline');    class C_Builder_Asset_Private extends C_Builder_Asset_Inline  {    STatic Function _ParseParams($Args)    {      $Args['Outer']->IsPublic=false;      return [];     }  };?>
