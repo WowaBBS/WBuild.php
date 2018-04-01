@@ -1,0 +1,1 @@
+<?  return [      'Assets'=>[      ['Public'],      ['Module/Depends',        'TestDef',        'TestDll',       #'TestProxy',        'TestLib',      ],      ['Cpp/Define', 'TEST_LIB'],      ['Cpp/SrcPath' ,''],      ['Cpp/Src'     ,'TestExe.cpp'],      ['Cpp/MakeExe'],    ],  ];?>

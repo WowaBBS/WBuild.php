@@ -1,1 +1,1 @@
-<? $Loader->Parent_Class('/Builder/Condition/Base');  class C_Builder_Condition_Release extends C_Builder_Condition_Base {    function CheckAsset($Asset, $Args)    {      return $Asset->IsRelease();    } }?>
+<?  $Loader->Parent_Class('/Builder/Condition/Base');   class C_Builder_Condition_Release extends C_Builder_Condition_Base  {    function CheckAsset($Asset, $Args)    {      return $Asset->IsRelease();    }  }?>

@@ -1,0 +1,1 @@
+<?  return [      'Assets'=>[      ['Cpp/Include', ''],      ['Cpp/SrcPath', ''],      ['Cpp/Pch'],      ['Cpp/Src',        'StdAfx.cpp', // PH      ],      ['Public'],      ['Cpp/MakeExe' ,'>Sub'=>['Cpp/Src'=>'TestPCH.cpp']],    ],  ];?>?>

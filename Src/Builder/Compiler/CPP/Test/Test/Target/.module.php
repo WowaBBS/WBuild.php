@@ -1,0 +1,1 @@
+<?  return [      'Assets'=>[      ['Public'],      ['Module/Depends',        'TestExe',        'TestPCH',      ],      ['Target/Dir', '../..'],      ['Target/Copy', 'From'=>'Bin/Exe', 'To'=>'Bin',],    ],  ];?>
