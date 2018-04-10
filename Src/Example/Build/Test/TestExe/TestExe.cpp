@@ -7,8 +7,8 @@
 
 int main(void)
 {
-  TestDef();
   printf("Hello, world!\n");
+  TestDef();
   TestDll();
 #ifdef TEST_LIB
   TestLib();

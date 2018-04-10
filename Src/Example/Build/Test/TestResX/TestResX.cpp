@@ -2,6 +2,6 @@
 
 int main(void)
 {
-  printf("TestRc\n");
+  printf("TestResX\n");
   return 0;
 }
