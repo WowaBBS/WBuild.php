@@ -1,0 +1,1 @@
+<?  return [      'Assets'=>[      ['Module/Depends',      ],      ['Cpp/SrcPath' ,''],      ['Cpp/Src'     ,'TestExe.cpp'],      ['Exec/Cmd'    ,        'Cmd'=>'TestBat.bat',      ],      ['Exec/Cmd'    ,        'Cmd'=>'dir',      ],      ['Public'],      ['Cpp/MakeExe'],    ],  ];?>
