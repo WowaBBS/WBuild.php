@@ -1,1 +1,1 @@
-<?  return [      'Assets'=>[      ['Public'],      ['Module/Depends',        'TestBat',      ],      ['Target/Dir', '../..'],      ['Target/Copy', 'From'=>'Bin/Exe', 'To'=>'Bin',],    ],  ];?>
+<?  return [      'Assets'=>[      ['Public'],      ['Module/Depends',        'TestBat',        'TestPhp',      ],      ['Target/Dir', '../..'],      ['Target/Copy', 'From'=>'Bin/Exe', 'To'=>'Bin',],    ],  ];?>
