@@ -1,1 +1,14 @@
-<?  Require_Once '../../../../Using.php';   $Manager=$Loader->Create_Object('/Builder/Manager', []);  $Args=[    'Config'=>['Win32', 'VC'],  ];  $Context=$Manager->Create_Context($Args);  $Compiler=$Manager->GetCompiler('CPP');  $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Test.log');  $Deb->Debug($Compiler);  $Instance=$Compiler->Find(['Win32']);  $Deb->Debug($Instance);?>
+<?
+  Require_Once '../../../../Using.php';
+ 
+  $Manager=$Loader->Create_Object('/Builder/Manager', []);
+  $Args=[
+    'Config'=>['Win32', 'VC'],
+  ];
+  $Context=$Manager->Create_Context($Args);
+  $Compiler=$Manager->GetCompiler('CPP');
+  $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Test.log');
+  $Deb->Debug($Compiler);
+  $Instance=$Compiler->Find(['Win32']);
+  $Deb->Debug($Instance);
+?>

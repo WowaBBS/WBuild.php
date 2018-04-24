@@ -1,1 +1,15 @@
-<?  Include '../../../Using.php';  $Assets=$Loader->Create_Object('/Builder/Asset/List');  $Assets->CreateAsset('Cpp/Define'  ,['TestDef1'=>1, 'TestDef3']);  $Assets->CreateAsset('Cpp/Define'  ,'TestDef2');  $Assets->CreateAsset('Cpp/Include' ,'Inc');  $Assets->CreateAsset('Cpp/Src'     ,['Test3.cpp','Test2.cpp']);  $Assets->CreateAsset('Cpp/Src'     ,'Test.cpp');  $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Test1.log');  $Deb->Debug($Assets);//$Compile=$Loader->Create_Object('/Builder/Compiler/CPP/VC/Task/Compile');//$Compile->Exec();?>
+<?
+  Include '../../../Using.php';
+  $Assets=$Loader->Create_Object('/Builder/Asset/List');
+  $Assets->CreateAsset('Cpp/Define'  ,['TestDef1'=>1, 'TestDef3']);
+  $Assets->CreateAsset('Cpp/Define'  ,'TestDef2');
+  $Assets->CreateAsset('Cpp/Include' ,'Inc');
+  $Assets->CreateAsset('Cpp/Src'     ,['Test3.cpp','Test2.cpp']);
+  $Assets->CreateAsset('Cpp/Src'     ,'Test.cpp');
+
+  $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Test1.log');
+  $Deb->Debug($Assets);
+
+//$Compile=$Loader->Create_Object('/Builder/Compiler/CPP/VC/Task/Compile');
+//$Compile->Exec();
+?>
