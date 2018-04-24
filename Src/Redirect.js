@@ -1,1 +1,1 @@
-   while(!WScript.StdIn.AtEndOfStream)  {    var str = WScript.StdIn.ReadLine();    WScript.StdOut.WriteLine(str);    WScript.StdErr.WriteLine(str);  } //WScript.StdOut.close();//WScript.StdErr.close();
+   while(!WScript.StdIn.AtEndOfStream)  {    var str = WScript.StdIn.ReadLine();    WScript.StdOut.WriteLine(str);    WScript.StdErr.WriteLine(str);  } 

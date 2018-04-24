@@ -19,13 +19,4 @@ call %3
 call %WBuild_Root%\EndTime.bat
 
 ::timeout /t 1
-echo The end!!!!!!!!!!!!!!!!
-exit /b
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
-call %WBuild_Root%\Flush.bat
+echo The end...
