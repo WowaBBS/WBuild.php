@@ -1,1 +1,79 @@
-<?//$Loader->Load_Class("System/Env");   class C_Builder_Compiler_CPP_GCC_Detect  {    function Detect($PathInfo)    {      $Path=$PathInfo['Path'];            MkDir('test');      MkDir('test\obj');      MkDir('test\bin');    //MkDir('test\env');      MkDir('test\info');            $PathBat='';      $PathObj='obj/';      $PathExe='bin/';          //$FileSrc='../test.c';      $FileSrc=$this->Loader->_Find_Lib('/Builder/Compiler/CPP/GCC/Test.c');            $CurrEnv=$this->Create_Object("System/Env");      $CurrEnv->LoadCurrent();      $ItemEnv=$this->Create_Object("System/Env");      $SaveDir=getcwd();      chdir('test');      foreach($List as $k=>$Item)      {        $File=$Path.$Item[0];        $k=str_pad($k, 3, '0', STR_PAD_LEFT);        if(File_Exists($File))        {          $FileBat=$PathBat.$k.'.bat' ;          $FileObj=$PathObj.$k.'.o'   ;          $FileExe=$PathExe.$k.'.exe' ;                  //echo '>',$File,"\n";          $Res=[            "@echo off\r\n",            'call "',$File,'"',"\r\n",            'SET >',$k,'.txt',"\r\n",          //'cl 2>info\\',$k,'.info',"\r\n",          //'cl /nologo -c ',$FileSrc,' /Fo: ',$FileObj,"\r\n",            'cl /nologo -c ',$FileSrc,' /Fo',$FileObj,"\r\n",            'link /nologo ',$FileObj,' /OUT:',$FileExe,"\r\n",          ];          FS_File_Put_Contents($FileBat, implode($Res));          exec($FileBat);                    // Begin Env          $ItemEnv->Clear();          $ItemEnv->LoadFile($k.'.txt');          unlink($k.'.txt');          $CurrEnv->LoadCurrent();          $ItemEnv->Minus($CurrEnv);          // End Env             $Obj_Bin=FS_File_Get_Contents($FileObj);          $PreDef=[];          preg_match_all('/>>>(.+):(.+);<<</', $Obj_Bin, $Matches, PREG_SET_ORDER);          foreach($Matches as $Item)            if($Item[1]!==$Item[2])              $PreDef[$Item[1]]=$Item[2];                    $Info=[            'From'=>$PathInfo,            'PreDef'=>$PreDef,            'Env'=>$ItemEnv->Map,          ];          $OutEnv="<?\n  return\n".Var_Export($Info, true).";\n?>";          FS_File_Put_Contents('info/'.$k.'.php', $OutEnv);        }      }      ChDir($SaveDir);    };  };?>
+<?
+//$Loader->Load_Class("System/Env");
+ 
+  class C_Builder_Compiler_CPP_GCC_Detect
+  {
+    function Detect($PathInfo)
+    {
+      $Path=$PathInfo['Path'];
+      
+      MkDir('test');
+      MkDir('test\obj');
+      MkDir('test\bin');
+    //MkDir('test\env');
+      MkDir('test\info');
+      
+      $PathBat='';
+      $PathObj='obj/';
+      $PathExe='bin/';
+      
+    //$FileSrc='../test.c';
+      $FileSrc=$this->Loader->_Find_Lib('/Builder/Compiler/CPP/GCC/Test.c');
+      
+      $CurrEnv=$this->Create_Object("System/Env");
+      $CurrEnv->LoadCurrent();
+      $ItemEnv=$this->Create_Object("System/Env");
+      $SaveDir=getcwd();
+      chdir('test');
+      foreach($List as $k=>$Item)
+      {
+        $File=$Path.$Item[0];
+        $k=str_pad($k, 3, '0', STR_PAD_LEFT);
+        if(File_Exists($File))
+        {
+          $FileBat=$PathBat.$k.'.bat' ;
+          $FileObj=$PathObj.$k.'.o'   ;
+          $FileExe=$PathExe.$k.'.exe' ;
+          
+        //echo '>',$File,"\n";
+          $Res=[
+            "@echo off\r\n",
+            'call "',$File,'"',"\r\n",
+            'SET >',$k,'.txt',"\r\n",
+          //'cl 2>info\\',$k,'.info',"\r\n",
+          //'cl /nologo -c ',$FileSrc,' /Fo: ',$FileObj,"\r\n",
+            'cl /nologo -c ',$FileSrc,' /Fo',$FileObj,"\r\n",
+            'link /nologo ',$FileObj,' /OUT:',$FileExe,"\r\n",
+          ];
+          FS_File_Put_Contents($FileBat, implode($Res));
+          exec($FileBat);
+          
+          // Begin Env
+          $ItemEnv->Clear();
+          $ItemEnv->LoadFile($k.'.txt');
+          unlink($k.'.txt');
+          $CurrEnv->LoadCurrent();
+          $ItemEnv->Minus($CurrEnv);
+          // End Env
+   
+          $Obj_Bin=FS_File_Get_Contents($FileObj);
+          $PreDef=[];
+          preg_match_all('/>>>(.+):(.+);<<</', $Obj_Bin, $Matches, PREG_SET_ORDER);
+          foreach($Matches as $Item)
+            if($Item[1]!==$Item[2])
+              $PreDef[$Item[1]]=$Item[2];
+          
+          $Info=[
+            'From'=>$PathInfo,
+            'PreDef'=>$PreDef,
+            'Env'=>$ItemEnv->Map,
+          ];
+          $OutEnv="<?\n  return\n".Var_Export($Info, true).";\n?>";
+          FS_File_Put_Contents('info/'.$k.'.php', $OutEnv);
+        }
+      }
+      ChDir($SaveDir);
+    };
+  };
+
+?>

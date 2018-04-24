@@ -1,1 +1,154 @@
-<?  $Loader->Parent_Class('/Object');    ///   * Processing  ///   * Finished  ///   * Failed  class C_Builder_Task_Base extends C_Object  {    /// States of task:    const Status_Undefined  =0 ; //< Undefined task    const Status_Wait       =1 ; //< Wait Depends    const Status_Ready      =2 ; //< Ready for starting    const Status_Processing =3 ;    const Status_Finished   =4 ;    const Status_Failed     =5 ;      Var $Manager   ;    Var $Depends   = [];    Var $WaitFor   = [];    Var $SendTo    = [];    // TODO: Separate Finished and Failed for this and Depends tasks    Var $bFinished = false; //< Was executed    Var $bFailed   = false; //< Execution was failed    Var $bAsync    = false;        Function GetMakeTasks(Array &$Res)    {      $Id=$this->Object_Id;      if(IsSet($Res[$Id]))      {        if($Res[$Id]===true)          echo "[Error] Cyclic dependencies\n";        return;      }      $Res[$Id]=true;      if(IsSet($this->CheckObjects))      { // TODO: It't workaround for late binding        ForEach($this->CheckObjects As $v)          if(IsSet($v->Tasks))            ForEach($v->Tasks As $Task)              $this->Depends($Task);      }      ForEach($this->Depends As $k=>$Task)        $Task->GetMakeTasks($Res);      UnSet($Res[$Id]);      $Res[$Id]=$this;    }        Function Depends()    {      ForEach(Func_Get_Args()As $i)        $this->Depends[$i->Object_Id]=$i;    }        Function _Prepare()    {      $this->WaitFor=$this->Depends;      $Id=$this->Object_Id;      ForEach($this->WaitFor As $i)        $i->SendTo[$Id]=$this;    }        Private Function EventFromTask($Task)    {      if($this->bFailed   ) return UnReachable();      if($this->bFinished ) return UnReachable();      if(!IsSet($this->WaitFor[$Task->Object_Id])) return UnReachable();      UnSet($this->WaitFor[$Task->Object_Id]);      if($Task->bFailed) return $this->Failed();      if(!$Task->bFinished) return UnReachable();      if(Count($this->WaitFor)===0) return $this->Ready();      // Wait finishing for another tasks    }        Private Function Failed()    {      $this->bFailed=true;      $this->SendEvent();      $this->Manager->Failed($this);      $this->_UnbindEvent();    }        Private Function Finished()    {      $this->bFinished=true;      $this->SendEvent();      $this->Manager->Finished($this);    }        Private Function Ready()    {      $this->Manager->Ready($this);    }        Private Function _UnbindEvent()    {      $Id=$this->Object_Id;      ForEach($this->WaitFor As $i)        UnSet($i[$Id]);    }        Private Function SendEvent()    {      if(!$this->bFinished && !$this->bFailed) UnReachable();      ForEach($this->SendTo As $SendTo)        $SendTo->EventFromTask($this);      $this->SendTo=[];    }        Final Function Execute()    {     #if(!$this->_Check())     #  return $this->Failed();      if(!$this->_Execute())        $this->Failed();     #else     #  if(!$this->_CheckResult())     #    $this->Failed();      if(!$this->bAsync)        $this->Finished();    }        Final Function Async($Ok)    {      if(!$Ok)        $this->Failed();      $this->Finished();    }        Protected Function _Execute()    {      return true;    }        Function _GetTaskHash(Array &$Res)    {      $Res[]=Static::Class;      $Res[]=$this->Name;    }    Function GetTaskHash()    {      $Res=[];      $this->_GetTaskHash(Res);    }        Protected Function _Debug_Info(Array &$Res)    {      Parent::_Debug_Info($Res);      UnSet($Res['Manager' ]);      UnSet($Res['SendTo'  ]);    }  };?>
+<?
+  $Loader->Parent_Class('/Object');
+  
+  ///   * Processing
+  ///   * Finished
+  ///   * Failed
+  class C_Builder_Task_Base extends C_Object
+  {
+    /// States of task:
+    const Status_Undefined  =0 ; //< Undefined task
+    const Status_Wait       =1 ; //< Wait Depends
+    const Status_Ready      =2 ; //< Ready for starting
+    const Status_Processing =3 ;
+    const Status_Finished   =4 ;
+    const Status_Failed     =5 ;
+  
+    Var $Manager   ;
+    Var $Depends   = [];
+    Var $WaitFor   = [];
+    Var $SendTo    = [];
+    // TODO: Separate Finished and Failed for this and Depends tasks
+    Var $bFinished = false; //< Was executed
+    Var $bFailed   = false; //< Execution was failed
+    Var $bAsync    = false;
+    
+    Function GetMakeTasks(Array &$Res)
+    {
+      $Id=$this->Object_Id;
+      if(IsSet($Res[$Id]))
+      {
+        if($Res[$Id]===true)
+          echo "[Error] Cyclic dependencies\n";
+        return;
+      }
+      $Res[$Id]=true;
+      if(IsSet($this->CheckObjects))
+      { // TODO: It't workaround for late binding
+        ForEach($this->CheckObjects As $v)
+          if(IsSet($v->Tasks))
+            ForEach($v->Tasks As $Task)
+              $this->Depends($Task);
+      }
+      ForEach($this->Depends As $k=>$Task)
+        $Task->GetMakeTasks($Res);
+      UnSet($Res[$Id]);
+      $Res[$Id]=$this;
+    }
+    
+    Function Depends()
+    {
+      ForEach(Func_Get_Args()As $i)
+        $this->Depends[$i->Object_Id]=$i;
+    }
+    
+    Function _Prepare()
+    {
+      $this->WaitFor=$this->Depends;
+      $Id=$this->Object_Id;
+      ForEach($this->WaitFor As $i)
+        $i->SendTo[$Id]=$this;
+    }
+    
+    Private Function EventFromTask($Task)
+    {
+      if($this->bFailed   ) return UnReachable();
+      if($this->bFinished ) return UnReachable();
+      if(!IsSet($this->WaitFor[$Task->Object_Id])) return UnReachable();
+      UnSet($this->WaitFor[$Task->Object_Id]);
+      if($Task->bFailed) return $this->Failed();
+      if(!$Task->bFinished) return UnReachable();
+      if(Count($this->WaitFor)===0) return $this->Ready();
+      // Wait finishing for another tasks
+    }
+    
+    Private Function Failed()
+    {
+      $this->bFailed=true;
+      $this->SendEvent();
+      $this->Manager->Failed($this);
+      $this->_UnbindEvent();
+    }
+    
+    Private Function Finished()
+    {
+      $this->bFinished=true;
+      $this->SendEvent();
+      $this->Manager->Finished($this);
+    }
+    
+    Private Function Ready()
+    {
+      $this->Manager->Ready($this);
+    }
+    
+    Private Function _UnbindEvent()
+    {
+      $Id=$this->Object_Id;
+      ForEach($this->WaitFor As $i)
+        UnSet($i[$Id]);
+    }
+    
+    Private Function SendEvent()
+    {
+      if(!$this->bFinished && !$this->bFailed) UnReachable();
+      ForEach($this->SendTo As $SendTo)
+        $SendTo->EventFromTask($this);
+      $this->SendTo=[];
+    }
+    
+    Final Function Execute()
+    {
+     #if(!$this->_Check())
+     #  return $this->Failed();
+      if(!$this->_Execute())
+        $this->Failed();
+     #else
+     #  if(!$this->_CheckResult())
+     #    $this->Failed();
+      if(!$this->bAsync)
+        $this->Finished();
+    }
+    
+    Final Function Async($Ok)
+    {
+      if(!$Ok)
+        $this->Failed();
+      $this->Finished();
+    }
+    
+    Protected Function _Execute()
+    {
+      return true;
+    }
+    
+    Function _GetTaskHash(Array &$Res)
+    {
+      $Res[]=Static::Class;
+      $Res[]=$this->Name;
+    }
+
+    Function GetTaskHash()
+    {
+      $Res=[];
+      $this->_GetTaskHash(Res);
+    }
+    
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      Parent::_Debug_Info($Res);
+      UnSet($Res['Manager' ]);
+      UnSet($Res['SendTo'  ]);
+    }
+  };
+?>

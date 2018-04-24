@@ -1,1 +1,11 @@
-<?  $Loader->Parent_Class('/Builder/Asset/FS/File');  class C_Builder_Asset_Cpp_Header extends C_Builder_Asset_FS_File  {    Protected Function _GetSearchPathClass()    {      return ['Cpp/Include'];    }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  class C_Builder_Asset_Cpp_Header extends C_Builder_Asset_FS_File
+  {
+    Protected Function _GetSearchPathClass()
+    {
+      return ['Cpp/Include'];
+    }
+  };
+?>

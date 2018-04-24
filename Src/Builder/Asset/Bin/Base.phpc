@@ -1,1 +1,25 @@
-<?  $Loader->Parent_Class('/Builder/Asset/FS/File');  class C_Builder_Asset_Bin_Base extends C_Builder_Asset_FS_File  {    Var $FileDepends=[];      Protected Function _Init(Array $Args)    {      Parent::_Init($Args);      $FullPathPdb=$this->GetFullPathNick().'.pdb';      if(File_Exists($FullPathPdb))      {        $PDB=$this->GetLocalPathNick().'.pdb';        $PdbAsset=$this->CreateAsset('FS/File', ['Path'=>$PDB, '>Parent'=>$this->Parent]);        $this->AddFileDepends($PdbAsset);      }    }        Protected Function _GetSearchPathClass()    {      return ['Bin/Path'];    }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  class C_Builder_Asset_Bin_Base extends C_Builder_Asset_FS_File
+  {
+    Var $FileDepends=[];
+  
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      $FullPathPdb=$this->GetFullPathNick().'.pdb';
+      if(File_Exists($FullPathPdb))
+      {
+        $PDB=$this->GetLocalPathNick().'.pdb';
+        $PdbAsset=$this->CreateAsset('FS/File', ['Path'=>$PDB, '>Parent'=>$this->Parent]);
+        $this->AddFileDepends($PdbAsset);
+      }
+    }
+    
+    Protected Function _GetSearchPathClass()
+    {
+      return ['Bin/Path'];
+    }
+  };
+?>

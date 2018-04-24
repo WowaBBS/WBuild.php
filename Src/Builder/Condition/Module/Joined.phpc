@@ -1,1 +1,24 @@
-<?  $Loader->Parent_Class('/Builder/Condition/Base');    class C_Builder_Condition_Module_Joined extends C_Builder_Condition_Base  {    Var $List=[];        function _Init(Array $Args)    {      parent::_Init($Args);      // TODO: Check list of string      $this->List=$Args['Param'];    }         function CheckAsset($Asset, $Args)    {      $Depends=$Asset->GetAssets('Module/Depends');      ForEach($this->List As $Name)        if(!IsSet($Depends[$Name]))          return false;      return true;    }  }?>
+<?
+  $Loader->Parent_Class('/Builder/Condition/Base');
+  
+  class C_Builder_Condition_Module_Joined extends C_Builder_Condition_Base
+  {
+    Var $List=[];
+    
+    function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      // TODO: Check list of string
+      $this->List=$Args['Param'];
+    }
+     
+    function CheckAsset($Asset, $Args)
+    {
+      $Depends=$Asset->GetAssets('Module/Depends');
+      ForEach($this->List As $Name)
+        if(!IsSet($Depends[$Name]))
+          return false;
+      return true;
+    }
+  }
+?>

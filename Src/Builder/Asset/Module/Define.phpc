@@ -1,1 +1,64 @@
-<?  $Loader->Parent_Class('/Builder/Asset/Base');  class C_Builder_Asset_Module_Define extends C_Builder_Asset_Base  {    Var $Key   ='';    Var $Value ='';    Function GetKey() { return $this->Key; }        Protected Function _Init(Array $Args)    {      Parent::_Init($Args);      if(IsSet($Args['Key']))        $this->Set(          $Args['Key'],          IsSet($Args['Value'])? $Args['Value']:''        );    }        Function Set(String $Key, String $Value='')    {      $this->Key   = $Key   ;      $this->Value = $Value ;    }        Static Function _ParseParams($Args)    {      $Param=$Args['Param'];      unset($Args['Param']);      $Res=[];      ForEach($Param As $k=>$v)      {        if(Is_Array($v))        {          $Args['Key'   ]=$v[0];          $Args['Value' ]=$v[1];        }        elseif(Is_String($k))        {          $Args['Key'   ]=$k;          $Args['Value' ]=$v;        }        else        {          $Args['Key'   ]=$v;          $Args['Value' ]='';        }        $Res[]=$Args;      }      return $Res;    }    Function GetKeyValue()    {      if($this->Value==='')        return $this->Key.'=';      return $this->Key.'='.$this->Value;    }  };  $DebM=$Loader->Get_Singleton('/Debug/Manager');  $DebM->AddInlineClass('C_Builder_Asset_Module_Define');?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/Base');
+
+  class C_Builder_Asset_Module_Define extends C_Builder_Asset_Base
+  {
+    Var $Key   ='';
+    Var $Value ='';
+
+    Function GetKey() { return $this->Key; }
+    
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      if(IsSet($Args['Key']))
+        $this->Set(
+          $Args['Key'],
+          IsSet($Args['Value'])? $Args['Value']:''
+        );
+    }
+    
+    Function Set(String $Key, String $Value='')
+    {
+      $this->Key   = $Key   ;
+      $this->Value = $Value ;
+    }
+    
+    Static Function _ParseParams($Args)
+    {
+      $Param=$Args['Param'];
+      unset($Args['Param']);
+      $Res=[];
+      ForEach($Param As $k=>$v)
+      {
+        if(Is_Array($v))
+        {
+          $Args['Key'   ]=$v[0];
+          $Args['Value' ]=$v[1];
+        }
+        elseif(Is_String($k))
+        {
+          $Args['Key'   ]=$k;
+          $Args['Value' ]=$v;
+        }
+        else
+        {
+          $Args['Key'   ]=$v;
+          $Args['Value' ]='';
+        }
+        $Res[]=$Args;
+      }
+      return $Res;
+    }
+
+    Function GetKeyValue()
+    {
+      if($this->Value==='')
+        return $this->Key.'=';
+      return $this->Key.'='.$this->Value;
+    }
+  };
+
+  $DebM=$Loader->Get_Singleton('/Debug/Manager');
+  $DebM->AddInlineClass('C_Builder_Asset_Module_Define');
+?>

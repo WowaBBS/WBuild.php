@@ -1,1 +1,39 @@
-<?  $Loader->Parent_Class('/Builder/Asset/FS/Path');  class C_Builder_Asset_Cpp_UsingPath extends C_Builder_Asset_FS_Path  {    Protected Function _Init(Array $Args)    {      $Path=$Args['Path'];      if($Path!=='' && $Path[0]==='>')      {        $Compiler=$Args['Outer']->RequireAsset('Cpp/Compiler')->Instance;        $Args['Path']=$Compiler->DetectUsingPath($Path);        $this->IsSystem=true;      }     #if($Def=$Args['>Detect']??false)     #  $Args['Path']=$Compiler->GetDefaultUsingPath($Def);     #echo 'Path: ',$Args['Path'],"\n";      Parent::_Init($Args);    }        Function IsSystem()    {      return $this->IsSystem??false;    }   #Static Function _CustomParams()   #{   #  $Res=Parent::_CustomParams();   #  $Res[]='>Detect';   #  return $Res;   #}        Protected Function _GetSearchPathClass()    {      return [];    }  //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/Path');
+
+  class C_Builder_Asset_Cpp_UsingPath extends C_Builder_Asset_FS_Path
+  {
+    Protected Function _Init(Array $Args)
+    {
+      $Path=$Args['Path'];
+      if($Path!=='' && $Path[0]==='>')
+      {
+        $Compiler=$Args['Outer']->RequireAsset('Cpp/Compiler')->Instance;
+        $Args['Path']=$Compiler->DetectUsingPath($Path);
+        $this->IsSystem=true;
+      }
+     #if($Def=$Args['>Detect']??false)
+     #  $Args['Path']=$Compiler->GetDefaultUsingPath($Def);
+     #echo 'Path: ',$Args['Path'],"\n";
+      Parent::_Init($Args);
+    }
+    
+    Function IsSystem()
+    {
+      return $this->IsSystem??false;
+    }
+   #Static Function _CustomParams()
+   #{
+   #  $Res=Parent::_CustomParams();
+   #  $Res[]='>Detect';
+   #  return $Res;
+   #}
+    
+    Protected Function _GetSearchPathClass()
+    {
+      return [];
+    }
+
+  //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
+  };
+?>

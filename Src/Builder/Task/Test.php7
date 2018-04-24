@@ -1,1 +1,31 @@
-<?  Require_Once '../../Using.php';  $Manager=$Loader->Create_Object('/Builder/Task/Manager');  $A=$Manager->Create(); $A->Name='A';  $B=$Manager->Create(); $B->Name='B';  $C=$Manager->Create(); $C->Name='C';  $D=$Manager->Create(); $D->Name='D';  $A->Depends($B, $C);  $B->Depends($D);  $C->Depends($B, $D);   #$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('debug.log'); #$Deb->Debug($Manager);    while($Task=$Manager->GetNext())  {    echo 'Starting ', $Task->Name, ' ...',"\n";    $Task->Execute();    if($Task->bFailed)      echo $Task->Name, ' was failed',"\n";    elseif($Task->bFinished)      echo $Task->Name, ' was finished',"\n";    elseif($Task->bAsync)      echo $Task->Name, ' is runing',"\n";    else      echo $Task->Name, ' is stupid',"\n";  }    echo 'All tasks were done',"\n";?>
+<?
+  Require_Once '../../Using.php';
+
+  $Manager=$Loader->Create_Object('/Builder/Task/Manager');
+  $A=$Manager->Create(); $A->Name='A';
+  $B=$Manager->Create(); $B->Name='B';
+  $C=$Manager->Create(); $C->Name='C';
+  $D=$Manager->Create(); $D->Name='D';
+  $A->Depends($B, $C);
+  $B->Depends($D);
+  $C->Depends($B, $D);
+  
+ #$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('debug.log');
+ #$Deb->Debug($Manager);
+  
+  while($Task=$Manager->GetNext())
+  {
+    echo 'Starting ', $Task->Name, ' ...',"\n";
+    $Task->Execute();
+    if($Task->bFailed)
+      echo $Task->Name, ' was failed',"\n";
+    elseif($Task->bFinished)
+      echo $Task->Name, ' was finished',"\n";
+    elseif($Task->bAsync)
+      echo $Task->Name, ' is runing',"\n";
+    else
+      echo $Task->Name, ' is stupid',"\n";
+  }
+  
+  echo 'All tasks were done',"\n";
+?>

@@ -1,1 +1,34 @@
-<?  $Loader->Parent_Class('/Builder/Asset/Inline');  $Loader->Using_Module('/Array');  class C_Builder_Asset_Debug extends C_Builder_Asset_Inline  {    Static Function _ParseParams($Args)    {      $Outer=$Args['Outer'];      $Param=$Args['Param'];      $Desr=Array_Shift_Checked($Param);            For($OuterUp=$Param['Outer']??0; $OuterUp>0; $OuterUp--)        $Outer=$Outer->Outer;            $Deb=$Outer->Get_Singleton('/Debug/Manager')->Get('Assets.log');    //$Deb->Debug($Param);          if($Desr)        $Deb->WriteLn($Desr.':');      $Res=[];      ForEach($Outer->List As $Type=>$List)        ForEach($List As $Id=>$Asset)          $Res[$Type][]=$Id;      $Deb->Debug($Res);      $Res=[];      ForEach($Outer->Public As $Type=>$List)        ForEach($List As $Id=>$Asset)          $Res[$Type][]=$Id;      $Deb->Debug($Res);      return [];    }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/Inline');
+  $Loader->Using_Module('/Array');
+
+  class C_Builder_Asset_Debug extends C_Builder_Asset_Inline
+  {
+    Static Function _ParseParams($Args)
+    {
+      $Outer=$Args['Outer'];
+      $Param=$Args['Param'];
+      $Desr=Array_Shift_Checked($Param);
+      
+      For($OuterUp=$Param['Outer']??0; $OuterUp>0; $OuterUp--)
+        $Outer=$Outer->Outer;
+      
+      $Deb=$Outer->Get_Singleton('/Debug/Manager')->Get('Assets.log');
+    //$Deb->Debug($Param);
+    
+      if($Desr)
+        $Deb->WriteLn($Desr.':');
+      $Res=[];
+      ForEach($Outer->List As $Type=>$List)
+        ForEach($List As $Id=>$Asset)
+          $Res[$Type][]=$Id;
+      $Deb->Debug($Res);
+      $Res=[];
+      ForEach($Outer->Public As $Type=>$List)
+        ForEach($List As $Id=>$Asset)
+          $Res[$Type][]=$Id;
+      $Deb->Debug($Res);
+      return [];
+    }
+  };
+?>

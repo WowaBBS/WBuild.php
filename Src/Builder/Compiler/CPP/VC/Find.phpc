@@ -1,1 +1,38 @@
-<?  $Loader->Parent_Class('/Object');  $Loader->Load_Lib('/FS/Utils');    class C_Builder_Compiler_CPP_VC_Find extends C_Object  {    var $Regs=[      'HKLM\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',      'HKCU\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',      'HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',      'HKCU\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',    ];    function Find()    {      echo 'Search installed Visual Studios',"\n";      $Reg=$this->Create_Object('/System/Reg');      $List=$Reg->SearchParam(        [         'HKLM\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',         'HKCU\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',         'HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',         'HKCU\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',        ]      );      $Res=[];      ForEach($List As $Item)        ForEach($Item As $k=>$v)          $Res[Path_Key($v)]=[            'Path'   =>Path_Simplify($v),            'RegVer' =>$k,          ]; //explode('.', $k)        //$Res[$v]=['Path'=>$v, 'RegVer'=>[(int)$Ver, (int)$Ver2]];      $Reg->Done();      return $Res;    }  }?>
+<?
+  $Loader->Parent_Class('/Object');
+  $Loader->Load_Lib('/FS/Utils');
+  
+  class C_Builder_Compiler_CPP_VC_Find extends C_Object
+  {
+    var $Regs=[
+      'HKLM\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
+      'HKCU\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
+      'HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
+      'HKCU\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
+    ];
+
+    function Find()
+    {
+      echo 'Search installed Visual Studios',"\n";
+      $Reg=$this->Create_Object('/System/Reg');
+      $List=$Reg->SearchParam(
+        [
+         'HKLM\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
+         'HKCU\SOFTWARE\Microsoft\VisualStudio\SxS\VS7',
+         'HKLM\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
+         'HKCU\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
+        ]
+      );
+      $Res=[];
+      ForEach($List As $Item)
+        ForEach($Item As $k=>$v)
+          $Res[Path_Key($v)]=[
+            'Path'   =>Path_Simplify($v),
+            'RegVer' =>$k,
+          ]; //explode('.', $k)
+        //$Res[$v]=['Path'=>$v, 'RegVer'=>[(int)$Ver, (int)$Ver2]];
+      $Reg->Done();
+      return $Res;
+    }
+  }
+?>

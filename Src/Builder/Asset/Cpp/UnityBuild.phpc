@@ -1,1 +1,96 @@
-<?  $Loader->Parent_Class('/Builder/Asset/Inline');  /// Load all Cpp/Src files and join it`s into one Cpp/Src  class C_Builder_Asset_Cpp_UnityBuild extends C_Builder_Asset_Inline  {    Static Function _Create($Outer, $Sources, bool $bInternal, String $RemoveType='')    {      $Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance;      if(!$Compiler)      {      //Var_Dump($Outer);        throw new Exception('Haven`t any compiler');      }      $OutPath=$Compiler->CreateOutPath($Outer);      $SrcPathAsset=$Outer->CreateAsset('Cpp/SrcPath', $OutPath.'UnityBuild');      $EnumCache=$Outer->GetModuleInstance()->EnumCache;          $Res=[];      $FirstSource=false;      $UnityList=[];      $ToRemove=[];      $Sources[]=false;      ForEach($Sources as $Source)      {        if($Source)        {          $UnityBuild=$Source->IsUnityBuild();          if($UnityBuild)            $Res[]=$Source;          elseif(!$FirstSource)          {            $UnityList=[$Source];            $FirstSource=$Source;            continue;          }          elseif($Source->IsCompatible($FirstSource))          {            $UnityList[]=$Source;            continue;          }        }        if($UnityList)        {          if(count($UnityList)>1)            $Res[]=$UnityList;          else            $Res[]=$UnityList[0];          $UnityList=[];          $FirstSource=false;        }        if($Source && !$UnityBuild)        {          $UnityList=[$Source];          $FirstSource=$Source;        }      }      ForEach($Res As $k=>$UnityList)        if(Is_Array($UnityList))        {          $FirstAsset=$UnityList[0];          [$Dir, $Name]=$FirstAsset->GetDirAndNick();          $Num=$EnumCache->AllocNum($Dir, 'UnityBuild', ['Pad'=>1]);          $ObjNick=$Num.'/'.$Name;          $Source=$Outer->CreateAsset('Cpp/Src', ['Path'=>$ObjNick.'.'.$FirstAsset->GetFileExt(), '>Create'=>1]);          $Source->SetUnityBuild($UnityList);        //echo $Source->GetFullPath(), "\n";          if($RemoveType!=='')            $Outer->RemoveAssets($RemoveType, $UnityList);          if($bInternal)            $Source->RemoveFromOuter();          $Res[$k]=$Source;        }      $SrcPathAsset->RemoveFromOuter();      return $Res;    }        Static Function Create($Outer, $Sources)    {      return Static::_Create($this, $Sources, true);    }      Static Function _ParseParams($Args)    {      $Outer=$Args['Outer'];      $Param=$Args['Param'];            $Pch =$Outer->ExtractAssets('Cpp/Pch'); // No PCH      $Sources =$Outer->GetAssets('Cpp/Src');    //$Sources =$Outer->ExtractAssets('Cpp/Src');      $Sources=Static::_Create($Outer, $Sources, false, 'Cpp/Src');      // Do nothing      return [];    }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/Inline');
+
+  /// Load all Cpp/Src files and join it`s into one Cpp/Src
+  class C_Builder_Asset_Cpp_UnityBuild extends C_Builder_Asset_Inline
+  {
+    Static Function _Create($Outer, $Sources, bool $bInternal, String $RemoveType='')
+    {
+      $Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance;
+      if(!$Compiler)
+      {
+      //Var_Dump($Outer);
+        throw new Exception('Haven`t any compiler');
+      }
+      $OutPath=$Compiler->CreateOutPath($Outer);
+      $SrcPathAsset=$Outer->CreateAsset('Cpp/SrcPath', $OutPath.'UnityBuild');
+      $EnumCache=$Outer->GetModuleInstance()->EnumCache;
+    
+      $Res=[];
+      $FirstSource=false;
+      $UnityList=[];
+      $ToRemove=[];
+      $Sources[]=false;
+      ForEach($Sources as $Source)
+      {
+        if($Source)
+        {
+          $UnityBuild=$Source->IsUnityBuild();
+          if($UnityBuild)
+            $Res[]=$Source;
+          elseif(!$FirstSource)
+          {
+            $UnityList=[$Source];
+            $FirstSource=$Source;
+            continue;
+          }
+          elseif($Source->IsCompatible($FirstSource))
+          {
+            $UnityList[]=$Source;
+            continue;
+          }
+        }
+        if($UnityList)
+        {
+          if(count($UnityList)>1)
+            $Res[]=$UnityList;
+          else
+            $Res[]=$UnityList[0];
+          $UnityList=[];
+          $FirstSource=false;
+        }
+        if($Source && !$UnityBuild)
+        {
+          $UnityList=[$Source];
+          $FirstSource=$Source;
+        }
+      }
+      ForEach($Res As $k=>$UnityList)
+        if(Is_Array($UnityList))
+        {
+          $FirstAsset=$UnityList[0];
+          [$Dir, $Name]=$FirstAsset->GetDirAndNick();
+          $Num=$EnumCache->AllocNum($Dir, 'UnityBuild', ['Pad'=>1]);
+          $ObjNick=$Num.'/'.$Name;
+          $Source=$Outer->CreateAsset('Cpp/Src', ['Path'=>$ObjNick.'.'.$FirstAsset->GetFileExt(), '>Create'=>1]);
+          $Source->SetUnityBuild($UnityList);
+        //echo $Source->GetFullPath(), "\n";
+          if($RemoveType!=='')
+            $Outer->RemoveAssets($RemoveType, $UnityList);
+          if($bInternal)
+            $Source->RemoveFromOuter();
+          $Res[$k]=$Source;
+        }
+      $SrcPathAsset->RemoveFromOuter();
+      return $Res;
+    }
+    
+    Static Function Create($Outer, $Sources)
+    {
+      return Static::_Create($this, $Sources, true);
+    }
+  
+    Static Function _ParseParams($Args)
+    {
+      $Outer=$Args['Outer'];
+      $Param=$Args['Param'];
+      
+      $Pch =$Outer->ExtractAssets('Cpp/Pch'); // No PCH
+      $Sources =$Outer->GetAssets('Cpp/Src');
+    //$Sources =$Outer->ExtractAssets('Cpp/Src');
+      $Sources=Static::_Create($Outer, $Sources, false, 'Cpp/Src');
+      // Do nothing
+      return [];
+    }
+  };
+?>

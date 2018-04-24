@@ -1,1 +1,7 @@
-<?  $Loader->Parent_Class('/Builder/Asset/Bin/Base');  class C_Builder_Asset_Bin_Exe extends C_Builder_Asset_Bin_Base  {  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/Bin/Base');
+
+  class C_Builder_Asset_Bin_Exe extends C_Builder_Asset_Bin_Base
+  {
+  };
+?>

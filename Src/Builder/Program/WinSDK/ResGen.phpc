@@ -1,1 +1,140 @@
-<?  $Loader->Parent_Class('/Object');  $Loader->Load_Lib('/FS/Utils');   // Token from https://github.com/emgucv/emgutf/blob/master/cmake/modules/FindCSharp.cmake  class C_Builder_Program_WinSDK_ResGen extends C_Object  {    Static $Search=[     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6.1 Tools' ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools'   ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v8.1A/bin/NETFX 4.5.1 Tools'  ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v8.0A/bin/NETFX 4.0 Tools'    ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v7.1A/Bin'                    ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v7.0/Bin'                     ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v7.0A/Bin'                    ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v6.0/Bin'                     ,     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v6.0A/Bin'                    ,     '$ENV{programfiles}/Microsoft Visual Studio 8/SDK/v2.0/Bin'                              ,     'C:/Program Files/Microsoft SDKs/Windows/v7.0/bin'                                       ,     'C:/Program Files/Microsoft SDKs/Windows/v7.0A/bin'                                      ,     'C:/Program Files/Microsoft SDKs/Windows/v6.0/bin'                                       ,     'C:/Program Files/Microsoft SDKs/Windows/v6.0A/bin'                                      ,     'C:/Program Files/Microsoft Visual Studio 8/SDK/v2.0/Bin'                                ,     '/usr/bin'                                                                               ,     '/Library/Frameworks/Mono.framework/Commands/'                                           ,    ];        Static Function _SearchFile(Array &$Res, String $Dir, $M1=[], $M2=[])    {      if(!Is_File($Dir)) return;      $Key=Path_Key($Dir);      if(IsSet($Res[$Key])) return;      $R=[        'ResGen'=>$Dir,      ];      if($M1) $R['SDK']=$M1;      if($M2) $R['Tools']=$M2;      $Res[$Key]=$R;    }        Static Function _SearchPath(Array &$Res, String $Dir, $M1=[], $M2=[])    {      if(!Is_Dir($Dir)) return;      Static::_SearchFile($Res, $Dir.'/ResGen.exe', $M1, $M2);    }        Static Function _SearchMicrosoftSDK(Array &$Res, String $Dir, Array $M1)    {      if(!Is_Dir($Dir)) return;      $List=Static::DirList($Dir);      NatSort($List);      $List=Array_Reverse($List);    //echo $Dir, ":\n";      ForEach($List As $File)        if(Preg_Match('/^NETFX (\d+)\.(\d+)(?:\.(\d+))? Tools$/i', $File, $Match))          Static::_SearchPath($Res, $Dir.'/'.$File, $M1, $Match);    }        Static Function _SearchProgramFiles(Array &$Res, String $Dir)    {      $Dir.='/Microsoft SDKs/Windows';      $List=Static::DirList($Dir);      NatSort($List);      $List=Array_Reverse($List);    //echo $Dir, "\n";      ForEach($List As $File)        if(Preg_Match('/^v(\d+)\.(\d+)(\w?)$/i', $File, $Match))        {        //echo $File, "\n";          Static::_SearchMicrosoftSDK($Res, $Dir.'/'.$File.'/bin', $Match);          Static::_SearchMicrosoftSDK($Res, $Dir.'/'.$File.'/Bin', $Match);        }    }        Static $SearchCache=[];        Static Function _Search()    {      if(Static::$SearchCache)        return Static::$SearchCache;      echo "Search ResGen\n";      $Res=[];      Static::_SearchProgramFiles($Res, GetEnv('ProgramFiles'      ));      Static::_SearchProgramFiles($Res, GetEnv('ProgramFiles(x86)' ));      Static::_SearchProgramFiles($Res, GetEnv('ProgramW6432'      ));      Static::_SearchPath($Res, '/usr/bin');      Static::_SearchPath($Res, '/Library/Frameworks/Mono.framework/Commands/');      Static::$SearchCache=$Res;      return $Res;    }    Function Search()    {      return Static::_Search();    }    Static Function DirList(String $Path):Array    {      if(!Is_Dir($Path)) return [];      $Res=[];      if($h=OpenDir($Path))      {        While(($File=ReadDir($h))!==false)        {          if($File=='.') continue;          if($File=='..') continue;          if(Is_File($Path.'/'.$File)) continue;        //if(!Is_Dir($Path.'/'.$File)) continue;          $Res[]=$File;        }        CloseDir($h);      }      return $Res;    }        Function Get()    {      $Res=$this->Search();      return $Res? Reset($Res)['ResGen']:null;    }        Function _Init(Array $Args)    {      Parent::_Init($Args);          //$this->Manager=$Args['Manager'];    }        Function Find($Args)    {      return null;    }        Protected Function _Debug_Info(Array &$Res)    {      Parent::_Debug_Info($Res);      UnSet($Res['Manager']);    }  }?>
+<?
+  $Loader->Parent_Class('/Object');
+  $Loader->Load_Lib('/FS/Utils');
+ 
+  // Token from https://github.com/emgucv/emgutf/blob/master/cmake/modules/FindCSharp.cmake
+  class C_Builder_Program_WinSDK_ResGen extends C_Object
+  {
+    Static $Search=[
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6.1 Tools' ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v10.0A/bin/NETFX 4.6 Tools'   ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v8.1A/bin/NETFX 4.5.1 Tools'  ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v8.0A/bin/NETFX 4.0 Tools'    ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v7.1A/Bin'                    ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v7.0/Bin'                     ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v7.0A/Bin'                    ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v6.0/Bin'                     ,
+     '$ENV{${PROGRAM_FILES_X86_ENV_STR}}/Microsoft SDKs/Windows/v6.0A/Bin'                    ,
+     '$ENV{programfiles}/Microsoft Visual Studio 8/SDK/v2.0/Bin'                              ,
+     'C:/Program Files/Microsoft SDKs/Windows/v7.0/bin'                                       ,
+     'C:/Program Files/Microsoft SDKs/Windows/v7.0A/bin'                                      ,
+     'C:/Program Files/Microsoft SDKs/Windows/v6.0/bin'                                       ,
+     'C:/Program Files/Microsoft SDKs/Windows/v6.0A/bin'                                      ,
+     'C:/Program Files/Microsoft Visual Studio 8/SDK/v2.0/Bin'                                ,
+     '/usr/bin'                                                                               ,
+     '/Library/Frameworks/Mono.framework/Commands/'                                           ,
+    ];
+    
+    Static Function _SearchFile(Array &$Res, String $Dir, $M1=[], $M2=[])
+    {
+      if(!Is_File($Dir)) return;
+      $Key=Path_Key($Dir);
+      if(IsSet($Res[$Key])) return;
+      $R=[
+        'ResGen'=>$Dir,
+      ];
+      if($M1) $R['SDK']=$M1;
+      if($M2) $R['Tools']=$M2;
+      $Res[$Key]=$R;
+    }
+    
+    Static Function _SearchPath(Array &$Res, String $Dir, $M1=[], $M2=[])
+    {
+      if(!Is_Dir($Dir)) return;
+      Static::_SearchFile($Res, $Dir.'/ResGen.exe', $M1, $M2);
+    }
+    
+    Static Function _SearchMicrosoftSDK(Array &$Res, String $Dir, Array $M1)
+    {
+      if(!Is_Dir($Dir)) return;
+      $List=Static::DirList($Dir);
+      NatSort($List);
+      $List=Array_Reverse($List);
+    //echo $Dir, ":\n";
+      ForEach($List As $File)
+        if(Preg_Match('/^NETFX (\d+)\.(\d+)(?:\.(\d+))? Tools$/i', $File, $Match))
+          Static::_SearchPath($Res, $Dir.'/'.$File, $M1, $Match);
+    }
+    
+    Static Function _SearchProgramFiles(Array &$Res, String $Dir)
+    {
+      $Dir.='/Microsoft SDKs/Windows';
+      $List=Static::DirList($Dir);
+      NatSort($List);
+      $List=Array_Reverse($List);
+    //echo $Dir, "\n";
+      ForEach($List As $File)
+        if(Preg_Match('/^v(\d+)\.(\d+)(\w?)$/i', $File, $Match))
+        {
+        //echo $File, "\n";
+          Static::_SearchMicrosoftSDK($Res, $Dir.'/'.$File.'/bin', $Match);
+          Static::_SearchMicrosoftSDK($Res, $Dir.'/'.$File.'/Bin', $Match);
+        }
+    }
+    
+    Static $SearchCache=[];
+    
+    Static Function _Search()
+    {
+      if(Static::$SearchCache)
+        return Static::$SearchCache;
+      echo "Search ResGen\n";
+      $Res=[];
+      Static::_SearchProgramFiles($Res, GetEnv('ProgramFiles'      ));
+      Static::_SearchProgramFiles($Res, GetEnv('ProgramFiles(x86)' ));
+      Static::_SearchProgramFiles($Res, GetEnv('ProgramW6432'      ));
+      Static::_SearchPath($Res, '/usr/bin');
+      Static::_SearchPath($Res, '/Library/Frameworks/Mono.framework/Commands/');
+      Static::$SearchCache=$Res;
+      return $Res;
+    }
+
+    Function Search()
+    {
+      return Static::_Search();
+    }
+
+    Static Function DirList(String $Path):Array
+    {
+      if(!Is_Dir($Path)) return [];
+      $Res=[];
+      if($h=OpenDir($Path))
+      {
+        While(($File=ReadDir($h))!==false)
+        {
+          if($File=='.') continue;
+          if($File=='..') continue;
+          if(Is_File($Path.'/'.$File)) continue;
+        //if(!Is_Dir($Path.'/'.$File)) continue;
+          $Res[]=$File;
+        }
+        CloseDir($h);
+      }
+      return $Res;
+    }
+    
+    Function Get()
+    {
+      $Res=$this->Search();
+      return $Res? Reset($Res)['ResGen']:null;
+    }
+    
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      
+    //$this->Manager=$Args['Manager'];
+    }
+    
+    Function Find($Args)
+    {
+      return null;
+    }
+    
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      Parent::_Debug_Info($Res);
+      UnSet($Res['Manager']);
+    }
+  }
+?>

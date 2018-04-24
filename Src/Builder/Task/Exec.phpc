@@ -1,1 +1,160 @@
-<?  $Loader->Parent_Class('/Builder/Task/Base');    class C_Builder_Task_Exec extends C_Builder_Task_Base  {    Var $Descr=[];    Var $List=[];    static $LabelIdx=0;        function _Init(Array $Args)    {      parent::_Init($Args);      if(IsSet($Args['Asset']))        $this->Asset=$Args['Asset'];    }        Function AllocLabelIdx() { return Self::$LabelIdx++; }        Function Descr() // VarArgs    {      $this->Descr=Implode(func_get_args());      $this->Exec('');      $this->Exec('');      ForEach(Explode("\n", $this->Descr) As $Line)        $this->Exec('Echo [Log] '.$Line);      $this->Exec('');    }        Function Exec($Cmd, $Args=null)    {      if($Args!==null)      {        $Args->Prepare($this, $Cmd);        $_Args=$Args->ToString();      }      else        $_Args='';      if(StrLen(Trim($_Args))>0)        $_Args=' '.$_Args;      $Res=$Cmd.$_Args;      $this->List[]=$Res;    //TODO: $Args->CheckObjects    //TODO: $Args->CheckResult      if($Args!==null)      {        $this->Exec('if errorlevel 1 echo Error && exit /b');        $this->Exec('');      }      return $Res;    }    Var $CheckObjects =[];    Var $CheckResult  =[];    Var $MkDir=[];        Function MkDir($v)    {      if(Is_Object($v))      {        $v->MkDir();        $v=$v->GetDirFullPath();      }      $v=StrTr($v, '\\', '/');      if(IsSet($this->MkDir[$v]))        return;      $this->Exec('MkDir "'.$v.'" 2>nul');      CreatePath($v);      $this->MkDir[$v]=true;    }        Function Copy($From, $To)    {      $F= StrTr($From ->GetFullPath(), '/', '\\');      $T= StrTr($To   ->GetFullPath(), '/', '\\');      $this->Exec('if not exist "'.$T.'" copy "'.$F.'" "'.$T.'"');      $this->Exec('xcopy "'.$F.'" "'.$T.'" /YDI');    }        Function CheckObject($v)    {  // TODO: It't disabled for late binding in GetMakeTasks    //if(IsSet($v->Tasks))    //  ForEach($v->Tasks As $Task)    //    $this->Depends($Task);      $this->CheckObjects[]=$v;    }        Function CheckObjects(Array $l)    {      ForEach($l As $i)        $this->CheckObject($i);    }    Function _CheckFile($v)    {          $this->Exec('if not exist "'.$v->GetFullPath().'" echo [Error] Can`t find file "'.$v->GetLocalPath().'" && exit /b');    }        Function CheckFile($v)    {      $this->CheckObject($v);      if(false)        Echo $v->GetMD5(), ' ', $v->GetLocalPath(), "\n";      if(!$v->IsNoSearch())        $this->_CheckFile($v);    }        Function CheckResultFile($v, $bAddTask=true)    {     #$v->ShouldBeExists();      $v->InvalidateCache(); // TODO: On finih task      $this->_CheckFile($v);      $this->CheckResult[]=$v;      if($bAddTask)        $v->AddTask($this);    }        Function CheckFiles($l)    {      ForEach($l As $i)        $this->CheckFile($i);    }    Function _GetTaskHash(Array &$Res)    {      Parent::_GetTaskHash($Res);      $Res[]=$this->List;    }        Function SaveCallTo($File)    {      $File.='.bat';      CreatePath(DirName($File));      File_Put_Contents($File, $this->ToString());      $this->List=[];      $this->Exec('call "'.$File.'"');      return $File;    }        Function ToString($Separator="\r\n")    {      return Implode($Separator, $this->List);    }        Function Refuse()    {      $this->List         =[];      $this->CheckObjects =[];      $this->CheckResult  =[];      $this->MkDir        =[];    }        Function Finish()    {    }  };  $DebM=$Loader->Get_Singleton('/Debug/Manager');  $DebM->AddNoInlineClass('C_Builder_Task_Exec');?>
+<?
+  $Loader->Parent_Class('/Builder/Task/Base');
+  
+  class C_Builder_Task_Exec extends C_Builder_Task_Base
+  {
+    Var $Descr=[];
+    Var $List=[];
+    static $LabelIdx=0;
+    
+    function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      if(IsSet($Args['Asset']))
+        $this->Asset=$Args['Asset'];
+    }
+    
+    Function AllocLabelIdx() { return Self::$LabelIdx++; }
+    
+    Function Descr() // VarArgs
+    {
+      $this->Descr=Implode(func_get_args());
+      $this->Exec('');
+      $this->Exec('');
+      ForEach(Explode("\n", $this->Descr) As $Line)
+        $this->Exec('Echo [Log] '.$Line);
+      $this->Exec('');
+    }
+    
+    Function Exec($Cmd, $Args=null)
+    {
+      if($Args!==null)
+      {
+        $Args->Prepare($this, $Cmd);
+        $_Args=$Args->ToString();
+      }
+      else
+        $_Args='';
+      if(StrLen(Trim($_Args))>0)
+        $_Args=' '.$_Args;
+      $Res=$Cmd.$_Args;
+      $this->List[]=$Res;
+    //TODO: $Args->CheckObjects
+    //TODO: $Args->CheckResult
+      if($Args!==null)
+      {
+        $this->Exec('if errorlevel 1 echo Error && exit /b');
+        $this->Exec('');
+      }
+      return $Res;
+    }
+
+    Var $CheckObjects =[];
+    Var $CheckResult  =[];
+    Var $MkDir=[];
+    
+    Function MkDir($v)
+    {
+      if(Is_Object($v))
+      {
+        $v->MkDir();
+        $v=$v->GetDirFullPath();
+      }
+
+      $v=StrTr($v, '\\', '/');
+      if(IsSet($this->MkDir[$v]))
+        return;
+      $this->Exec('MkDir "'.$v.'" 2>nul');
+      CreatePath($v);
+      $this->MkDir[$v]=true;
+    }
+    
+    Function Copy($From, $To)
+    {
+      $F= StrTr($From ->GetFullPath(), '/', '\\');
+      $T= StrTr($To   ->GetFullPath(), '/', '\\');
+      $this->Exec('if not exist "'.$T.'" copy "'.$F.'" "'.$T.'"');
+      $this->Exec('xcopy "'.$F.'" "'.$T.'" /YDI');
+    }
+    
+    Function CheckObject($v)
+    {  // TODO: It't disabled for late binding in GetMakeTasks
+    //if(IsSet($v->Tasks))
+    //  ForEach($v->Tasks As $Task)
+    //    $this->Depends($Task);
+      $this->CheckObjects[]=$v;
+    }
+    
+    Function CheckObjects(Array $l)
+    {
+      ForEach($l As $i)
+        $this->CheckObject($i);
+    }
+
+    Function _CheckFile($v)
+    {    
+      $this->Exec('if not exist "'.$v->GetFullPath().'" echo [Error] Can`t find file "'.$v->GetLocalPath().'" && exit /b');
+    }
+    
+    Function CheckFile($v)
+    {
+      $this->CheckObject($v);
+      if(false)
+        Echo $v->GetMD5(), ' ', $v->GetLocalPath(), "\n";
+      if(!$v->IsNoSearch())
+        $this->_CheckFile($v);
+    }
+    
+    Function CheckResultFile($v, $bAddTask=true)
+    {
+     #$v->ShouldBeExists();
+      $v->InvalidateCache(); // TODO: On finih task
+      $this->_CheckFile($v);
+      $this->CheckResult[]=$v;
+      if($bAddTask)
+        $v->AddTask($this);
+    }
+    
+    Function CheckFiles($l)
+    {
+      ForEach($l As $i)
+        $this->CheckFile($i);
+    }
+
+    Function _GetTaskHash(Array &$Res)
+    {
+      Parent::_GetTaskHash($Res);
+      $Res[]=$this->List;
+    }
+    
+    Function SaveCallTo($File)
+    {
+      $File.='.bat';
+      CreatePath(DirName($File));
+      File_Put_Contents($File, $this->ToString());
+      $this->List=[];
+      $this->Exec('call "'.$File.'"');
+      return $File;
+    }
+    
+    Function ToString($Separator="\r\n")
+    {
+      return Implode($Separator, $this->List);
+    }
+    
+    Function Refuse()
+    {
+      $this->List         =[];
+      $this->CheckObjects =[];
+      $this->CheckResult  =[];
+      $this->MkDir        =[];
+    }
+    
+    Function Finish()
+    {
+    }
+  };
+
+  $DebM=$Loader->Get_Singleton('/Debug/Manager');
+  $DebM->AddNoInlineClass('C_Builder_Task_Exec');
+?>

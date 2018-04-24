@@ -1,1 +1,10 @@
-<?  class C_Builder_Compiler_CPP_GCC_Find  {    function Find()    {      $Results=[];      return $Results;    }  }?>
+<?
+  class C_Builder_Compiler_CPP_GCC_Find
+  {
+    function Find()
+    {
+      $Results=[];
+      return $Results;
+    }
+  }
+?>

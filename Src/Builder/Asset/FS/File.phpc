@@ -1,1 +1,89 @@
-<?  $Loader->Load_Lib('/FS/Utils');  $Loader->Parent_Class('/Builder/Asset/FS/PathBase');  class C_Builder_Asset_FS_File extends C_Builder_Asset_FS_PathBase  {    Final Function GetFileName()    {      return BaseName($this->GetFullPath());    }        Function GetDirFullPath()    {      return DirName($this->GetFullPath());    }    Function GetFileExt() // TODO: Num    {      $Res=$this->GetLocalPath();      $Pos1 = StrRPos($Res, '/');      $Pos2 = StrRPos($Res, '.');      if($Pos2===false || $Pos1!=false && $Pos1>$Pos2)        return '';      return SubStr($Res, $Pos2+1);    //return FilePath_GetFileNick($this->GetLocalPath());    }        Function GetLocalPathNick()    {      $Res=$this->GetLocalPath();      $Pos1 = StrRPos($Res, '/');      $Pos2 = StrRPos($Res, '.');      if($Pos2===false || $Pos1!=false && $Pos1>$Pos2)        $Pos2=StrLen($Res);      return SubStr($Res, 0, $Pos2);    //return FilePath_GetFileNick($this->GetLocalPath());    }        Function GetFullPathNick()    {      $Res=$this->GetFullPath();      $Pos1 = StrRPos($Res, '/');      $Pos2 = StrRPos($Res, '.');      if($Pos2===false || $Pos1!=false && $Pos1>$Pos2)        $Pos2=StrLen($Res);      return SubStr($Res, 0, $Pos2);    //return FilePath_GetFileNick($this->GetLocalPath());    }        Function GetFileNick()    {      return FilePath_GetFileNick($this->GetLocalPath());    }    Protected Function _IsFile() { return true; }        Function GetMD5()    {      $Cache=$this->GetMD5Cache();      return $Cache->CalcMD5($this->GetFullPath());    }        Function GetDirAndNick()    {      if($this->Parent)        return [          $this->Parent->GetFullPath(),          $this->GetLocalPathNick(),        ];      return [        $this->GetDirFullPath(),        $this->GetFileNick(),      ];    }        Function GetDirAndName()    {      if($this->Parent)        return [          $this->Parent->GetFullPath(),          $this->GetLocalPath(),        ];      return [        $this->GetDirFullPath(),        $this->GetFileName(),      ];    }  };?>
+<?
+  $Loader->Load_Lib('/FS/Utils');
+  $Loader->Parent_Class('/Builder/Asset/FS/PathBase');
+
+  class C_Builder_Asset_FS_File extends C_Builder_Asset_FS_PathBase
+  {
+    Final Function GetFileName()
+    {
+      return BaseName($this->GetFullPath());
+    }
+    
+    Function GetDirFullPath()
+    {
+      return DirName($this->GetFullPath());
+    }
+
+    Function GetFileExt() // TODO: Num
+    {
+      $Res=$this->GetLocalPath();
+      $Pos1 = StrRPos($Res, '/');
+      $Pos2 = StrRPos($Res, '.');
+      if($Pos2===false || $Pos1!=false && $Pos1>$Pos2)
+        return '';
+      return SubStr($Res, $Pos2+1);
+    //return FilePath_GetFileNick($this->GetLocalPath());
+    }
+    
+    Function GetLocalPathNick()
+    {
+      $Res=$this->GetLocalPath();
+      $Pos1 = StrRPos($Res, '/');
+      $Pos2 = StrRPos($Res, '.');
+      if($Pos2===false || $Pos1!=false && $Pos1>$Pos2)
+        $Pos2=StrLen($Res);
+      return SubStr($Res, 0, $Pos2);
+    //return FilePath_GetFileNick($this->GetLocalPath());
+    }
+    
+    Function GetFullPathNick()
+    {
+      $Res=$this->GetFullPath();
+      $Pos1 = StrRPos($Res, '/');
+      $Pos2 = StrRPos($Res, '.');
+      if($Pos2===false || $Pos1!=false && $Pos1>$Pos2)
+        $Pos2=StrLen($Res);
+      return SubStr($Res, 0, $Pos2);
+    //return FilePath_GetFileNick($this->GetLocalPath());
+    }
+    
+    Function GetFileNick()
+    {
+      return FilePath_GetFileNick($this->GetLocalPath());
+    }
+
+    Protected Function _IsFile() { return true; }
+    
+    Function GetMD5()
+    {
+      $Cache=$this->GetMD5Cache();
+      return $Cache->CalcMD5($this->GetFullPath());
+    }
+    
+    Function GetDirAndNick()
+    {
+      if($this->Parent)
+        return [
+          $this->Parent->GetFullPath(),
+          $this->GetLocalPathNick(),
+        ];
+      return [
+        $this->GetDirFullPath(),
+        $this->GetFileNick(),
+      ];
+    }
+    
+    Function GetDirAndName()
+    {
+      if($this->Parent)
+        return [
+          $this->Parent->GetFullPath(),
+          $this->GetLocalPath(),
+        ];
+      return [
+        $this->GetDirFullPath(),
+        $this->GetFileName(),
+      ];
+    }
+  };
+?>

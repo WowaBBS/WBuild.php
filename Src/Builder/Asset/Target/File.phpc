@@ -1,1 +1,16 @@
-<?  $Loader->Parent_Class('/Builder/Asset/FS/File');  class C_Builder_Asset_Target_File extends C_Builder_Asset_FS_File  {    Protected Function _Init(Array $Args)    {      Parent::_Init($Args);    }        Protected Function _GetSearchPathClass()    {      return ['Target/Dir'];    }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  class C_Builder_Asset_Target_File extends C_Builder_Asset_FS_File
+  {
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+    }
+    
+    Protected Function _GetSearchPathClass()
+    {
+      return ['Target/Dir'];
+    }
+  };
+?>

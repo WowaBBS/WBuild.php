@@ -1,1 +1,11 @@
-<?  $Loader->Parent_Class('/Builder/Asset/Inline');    class C_Builder_Asset_Rem extends C_Builder_Asset_Inline  {    STatic Function _ParseParams($Args)    {      return [];     }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/Inline');
+  
+  class C_Builder_Asset_Rem extends C_Builder_Asset_Inline
+  {
+    STatic Function _ParseParams($Args)
+    {
+      return []; 
+    }
+  };
+?>

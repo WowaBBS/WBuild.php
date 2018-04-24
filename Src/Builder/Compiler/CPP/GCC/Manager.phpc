@@ -1,1 +1,8 @@
-<?  $Loader->Load_Lib('/FS/Utils');  $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Manager');   class C_Builder_Compiler_CPP_GCC_Manager extends C_Builder_Compiler_CPP_Base_Manager  {  }?>
+<?
+  $Loader->Load_Lib('/FS/Utils');
+  $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Manager');
+ 
+  class C_Builder_Compiler_CPP_GCC_Manager extends C_Builder_Compiler_CPP_Base_Manager
+  {
+  }
+?>

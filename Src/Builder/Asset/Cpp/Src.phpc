@@ -1,1 +1,32 @@
-<?  $Loader->Parent_Class('/Builder/Asset/FS/File');  class C_Builder_Asset_Cpp_Src extends C_Builder_Asset_FS_File  {    Var $FileDepends=[];        Protected Function _GetSearchPathClass()    {      return ['Cpp/SrcPath', 'Cpp/Include'];    }        Function IsCompatible(C_Builder_Asset_Cpp_Src $Asset)    {      if($this->GetFileExt()!==$Asset->GetFileExt()) return false;      return True; // TODO: Check include libs and orther setups;    }        Function SetUnityBuild($Assets)    {      $this->bIsUnityBuild=true;      $Res=[];      ForEach($Assets As $Asset)        $Res[]='#include "'.$Asset->GetFullPath().'"';      $Res=Implode("\n", $Res);      $this->MkDir();      File_Put_Contents($this->GetFullPath(), $Res);    }        Function IsUnityBuild() { return $this->bIsUnityBuild??false; }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  class C_Builder_Asset_Cpp_Src extends C_Builder_Asset_FS_File
+  {
+    Var $FileDepends=[];
+    
+    Protected Function _GetSearchPathClass()
+    {
+      return ['Cpp/SrcPath', 'Cpp/Include'];
+    }
+    
+    Function IsCompatible(C_Builder_Asset_Cpp_Src $Asset)
+    {
+      if($this->GetFileExt()!==$Asset->GetFileExt()) return false;
+      return True; // TODO: Check include libs and orther setups;
+    }
+    
+    Function SetUnityBuild($Assets)
+    {
+      $this->bIsUnityBuild=true;
+      $Res=[];
+      ForEach($Assets As $Asset)
+        $Res[]='#include "'.$Asset->GetFullPath().'"';
+      $Res=Implode("\n", $Res);
+      $this->MkDir();
+      File_Put_Contents($this->GetFullPath(), $Res);
+    }
+    
+    Function IsUnityBuild() { return $this->bIsUnityBuild??false; }
+  };
+?>

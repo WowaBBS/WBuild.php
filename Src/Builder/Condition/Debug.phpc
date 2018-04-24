@@ -1,1 +1,11 @@
-<?  $Loader->Parent_Class('/Builder/Condition/Base');    class C_Builder_Condition_Debug extends C_Builder_Condition_Base  {    function CheckAsset($Asset, $Args)    {      return $Asset->IsDebug();    }  }?>
+<?
+  $Loader->Parent_Class('/Builder/Condition/Base');
+  
+  class C_Builder_Condition_Debug extends C_Builder_Condition_Base
+  {
+    function CheckAsset($Asset, $Args)
+    {
+      return $Asset->IsDebug();
+    }
+  }
+?>

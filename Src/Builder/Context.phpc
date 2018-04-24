@@ -1,1 +1,52 @@
-<?  $Loader->Parent_Class('/Object');    class C_Builder_Context extends C_Object  {  //Var $Private =false;  //Var $Debug   =false;  //Var $Release =false;  //Var $Static  =false;  //Var $Full    =false;        Var $Manager ;  //Var $Modules ;      Var $Assets  ;    Var $Config  ;    Private $ContextId ;        Private Function _GetContextId()    {      return [        'Assets' => $this->Assets ,        'Config' => $this->Config->GetContextId(),      ];    }     Function GetContextId()    {      return $this->ContextId;    }     Protected Function _Init(Array $Args)    {      parent::_Init($Args);      $this->Assets=$Args['Assets']?? [];      $this->Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);      $this->Manager=$Args['Manager'];    //$this->Modules=$Args['Modules'];      $this->ContextId=$this->_GetContextId();    }    Function IsDebug()    {      return $this->Config->Value['Debug'];    }    Function IsStatic()    {      return $this->Config->Value['Static'];    }  }?>
+<?
+  $Loader->Parent_Class('/Object');
+  
+  class C_Builder_Context extends C_Object
+  {
+  //Var $Private =false;
+  //Var $Debug   =false;
+  //Var $Release =false;
+  //Var $Static  =false;
+  //Var $Full    =false;
+    
+    Var $Manager ;
+  //Var $Modules ;
+  
+    Var $Assets  ;
+    Var $Config  ;
+    Private $ContextId ;
+    
+    Private Function _GetContextId()
+    {
+      return [
+        'Assets' => $this->Assets ,
+        'Config' => $this->Config->GetContextId(),
+      ];
+    }
+ 
+    Function GetContextId()
+    {
+      return $this->ContextId;
+    }
+ 
+    Protected Function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      $this->Assets=$Args['Assets']?? [];
+      $this->Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);
+      $this->Manager=$Args['Manager'];
+    //$this->Modules=$Args['Modules'];
+      $this->ContextId=$this->_GetContextId();
+    }
+
+    Function IsDebug()
+    {
+      return $this->Config->Value['Debug'];
+    }
+
+    Function IsStatic()
+    {
+      return $this->Config->Value['Static'];
+    }
+  }
+?>

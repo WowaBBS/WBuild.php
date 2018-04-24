@@ -1,1 +1,7 @@
-<?  $Loader->Parent_Class('/Builder/Condition/List');    class C_Builder_Condition_And extends C_Builder_Condition_List  {  }?>
+<?
+  $Loader->Parent_Class('/Builder/Condition/List');
+  
+  class C_Builder_Condition_And extends C_Builder_Condition_List
+  {
+  }
+?>

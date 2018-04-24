@@ -1,1 +1,9 @@
-<?  Include '../../../Using.php';    $ResGen=$Loader->Create_Object('/Builder/Program/WinSDK/ResGen');//$List=$ResGen::_Search();//Var_Dump($List);  echo $ResGen->Get();  $ResGen->Done();?>
+<?
+  Include '../../../Using.php';
+  
+  $ResGen=$Loader->Create_Object('/Builder/Program/WinSDK/ResGen');
+//$List=$ResGen::_Search();
+//Var_Dump($List);
+  echo $ResGen->Get();
+  $ResGen->Done();
+?>

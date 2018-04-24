@@ -1,1 +1,39 @@
-<?  $Loader->Parent_Class('/Builder/Asset/FS/File');  // TODO:  class C_Builder_Asset_Exec_Cmd extends C_Builder_Asset_FS_File  {    Var $bAsTask =false;    Var $File    =false;      Static Function _CustomParams()    {      $Res=Parent::_CustomParams();      $Res[]='>AsTask';      return $Res;    }        Protected Function _Init(Array $Args)    {      $this->bAsTask =$Args['>AsTask']??false;      Parent::_Init($Args);      if(!$this->bAsTask)        PassThru($this->GetFullPath());      else      {        $Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;        $EnumCache=$this->GetModuleInstance()->EnumCache;        [$Dir, $Name]=$this->GetDirAndNick();        $Num=$EnumCache->AllocNum($Dir, 'Cmd', ['Pad'=>1]);        $Nick=$Num.'/'.$Name;        $OutPath=$Compiler->CreateOutPath($this);        $Exec=$this->CreateExec([$OutPath, $Nick]);        $Exec->Exec('call "'.$this->GetFullPath().'"');        $this->AddTask($Exec);      }    }  };?>
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  // TODO:
+  class C_Builder_Asset_Exec_Cmd extends C_Builder_Asset_FS_File
+  {
+    Var $bAsTask =false;
+    Var $File    =false;
+  
+    Static Function _CustomParams()
+    {
+      $Res=Parent::_CustomParams();
+      $Res[]='>AsTask';
+      return $Res;
+    }
+    
+    Protected Function _Init(Array $Args)
+    {
+      $this->bAsTask =$Args['>AsTask']??false;
+      Parent::_Init($Args);
+
+      if(!$this->bAsTask)
+        PassThru($this->GetFullPath());
+      else
+      {
+        $Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;
+        $EnumCache=$this->GetModuleInstance()->EnumCache;
+        [$Dir, $Name]=$this->GetDirAndNick();
+        $Num=$EnumCache->AllocNum($Dir, 'Cmd', ['Pad'=>1]);
+        $Nick=$Num.'/'.$Name;
+        $OutPath=$Compiler->CreateOutPath($this);
+
+        $Exec=$this->CreateExec([$OutPath, $Nick]);
+        $Exec->Exec('call "'.$this->GetFullPath().'"');
+        $this->AddTask($Exec);
+      }
+    }
+  };
+?>
