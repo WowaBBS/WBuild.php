@@ -36,7 +36,7 @@
     //['Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat'    ,'?'     ,'?'     ,],
     ];
     
-    Function GetVersion() { return 3; }
+    Function GetVersion() { return 4; }
   
     function Detect($Vars)
     {
@@ -46,17 +46,19 @@
     //$MapInfo =$Vars['MapInfo'];
       $Path=$Check->FullPath.'/Check/';
       
-      $PathBat  =$Path.'';
-      $PathObj  =$Path.'obj/';
-      $PathExe  =$Path.'bin/';
-      $PathTmp  =$Path.'tmp/';
-      $PathInfo =$Path.'Info/';
+      $PathBat  =$Path.''        ;
+      $PathObj  =$Path.'obj/'    ;
+      $PathExe  =$Path.'bin/'    ;
+      $PathTmp  =$Path.'tmp/'    ;
+      $PathInfo =$Path.'Info/'   ;
+      $PathVc   =$Check->FullPath.'/VcVars/' ;
       
       CreatePath($PathBat  );
       CreatePath($PathObj  );
       CreatePath($PathExe  );
       CreatePath($PathTmp  );
       CreatePath($PathInfo );
+      CreatePath($PathVc   );
       
     //$FileSrc='../test.c';
       $FileSrc=$this->Loader->_Find_Lib('/Builder/Compiler/CPP/VC/Test.c');
@@ -64,6 +66,8 @@
       $CurrEnv=$this->Create_Object('/System/Env');
       $CurrEnv->LoadCurrent();
       $ItemEnv=$this->Create_Object('/System/Env');
+      File_Put_Contents($PathVc.'BaseEnv.bat', $CurrEnv->ToCmd());
+      
       $Res=[];
       foreach($this->List as $k=>$Item)
       {
@@ -74,10 +78,11 @@
           echo 'Load ', $VcFile, "\n";
           $k=$Check->AllocNum($VcFile, '', ['Pad'=>2]);
           
-          $FileBat  =$PathBat.$k.'.bat' ;
-          $FileObj  =$PathObj.$k.'.o'   ;
-          $FileExe  =$PathExe.$k.'.exe' ;
-          $FileEnv  =$PathTmp.$k.'.env' ;
+          $FileBat  =$PathBat .$k.'.bat' ;
+          $FileObj  =$PathObj .$k.'.o'   ;
+          $FileExe  =$PathExe .$k.'.exe' ;
+          $FileEnv  =$PathTmp .$k.'.env' ;
+          $FileVc   =$PathVc  .$k.'.VcVars.bat' ;
           
         //echo '>',$File,"\n";
           $Cmd=[
@@ -113,9 +118,21 @@
           // Begin Env
           $ItemEnv->Clear();
           $ItemEnv->LoadFile($FileEnv);
-          unlink($FileEnv);
+        //unlink($FileEnv);
           $CurrEnv->LoadCurrent();
           $ItemEnv->Minus($CurrEnv);
+          // TODO:
+          $Removes=[
+            '__VSCMD_PREINIT_PATH'    ,
+            '__VSCMD_PREINIT_INCLUDE' ,
+            '__VSCMD_PREINIT_LIB'     ,
+            '__VSCMD_PREINIT_LIBPATH' ,
+            '__VSCMD_PREINIT_VS150COMNTOOLS' ,
+            '__VSCMD_PREINIT_VCToolsVersion' ,
+          ];
+          ForEach($Removes As $Remove)
+            $ItemEnv->Remove($Remove);
+          File_Put_Contents($FileVc, $ItemEnv->ToCmd());
           // End Env
           
           if(!File_Exists($FileObj))
@@ -131,22 +148,23 @@
           $Info=[
             'From'   =>$Vars['Info'],
             'PreDef' =>$PreDef,
-            'Env'    =>$ItemEnv->Map,
+            'Env'    =>$ItemEnv->GetMap(),
           ];
           
         //$MapInfo->Set($VcFile, '', $Info);
           $ST=$Check->GetStorage($k)->SetVars($Info);
         //echo 'SaveInfo ',$ST->FullPath,"\n";
           $Res[$VcFile]=[
-            'VcVars'      =>$VcFile,
+            'VcVarsOrig'  =>$VcFile,
+            'VcVars'      =>$FileVc,
             'CompilerCPU' =>$Item[1],
             'CPU'         =>$Item[2],
             'VcVer'       =>(Int)$PreDef['_MSC_VER'],
             'VcFullVer'   =>(Int)$PreDef['_MSC_FULL_VER'],
             'Win'         =>($PreDef['_WIN32']??0)==='1',
-            'Includes'    =>$ItemEnv->Map['INCLUDE' ],
-            'Lib'         =>$ItemEnv->Map['LIB'     ],
-            'LibPath'     =>$ItemEnv->Map['LIBPATH' ],
+            'Includes'    =>$ItemEnv->INCLUDE ->ToArray(),
+            'Lib'         =>$ItemEnv->LIB     ->ToArray(),
+            'LibPath'     =>$ItemEnv->LIBPATH ->ToArray(),
             'Tools'       =>$Tools,
           ];
         //break; // TODO: Remove
