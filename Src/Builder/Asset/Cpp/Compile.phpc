@@ -61,6 +61,7 @@
         'Outer'     =>$Outer     ,
         'Compiler'  =>$Compiler  ,
         'EnumCache' =>$EnumCache ,
+        'OutPath'   =>$OutPath   ,
       ]);
 
       $PathObjAsset->RemoveFromOuter();

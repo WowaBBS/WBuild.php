@@ -1,0 +1,86 @@
+<?
+  Require_Once 'Using.php';
+  
+  if(!IsSet($MainTarget )) $MainTarget ='UnTarget';
+  if(!IsSet($OutTasks   )) $OutTasks   ='Un_tasks.bat';
+  if(!IsSet($Modules    )) $Modules    ='Un./';
+  if(!IsSet($Op         )) $Op         ='Build';
+  $Mode=0;
+  ForEach($argv as $k=>$Arg)
+    switch($Mode)
+    {
+    case 0:
+      Switch($Arg)
+      {
+      case '/target'  : $Mode=1; break;
+      case '-target'  : $Mode=1; break;
+      case '/tasks'   : $Mode=2; break;
+      case '-tasks'   : $Mode=2; break;
+      case '/modules' : $Mode=3; break;
+      case '-modules' : $Mode=3; break;
+      case '/op'      : $Mode=4; break;
+      case '-op'      : $Mode=4; break;
+      default:
+        if($k)
+        echo 'Arg ', $Arg, ' is unsupported',"\n";
+      }
+      break;
+    case 1: $MainTarget =$Arg; $Mode=0;  break;
+    case 2: $OutTasks   =$Arg; $Mode=0;  break;
+    case 3: $Modules    =$Arg; $Mode=0;  break;
+    case 4: $Op         =$Arg; $Mode=0;  break;
+    }
+    
+  switch($Op)
+  {
+  case 'Build'   : $bBuild=true;               Break;
+  case 'ReBuild' : $bBuild=true; $bClean=true; Break;
+  case 'Clean'   :               $bClean=true; Break;
+  default:
+    echo '[Error] Not allowed operator (-op) ',$Op,"\n";
+    echo '  Allowed operators:',"\n";
+    echo '   -o Build',"\n";
+    echo '   -o ReBuild',"\n";
+    echo '   -o Clean',"\n";
+  }
+  
+//var_dump($argv);
+//return;
+ 
+  $Manager=$Loader->Create_Object('/Builder/Manager', ['Modules'=>[$Modules]]);
+  if(!IsSet($Args))
+  $Args=[
+  //'Config'=>['Win32', 'VC'=>-2015, 'Debug'],
+    'Assets'=>[
+      //['Asset/Include', './Target/Options.Debug.php'],    
+    ],
+  ];
+  $Context=$Manager->Create_Context($Args);
+  $Module=$Manager->Modules->Get($MainTarget);
+  if(!$Module)
+  {
+    echo '[Error] Module '.$MainTarget." not found\n";
+    return;
+  }
+  $Instance=$Module->CreateInstance($Context);
+
+  $Tasks=$Instance->Make();
+  if($Op==='BuildTasks')
+  {
+    $ResTasks=[];
+    ForEach($Tasks As $k=>$v)
+      $ResTasks=Array_Merge($ResTasks, $v->List);
+    $OutTasks=$Loader->Get_Singleton('/Debug/Manager')->Get($OutTasks);
+    $ResTasks=Implode("\r\n", $ResTasks);
+    $OutTasks->Write($ResTasks);
+  }
+  elseif($Op==='Build')
+  {
+    $Manager=$Loader->Create_Object('/Builder/Task/Manager');
+    ForEach($Tasks As $k=>$v)
+      $Manager->_Add($v);
+    ForEach($Tasks As $k=>$v)
+      $v->Execute();
+  }
+  $Manager->Done();
+?>

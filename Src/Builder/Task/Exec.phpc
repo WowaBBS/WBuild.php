@@ -156,16 +156,33 @@
     Function Finish()
     {
     }
+    
+    Protected Function CheckInfo()
+    {
+      $Res=[];
+      ForEach($this->CheckObjects As $i)
+        $Res[$i->GetFullPath()]=$i->GetMD5();
+      ForEach($this->CheckResult As $i)
+        $Res[$i->GetFullPath()]=$i->GetMD5();
+      return $Res;
+    }
 
     Protected Function _Execute()
     {
       $Exec=$this->Create_Object('/System/Exec');
       $Exec->Env=$_SERVER;
       
+      $Cache=$this->Asset->GetManager()->Cache;
+      $Storage=$Cache->GetStorage($this->CachePath.'.check');
+      $CheckVars=$Storage->GetVars();
+      if($CheckVars)
+      {
+        $CheckInfo=$this->CheckInfo();
+        if($CheckVars===$CheckInfo)
+          return true;
+      }
     //$Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;
     //$Exec->Env['VcVars']=$Compiler->VCVars;
-  //Var $CheckObjects =[];
-  //Var $CheckResult  =[];
       
       ForEach($this->List As $Item)
       {
@@ -173,6 +190,12 @@
         $Exec->Execute();
       }
       $Exec->Done();
+      
+      $CheckInfo=$this->CheckInfo();
+    //$this->Debug($CheckInfo);
+      $Storage->SetVars($CheckInfo);
+      $this->Debug($Storage->FullPath);
+      $Storage->Done();
     
       return true;
     }
