@@ -68,12 +68,12 @@
     Function Exec_Rc      ($Exec, $Params) { return $Exec->Exec('rc'      ,$Params); }
     Function Exec_Mt      ($Exec, $Params) { return $Exec->Exec('mt'      ,$Params); }
     
-    Function GetPchFile    ($Name) { return $Name.'.pch'; }
-    Function GetObjFile    ($Name) { return $Name.'.obj'; }
-    Function GetExeFile    ($Name) { return $Name.'.exe'; } // TODO: 
-    Function GetDllFile    ($Name, $bDebug=false) { return $Name.($bDebug? '_d.dll'     :'.dll'     ); } // '.so'
-    Function GetDllLibFile ($Name, $bDebug=false) { return $Name.($bDebug? '_d.dll.lib' :'.dll.lib' ); }
-    Function GetLibFile    ($Name, $bDebug=false) { return $Name.($bDebug? '_d.lib'     :'.lib'     ); }
+    Function GetPchFile    ($Name) { return $Name.'.pch'     ; }
+    Function GetObjFile    ($Name) { return $Name.'.obj'     ; }
+    Function GetExeFile    ($Name) { return $Name.'.exe'     ; } // TODO:
+    Function GetDllFile    ($Name) { return $Name.'.dll'     ; } // '.so'
+    Function GetDllLibFile ($Name) { return $Name.'.dll.lib' ; }
+    Function GetLibFile    ($Name) { return $Name.'.lib'     ; }
     
     Function DefineDLLExport () { return '__declspec(dllexport)'; }
     Function DefineDLLImport () { return '__declspec(dllimport)'; }

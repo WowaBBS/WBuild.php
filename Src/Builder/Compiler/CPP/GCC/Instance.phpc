@@ -15,12 +15,12 @@
     {
     }
 
-    Function GetPchFile    ($Name) { return $Name.'.gch'; }
-    Function GetObjFile    ($Name) { return $Name.'.o'  ; }
-    Function GetExeFile    ($Name) { return $Name.'.exe'; } // TODO: 
-    Function GetDllFile    ($Name, $bDebug=false) { return      .$Name.($bDebug? '_d.dll' :'.dll' ); } // '.so'
-    Function GetDllLibFile ($Name, $bDebug=false) { return 'lib'.$Name.($bDebug? '_d.a'   :'.a'   ); }
-    Function GetLibFile    ($Name, $bDebug=false) { return       $Name.($bDebug? '_d.a'   :'.a'   ); }
+    Function GetPchFile    ($Name) { return       $Name.'.gch' ; }
+    Function GetObjFile    ($Name) { return       $Name.'.o'   ; }
+    Function GetExeFile    ($Name) { return       $Name.'.exe' ; }
+    Function GetDllFile    ($Name) { return      .$Name.'.dll' ; } // '.so'
+    Function GetDllLibFile ($Name) { return 'lib'.$Name.'.a'   ; }
+    Function GetLibFile    ($Name) { return       $Name.'.a'   ; }
 
     Function DefineDLLExport () { return '__attribute__((visibility("default")))'; }
     Function DefineDLLImport () { return ''; } // __attribute__((visibility("hidden")))

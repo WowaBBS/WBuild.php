@@ -11,6 +11,7 @@
       // $Mode==3 -- Compile and generate DLL if avalible
       $Mode=$Outer->IsStatic()? 2:3; // TODO: Customization
       $bDebug=$Outer->IsDebug();
+      $_d=$bDebug? '_d':'';
       $OutPath=$Param['OutPath'];
       
       $DLL=IsSet($Param['DLL'])? $Param['DLL']:'';
@@ -73,8 +74,8 @@
             'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'   ),
             'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'   ),
             'Using'     =>$Outer->GetAssets     ('Cpp/Using' ),
-            'DllAsset'  =>$Outer->CreateAsset   ('Bin/Dll'   ,['Path'=>$Compiler->GetDllFile    ($LibName, $bDebug), '>Create'=>1]),
-            'LibAsset'  =>$Outer->CreateAsset   ('Cpp/Lib'   ,['Path'=>$Compiler->GetDllLibFile ($LibName, $bDebug), '>Create'=>1,
+            'DllAsset'  =>$Outer->CreateAsset   ('Bin/Dll'   ,['Path'=>$Compiler->GetDllFile    ($LibName.$_d), '>Create'=>1]),
+            'LibAsset'  =>$Outer->CreateAsset   ('Cpp/Lib'   ,['Path'=>$Compiler->GetDllLibFile ($LibName.$_d), '>Create'=>1,
               '>FileDepends'=>$Param['>FileDepends']??[],
             ]),
             'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
@@ -95,7 +96,7 @@
             'Using'    =>$Outer->GetAssets     ('Cpp/Using' ),
             'Libs'     =>$Outer->GetAssets     ('Cpp/Lib'   ),
             'LibAsset' =>$Outer->CreateAsset   ('Cpp/Lib'  ,[
-              'Path'     =>$Compiler->GetLibFile ($LibName, $bDebug), 
+              'Path'     =>$Compiler->GetLibFile ($LibName.$_d),
               '>Create'=>1,
             ]),
           ]);

@@ -9,6 +9,7 @@
       $bUsing      =$Param['Using'      ]??false;
       $bAllowDebug =$Param['AllowDebug' ]??$bUsing;
       $bDebug=$bAllowDebug && $Outer->IsDebug();
+      $_d=$bDebug? '_d':'';
       
       $LibName=Static::_GetName($Param, $Outer);
       
@@ -19,7 +20,7 @@
       $Libs=$Outer->GetAssets     ('Cpp/Lib');
       
       $DllAsset=$Outer->CreateAsset   ('Bin/Dll', [
-        'Path'=>$Compiler->GetDllFile    ($LibName, $bDebug),
+        'Path'=>$Compiler->GetDllFile    ($LibName.$_d),
         '>FileDepends'=>$Param['>FileDepends']??[],
         '>Create'=>1
       ]);

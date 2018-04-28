@@ -6,6 +6,8 @@
     Static Function Make($Outer, $Compiler, $Param)
     {
       $ExeName=Static::_GetName($Param, $Outer);
+      $bDebug=$Outer->IsDebug();
+      $_d=$bDebug? '_d':'';
 
       $OutPath=$Param['OutPath'];
     
@@ -24,7 +26,7 @@
         'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
         'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
         'ExeAsset'  =>$Outer->CreateAsset   ('Bin/Exe', [
-          'Path'=>$Compiler->GetExeFile($ExeName),
+          'Path'=>$Compiler->GetExeFile($ExeName.$_d),
           '>FileDepends'=>$Param['>FileDepends']??[],
           '>Create'=>1,
         ]),

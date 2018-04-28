@@ -26,9 +26,9 @@
     Function GetPchFile    ($Name) { return $Name.'.PreCompledHeader' ; }
     Function GetObjFile    ($Name) { return $Name.'.Object'           ; }
     Function GetExeFile    ($Name) { return $Name.'.Executable'       ; }
-    Function GetDllFile    ($Name, $bDebug=false) { return $Name.($bDebug? '.Debug.Dynamic'          :'.Dynamic'          ); }
-    Function GetDllLibFile ($Name, $bDebug=false) { return $Name.($bDebug? '.Debug.Dynamic.Liberary' :'.Dynamic.Liberary' ); }
-    Function GetLibFile    ($Name, $bDebug=false) { return $Name.($bDebug? '.Debug.Liberary'         :'.Liberary'         ); }
+    Function GetDllFile    ($Name) { return $Name.'.Dynamic'          ; }
+    Function GetDllLibFile ($Name) { return $Name.'.Dynamic.Liberary' ; }
+    Function GetLibFile    ($Name) { return $Name.'.Liberary'         ; }
     
     Function DefineDLLExport () { return 'Export Of DLL'; }
     Function DefineDLLImport () { return 'Import Of DLL'; }
