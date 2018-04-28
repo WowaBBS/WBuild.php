@@ -215,10 +215,11 @@
     Function ShouldBePrivate ($v) { return $v; }
     Function ShouldBePublic  ($v) { return $v; }
 
-    Function CreateExec(Array $CachePath)
+    Function CreateExec(String $CachePath)
     {
       $Res=$this->Create_Object('/Builder/Task/Exec', ['Asset'=>$this]);
-      $Res->Cache=new TCachePath($CachePath);
+    //$Res->Cache=new TCachePath($CachePath);
+      $Res->CachePath=$CachePath;
       return $Res;
     }
     

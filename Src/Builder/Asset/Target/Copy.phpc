@@ -36,16 +36,14 @@
         $Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance;
         $OutPath=$Compiler->CreateOutPath($Outer);
         
-        $OutPath=[$OutPath, $ResNick];
-        
-        $Exec=$this->CreateExec($OutPath);
+        $Exec=$this->CreateExec($OutPath.'Task/Copy/'.$ResNick);
         
         $Exec->CheckObject($i);
         $Exec->MkDir($Dest);
         $Exec->Copy($i, $Dest);
 
         $Exec->CheckResultFile($Dest);
-        $Exec->SaveCallTo($OutPath[0].'Task/Copy/'.$OutPath[1]);
+        $Exec->SaveCallTo();
         $Exec->Finish();
       }
       

@@ -12,6 +12,7 @@
       parent::_Init($Args);
       if(IsSet($Args['Asset']))
         $this->Asset=$Args['Asset'];
+      $this->List[]='@echo off';
     }
     
     Function AllocLabelIdx() { return Self::$LabelIdx++; }
@@ -127,8 +128,10 @@
       $Res[]=$this->List;
     }
     
-    Function SaveCallTo($File)
+    Function SaveCallTo($File=false)
     {
+      If($File===false)
+        $File=$this->CachePath;
       $File.='.bat';
       CreatePath(DirName($File));
       File_Put_Contents($File, $this->ToString());
@@ -152,6 +155,26 @@
     
     Function Finish()
     {
+    }
+
+    Protected Function _Execute()
+    {
+      $Exec=$this->Create_Object('/System/Exec');
+      $Exec->Env=$_SERVER;
+      
+    //$Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;
+    //$Exec->Env['VcVars']=$Compiler->VCVars;
+  //Var $CheckObjects =[];
+  //Var $CheckResult  =[];
+      
+      ForEach($this->List As $Item)
+      {
+        $Exec->Command=$Item;
+        $Exec->Execute();
+      }
+      $Exec->Done();
+    
+      return true;
     }
   };
 

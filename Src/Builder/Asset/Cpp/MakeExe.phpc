@@ -16,7 +16,7 @@
       $Compiler->BuildExe([
         'Outer'     =>$Outer,
         'Name'      =>$ExeName,
-        'Exec'      =>$Outer->CreateExec([$OutPath, $ExeName]),
+        'Exec'      =>$Outer->CreateExec($OutPath.'Task/Exe/'.$ExeName),
         'Using'     =>$Outer->GetAssets     ('Cpp/Using'     ),
         'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'       ),
         'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'       ),
@@ -28,7 +28,6 @@
           '>FileDepends'=>$Param['>FileDepends']??[],
           '>Create'=>1,
         ]),
-        'OutPath'  =>[$OutPath, $ExeName],
       ]);
 
       $PathExeAsset->RemoveFromOuter();

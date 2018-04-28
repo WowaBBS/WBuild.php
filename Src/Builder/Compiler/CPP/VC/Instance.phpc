@@ -86,7 +86,6 @@
       $Params   =$Args['Params'   ];
       $Exec     =$Args['Exec'     ];
       $Dir      =$Args['Dir'      ]; //$ObjAsset->GetDirFullPath()
-      $OutPath  =$Args['OutPath'  ];
       
       $Params   =clone $Params;
     
@@ -95,7 +94,7 @@
         $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
       
       $Params->Add('/Fo"',$Dir.'/"');
-      $FileParams=$OutPath[0].'Task/Obj/'.$OutPath[1].'.Opt';
+      $FileParams=$Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
       
       $this->Exec_Cl($Exec, $Params);
@@ -106,14 +105,13 @@
       $SrcAsset =$Args['SrcAsset' ];
       $ObjAsset =$Args['ObjAsset' ];
       $Exec     =$Args['Exec'     ];
-      $OutPath  =$Args['OutPath'  ];
       $Params   =$Args['Params'   ];
       
       $Params->Add('-c "' ,$SrcAsset->GetFullPath(),'"');
     //$Params->Add('/Fo:"',$ObjAsset->GetFullPath(),'"');
       $Params->Add('/Fo"' ,$ObjAsset->GetFullPath(),'"');
 
-      $FileParams=$OutPath[0].'Task/Obj/'.$OutPath[1].'.Opt';
+      $FileParams=$Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
       
       $this->Exec_Cl($Exec, $Params);
@@ -212,7 +210,6 @@
       $Exec      =$Args['Exec'     ];
       $RcAsset   =$Args['RcAsset'  ];
       $ResAsset  =$Args['ResAsset' ];
-      $OutPath   =$Args['OutPath'  ];
       $Includes  =$Args['Includes' ];
 
       $Params=$this->CreateParams();
@@ -232,7 +229,6 @@
       $Exec      =$Args['Exec'      ];
       $ResXAsset =$Args['ResXAsset' ];
       $Resources =$Args['Resources' ];
-      $OutPath   =$Args['OutPath'   ];
       $Using     =$Args['Using'     ];
       
       $Params=$this->CreateParams();
@@ -262,7 +258,6 @@
     //$Params    =$Args['Params'    ];
       $Objects   =$Args['Objects'   ];
       $Libs      =$Args['Libs'      ];
-      $OutPath   =$Args['OutPath'   ];
       $ResAsset  =$Args['ResAsset'  ]??[];
       $Resources =$Args['Resources' ]??[];
       $Manifests =$Args['Manifests' ]??[];
@@ -352,7 +347,7 @@
         $OutAsset->AddFileDepends($PdbAsset);
       }
       
-      $FileParams=$OutPath[0].'Task/Link/'.$OutPath[1].'.Opt';
+      $FileParams=$Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
       
       $ExecLink=$this->Exec_Link($Exec, $Params);
@@ -429,7 +424,6 @@
       $Objects  =$Args['Objects'  ];
     //$Libs     =$Args['Libs'     ];
       $LibAsset =$Args['LibAsset' ];
-      $OutPath  =$Args['OutPath'  ];
       
       $Params=$this->CreateParams();
       $Params->Add('/nologo');
@@ -441,7 +435,7 @@
  
       $Params->Add('/OUT:'.$LibAsset->GetFullPath());
 
-      $FileParams=$OutPath[0].'Task/Lib/'.$OutPath[1].'.Opt';
+      $FileParams=$Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
 
       $this->Exec_Lib($Exec, $Params);

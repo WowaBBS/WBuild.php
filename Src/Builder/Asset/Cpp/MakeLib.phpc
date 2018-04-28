@@ -69,7 +69,7 @@
           $Compiler->BuildDll([
             'Outer'     =>$Outer,
             'Name'      =>$LibName,
-            'Exec'      =>$Outer->CreateExec([$OutPath, $LibName]),
+            'Exec'      =>$Outer->CreateExec($OutPath.'Task/Dll/'.$LibName),
             'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'   ),
             'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'   ),
             'Using'     =>$Outer->GetAssets     ('Cpp/Using' ),
@@ -80,7 +80,6 @@
             'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
             'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
             'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
-            'OutPath'   =>[$OutPath, $LibName],
           ]);
           $Outer->CreateAsset('Cpp/Define', $DLL_Import);
   
@@ -91,7 +90,7 @@
         {
           $Compiler->BuildLib([
             'Outer'    =>$Outer,
-            'Exec'     =>$Outer->CreateExec([$OutPath, $LibName]),
+            'Exec'     =>$Outer->CreateExec($OutPath.'Task/Lib/'.$LibName),
             'Objects'  =>$Outer->ExtractAssets ('Cpp/Obj'   ),
             'Using'    =>$Outer->GetAssets     ('Cpp/Using' ),
             'Libs'     =>$Outer->GetAssets     ('Cpp/Lib'   ),
@@ -99,7 +98,6 @@
               'Path'     =>$Compiler->GetLibFile ($LibName, $bDebug), 
               '>Create'=>1,
             ]),
-            'OutPath'  =>[$OutPath, $LibName],
           ]);
         }
         $PathLibAsset->RemoveFromOuter();

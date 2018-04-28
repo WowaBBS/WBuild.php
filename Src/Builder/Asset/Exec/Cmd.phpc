@@ -30,7 +30,7 @@
         $Nick=$Num.'/'.$Name;
         $OutPath=$Compiler->CreateOutPath($this);
 
-        $Exec=$this->CreateExec([$OutPath, $Nick]);
+        $Exec=$this->CreateExec($OutPath.'Task/Exec/'.$Nick);
         $Exec->Exec('call "'.$this->GetFullPath().'"');
         $this->AddTask($Exec);
       }

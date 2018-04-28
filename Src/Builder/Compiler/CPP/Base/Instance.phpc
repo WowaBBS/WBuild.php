@@ -95,7 +95,7 @@
       {
         echo '>>>>>>>>>',"\n";
         ForEach($Items As $Item)
-          echo $Item['OutPath'][1],"\n";
+          echo $Item['Exec']->CachePath,"\n";
         echo '<<<<<<<<<',"\n";
       }
       $c=count($Items);
@@ -122,7 +122,6 @@
           $_Args['Items'   ]=$GItems;
           $_Args['Params'  ]=clone $Params;
           $_Args['Exec'    ]=$First['Exec'     ];
-          $_Args['OutPath' ]=$First['OutPath'  ];
           $_Args['First'   ]=$First;
           $Res[]=$_Args;
           UnSet($GItems); // Fix of big bug
@@ -139,7 +138,7 @@
         echo '>>>>>>>>>',"\n";
         echo 'Dir: ',$Args['Dir'],"\n";
         ForEach($Args['Items'] As $Item)
-          echo $Item['OutPath'][1],'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
+          echo $Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
         echo '<<<<<<<<<',"\n";
       }
       if(IsSet($Args['Dir']))
@@ -186,10 +185,9 @@
       {
         $ObjAsset =$Item['ObjAsset' ];
         $Exec     =$Item['Exec'     ];
-        $OutPath  =$Item['OutPath'  ];
       
         $Exec->CheckResultFile($ObjAsset);
-        $Exec->SaveCallTo($OutPath[0].'Task/Obj/'.$OutPath[1]);
+        $Exec->SaveCallTo();
         $Exec->Finish();
 
         UnSet($ObjAsset );
@@ -210,16 +208,15 @@
       $Includes =$Args['Includes' ];
       $Items    =$Args['Items'    ];
       $Exec     =$Args['Exec'     ];
-      $OutPath  =$Args['OutPath'  ];
 
       if(false)
       {
         echo '>>>>>>>>>',"\n";
         echo 'Dir: ',$Args['Dir'],"\n";
         $Item=$Args['First'];
-        echo $Item['OutPath'][1],'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
+        echo $Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
         ForEach($Args['Items'] As $Item)
-          echo $Item['OutPath'][1],'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
+          echo $Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
         echo '<<<<<<<<<',"\n";
       }
 
@@ -253,7 +250,7 @@
         UnSet($ExExec   );
         UnSet($ObjAsset );
       }
-      $Exec->SaveCallTo($OutPath[0].'Task/Obj/'.$OutPath[1]);
+      $Exec->SaveCallTo();
       $Exec->Finish();
     }
     
@@ -284,7 +281,6 @@
       $Exec      =$Args['Exec'     ];
       $RcAsset   =$Args['RcAsset'  ];
       $ResAsset  =$Args['ResAsset' ];
-      $OutPath   =$Args['OutPath'  ];
       $Includes  =$Args['Includes' ];
 
       $Exec->Descr('Build ',$ResAsset->GetLocalPathNick());
@@ -298,7 +294,7 @@
  
       $Exec->CheckResultFile($ResAsset);
       
-      $Exec->SaveCallTo($OutPath[0].'Task/Rc/'.$OutPath[1]);
+      $Exec->SaveCallTo();
       $Exec->Finish();
     }
     
@@ -308,7 +304,6 @@
       $Using     =$Args['Using'     ];
       $ResXAsset =$Args['ResXAsset' ];
       $Resources =$Args['Resources' ];
-      $OutPath   =$Args['OutPath'   ];
       
       //resgen /useSourcePath /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Core.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Drawing.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Windows.Forms.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Xml.dll" /compile FogTunerControl.resX,Release\FogTuner.FogTunerControl.resources
       $Exec->Descr('Build ',$Resources->GetLocalPathNick());
@@ -320,7 +315,7 @@
 
       $Exec->CheckResultFile($Resources);
       
-      $Exec->SaveCallTo($OutPath[0].'Task/ResX/'.$OutPath[1]);
+      $Exec->SaveCallTo();
       $Exec->Finish();
     }
     
@@ -335,7 +330,6 @@
       $Libs      =$Args['Libs'      ];
       $Using     =$Args['Using'     ];
       $ExeAsset  =$Args['ExeAsset'  ];
-      $OutPath   =$Args['OutPath'   ];
       $ResAsset  =$Args['ResAsset'  ]??[];
       $Resources =$Args['Resources' ]??[];
       $Manifests =$Args['Manifests' ]??[];
@@ -363,7 +357,7 @@
       // TODO: Copy depends dlls
       $Exec->CheckResultFile($ExeAsset);
 
-      $Exec->SaveCallTo($OutPath[0].'Task/Exe/'.$OutPath[1]);
+      $Exec->SaveCallTo();
       $Exec->Finish();
     }
 
@@ -380,7 +374,6 @@
       $Using     =$Args['Using'     ];
       $DllAsset  =$Args['DllAsset'  ];
       $LibAsset  =$Args['LibAsset'  ]??false;
-      $OutPath   =$Args['OutPath'   ];
       $ResAsset  =$Args['ResAsset'  ]??[];
       $Resources =$Args['Resources' ]??[];
       $Manifests =$Args['Manifests' ]??[];
@@ -411,7 +404,7 @@
       if($LibAsset)
         $Exec->CheckResultFile($LibAsset);
       
-      $Exec->SaveCallTo($OutPath[0].'Task/Dll/'.$OutPath[1]);
+      $Exec->SaveCallTo();
       $Exec->Finish();
     }
 
@@ -426,7 +419,6 @@
       $Libs     =$Args['Libs'     ];
       $Using    =$Args['Using'    ];
       $LibAsset =$Args['LibAsset' ];
-      $OutPath  =$Args['OutPath'  ];
       
     //ForEach($Objects As $Item) $LibAsset->AddFileDepends($Item); //TODO: Add 'Bin/Dll' and 'Cpp/Lib'
       ForEach($Libs    As $Item) $LibAsset->AddFileDepends($Item); //'Bin/Dll'
@@ -442,7 +434,7 @@
  
       $this->_BuildLib($Args);
       $Exec->CheckResultFile($LibAsset);
-      $Exec->SaveCallTo($OutPath[0].'Task/Lib/'.$OutPath[1]);
+      $Exec->SaveCallTo();
       $Exec->Finish();
     }
 

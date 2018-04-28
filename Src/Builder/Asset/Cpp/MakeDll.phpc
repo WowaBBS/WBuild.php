@@ -27,7 +27,7 @@
       $Compiler->BuildDll([
         'Outer'     =>$Outer,
         'Name'      =>$LibName,
-        'Exec'      =>$Outer->CreateExec([$OutPath, $LibName]),
+        'Exec'      =>$Outer->CreateExec($OutPath.'Task/Dll/'.$LibName),
         'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'       ),
         'Using'     =>$Outer->GetAssets     ('Cpp/Using'     ),
         'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
@@ -35,7 +35,6 @@
         'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
         'Libs'      =>$Libs,
         'DllAsset'  =>$DllAsset,
-        'OutPath'   =>[$OutPath, $LibName],
       ]);
 
       $PathDllAsset->RemoveFromOuter();

@@ -40,13 +40,12 @@
         $ObjAsset=$Outer->CreateAsset('Cpp/Obj', ['Path'=>$Compiler->GetObjFile($ObjNick), '>Create'=>1]);
        #echo '  ObjNick: ',$ObjNick,"\n";
        #echo '  ObjAsset: ',$ObjAsset->GetFullPath(),"\n";
-        $Exec=$ObjAsset->CreateExec([$OutPath, $ObjNick]);
+        $Exec=$ObjAsset->CreateExec($OutPath.'Task/Obj/'.$ObjNick);
         
         $Items[]=[
           'Exec'     =>$Exec     ,
           'SrcAsset' =>$SrcAsset ,
           'ObjAsset' =>$ObjAsset ,
-          'OutPath'  =>[$OutPath, $ObjNick],
         ];
       }
 
@@ -62,7 +61,6 @@
         'Outer'     =>$Outer     ,
         'Compiler'  =>$Compiler  ,
         'EnumCache' =>$EnumCache ,
-        'OutPath'   =>$OutPath   ,
       ]);
 
       $PathObjAsset->RemoveFromOuter();
