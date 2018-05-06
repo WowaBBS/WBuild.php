@@ -33,12 +33,14 @@
         $EnumCache=$Outer->GetModuleInstance()->EnumCache;
         $Num=$EnumCache->AllocNum($Dir, 'Copy', ['Pad'=>1]);
         $ResNick=$Num.'/'.$Name;
-        $Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance;
-        $OutPath=$Compiler->CreateOutPath($Outer);
+      //$Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance;
+      //$OutPath=$Compiler->CreateOutPath($Outer);
+        $I=$Outer->GetModuleInstance();
+        $OutPath=$I->EnumCache->FullPath;
         
         $Exec=$this->CreateExec($OutPath.'Task/Copy/'.$ResNick);
         
-        $Exec->CheckObject($i);
+        $Exec->CheckInput($i);
         $Exec->MkDir($Dest);
         $Exec->Copy($i, $Dest);
 

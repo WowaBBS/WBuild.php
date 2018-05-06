@@ -166,9 +166,9 @@
         $this->PrepareExec($Exec);
         $Exec->Descr('Compile ',$SrcAsset->GetLocalPathNick());
         
-        $Exec->CheckObjects($Includes);
-       #$Exec->CheckObjects($UsingPath); // TODO:
-        $Exec->CheckObjects($Using);
+        $Exec->CheckInputs($Includes);
+       #$Exec->CheckInputs($UsingPath); // TODO:
+        $Exec->CheckInputs($Using);
         $Exec->CheckFile($SrcAsset);
         $Exec->MkDir($ObjAsset);
         
@@ -221,7 +221,7 @@
       }
 
       $this->PrepareExec($Exec);
-      $Exec->CheckObjects($Includes);
+      $Exec->CheckInputs($Includes);
       $Exec->MkDir($Args['First']['ObjAsset']);
         
       ForEach($Items As $Item)
@@ -284,7 +284,7 @@
       $Includes  =$Args['Includes' ];
 
       $Exec->Descr('Build ',$ResAsset->GetLocalPathNick());
-      $Exec->CheckObjects($Includes);
+      $Exec->CheckInputs($Includes);
       $Exec->CheckFile  ($RcAsset );
       $Exec->MkDir($ResAsset);
       

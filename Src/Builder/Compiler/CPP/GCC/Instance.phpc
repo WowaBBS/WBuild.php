@@ -41,7 +41,8 @@
     //$Params->Add('/nologo');
       
       ForEach($Defines As $Define)
-        $Params->Add('-D ',$Define->GetKeyValue());
+        if(!$Define->IsRemoving())
+          $Params->Add('-D ',$Define->GetKeyValue());
  
       ForEach($Includes As $Include)
         $Params->Add('-I ',$Include->GetFullPath());

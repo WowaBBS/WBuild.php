@@ -15,6 +15,17 @@
     
     Function GetKey() { return $this->GetFullPath(); }
     
+    Function Exists()
+    {
+      return File_Exists($this->GetFullPath());
+    }
+    
+    Function Remove()
+    {
+      if($this->Exists())
+        Unlink($this->GetFullPath());
+    }
+    
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
@@ -269,6 +280,7 @@
 
     Function InvalidateCache()
     {
+      ClearStatCache(true, $this->GetFullPath());
       if($this->Parent)
         $this->Parent->InvalidateCache();
     }

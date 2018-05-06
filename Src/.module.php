@@ -1,1 +1,6 @@
-<?  return [      'Assets'=>[    ],  ];?>
+<?
+  return [  
+    'Assets'=>[
+    ],
+  ];
+?>

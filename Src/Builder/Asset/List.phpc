@@ -15,8 +15,8 @@
       if($Outer=$Args['Outer'])
       {
         $this->List     =$Outer->List     ;
-        $this->Public   =$Outer->Public   ;
-        $this->IsPublic =$Outer->IsPublic ;
+      //$this->Public   =$Outer->Public   ;
+      //$this->IsPublic =$Outer->IsPublic ;
       }
       Parent::_Init($Args);
     }

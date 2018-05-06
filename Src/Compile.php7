@@ -21,7 +21,6 @@
       case '/op'      : $Mode=4; break;
       case '-op'      : $Mode=4; break;
       default:
-        if($k)
         echo 'Arg ', $Arg, ' is unsupported',"\n";
       }
       break;
@@ -39,9 +38,9 @@
   default:
     echo '[Error] Not allowed operator (-op) ',$Op,"\n";
     echo '  Allowed operators:',"\n";
-    echo '   -o Build',"\n";
-    echo '   -o ReBuild',"\n";
-    echo '   -o Clean',"\n";
+    echo '   -op Build',"\n";
+    echo '   -op ReBuild',"\n";
+    echo '   -op Clean',"\n";
   }
   
 //var_dump($argv);

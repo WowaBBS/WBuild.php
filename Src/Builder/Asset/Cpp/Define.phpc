@@ -18,7 +18,7 @@
         );
     }
     
-    Function Set(String $Key, String $Value='')
+    Function Set(String $Key, $Value='')
     {
       $this->Key   = $Key   ;
       $this->Value = $Value ;
@@ -50,9 +50,13 @@
       }
       return $Res;
     }
+    
+    Function IsRemoving() { return $this->Value===false; } // Is_Null($this->Value) || 
 
     Function GetKeyValue()
     {
+      if($this->IsRemoving())
+        return '';
       if($this->Value==='')
         return $this->Key.'=';
       return $this->Key.'='.$this->Value;

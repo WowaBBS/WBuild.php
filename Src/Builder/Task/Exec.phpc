@@ -1,10 +1,11 @@
 <?
-  $Loader->Parent_Class('/Builder/Task/Base');
+  $Loader->Parent_Class('/Builder/Task/Depends');
   
-  class C_Builder_Task_Exec extends C_Builder_Task_Base
+  class C_Builder_Task_Exec extends C_Builder_Task_Depends
   {
     Var $Descr=[];
     Var $List=[];
+    Var $ContentHash=[];
     static $LabelIdx=0;
     
     function _Init(Array $Args)
@@ -33,6 +34,7 @@
       {
         $Args->Prepare($this, $Cmd);
         $_Args=$Args->ToString();
+        $this->ContentHash[]=$Args->ContentHash;
       }
       else
         $_Args='';
@@ -40,7 +42,7 @@
         $_Args=' '.$_Args;
       $Res=$Cmd.$_Args;
       $this->List[]=$Res;
-    //TODO: $Args->CheckObjects
+    //TODO: $Args->CheckInput
     //TODO: $Args->CheckResult
       if($Args!==null)
       {
@@ -50,24 +52,14 @@
       return $Res;
     }
 
-    Var $CheckObjects =[];
-    Var $CheckResult  =[];
-    Var $MkDir=[];
-    
-    Function MkDir($v)
+    Function _MkDir(String $v)
     {
-      if(Is_Object($v))
-      {
-        $v->MkDir();
-        $v=$v->GetDirFullPath();
-      }
-
-      $v=StrTr($v, '\\', '/');
-      if(IsSet($this->MkDir[$v]))
-        return;
       $this->Exec('MkDir "'.$v.'" 2>nul');
-      CreatePath($v);
-      $this->MkDir[$v]=true;
+    }
+    
+    Function _CheckFile(String $v, ?String $i=null)
+    {    
+      $this->Exec('if not exist "'.$v.'" echo [Error] Can`t find file "'.($i??$v).'" && exit /b');
     }
     
     Function Copy($From, $To)
@@ -78,54 +70,29 @@
       $this->Exec('xcopy "'.$F.'" "'.$T.'" /YDI');
     }
     
-    Function CheckObject($v)
-    {  // TODO: It't disabled for late binding in GetMakeTasks
-    //if(IsSet($v->Tasks))
-    //  ForEach($v->Tasks As $Task)
-    //    $this->Depends($Task);
-      $this->CheckObjects[]=$v;
-    }
-    
-    Function CheckObjects(Array $l)
+    Function MkDir($v) // TODO: Remove
     {
-      ForEach($l As $i)
-        $this->CheckObject($i);
-    }
-
-    Function _CheckFile($v)
-    {    
-      $this->Exec('if not exist "'.$v->GetFullPath().'" echo [Error] Can`t find file "'.$v->GetLocalPath().'" && exit /b');
+      if($v=parent::MkDir($v))
+        $this->_MkDir($v);
     }
     
     Function CheckFile($v)
     {
-      $this->CheckObject($v);
-      if(false)
-        Echo $v->GetMD5(), ' ', $v->GetLocalPath(), "\n";
-      if(!$v->IsNoSearch())
-        $this->_CheckFile($v);
+      if(Parent::CheckFile($v))
+        $this->_CheckFile($v->GetFullPath(), $v->GetLocalPath());
     }
     
     Function CheckResultFile($v, $bAddTask=true)
     {
-     #$v->ShouldBeExists();
-      $v->InvalidateCache(); // TODO: On finih task
-      $this->_CheckFile($v);
-      $this->CheckResult[]=$v;
-      if($bAddTask)
-        $v->AddTask($this);
+      Parent::CheckResultFile($v, $bAddTask);
+      $this->_CheckFile($v->GetFullPath(), $v->GetLocalPath());
     }
     
-    Function CheckFiles($l)
-    {
-      ForEach($l As $i)
-        $this->CheckFile($i);
-    }
-
     Function _GetTaskHash(Array &$Res)
     {
       Parent::_GetTaskHash($Res);
       $Res[]=$this->List;
+      $Res[]=$this->ContentHash;
     }
     
     Function SaveCallTo($File=false)
@@ -134,7 +101,9 @@
         $File=$this->CachePath;
       $File.='.bat';
       CreatePath(DirName($File));
-      File_Put_Contents($File, $this->ToString());
+      $Content=$this->ToString();
+      $this->ContentHash[]=md5($Content);
+      File_Put_Contents($File, $Content);
       $this->List=[];
       $this->Exec('call "'.$File.'"');
       return $File;
@@ -147,42 +116,18 @@
     
     Function Refuse()
     {
-      $this->List         =[];
-      $this->CheckObjects =[];
-      $this->CheckResult  =[];
-      $this->MkDir        =[];
+      $this->List        =[];
+      Parent::Refuse();
     }
     
     Function Finish()
     {
     }
     
-    Protected Function CheckInfo()
-    {
-      $Res=[];
-      ForEach($this->CheckObjects As $i)
-        $Res[$i->GetFullPath()]=$i->GetMD5();
-      ForEach($this->CheckResult As $i)
-        $Res[$i->GetFullPath()]=$i->GetMD5();
-      return $Res;
-    }
-
-    Protected Function _Execute()
+    Protected Function DoExecute()
     {
       $Exec=$this->Create_Object('/System/Exec');
       $Exec->Env=$_SERVER;
-      
-      $Cache=$this->Asset->GetManager()->Cache;
-      $Storage=$Cache->GetStorage($this->CachePath.'.check');
-      $CheckVars=$Storage->GetVars();
-      if($CheckVars)
-      {
-        $CheckInfo=$this->CheckInfo();
-        if($CheckVars===$CheckInfo)
-          return true;
-      }
-    //$Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;
-    //$Exec->Env['VcVars']=$Compiler->VCVars;
       
       ForEach($this->List As $Item)
       {
@@ -190,14 +135,6 @@
         $Exec->Execute();
       }
       $Exec->Done();
-      
-      $CheckInfo=$this->CheckInfo();
-    //$this->Debug($CheckInfo);
-      $Storage->SetVars($CheckInfo);
-      $this->Debug($Storage->FullPath);
-      $Storage->Done();
-    
-      return true;
     }
   };
 

@@ -1,1 +1,2 @@
-set ftime=%time%
+
+set ftime=%time%

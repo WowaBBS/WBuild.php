@@ -4,6 +4,7 @@
   class C_Builder_Task_Params extends C_Object
   {
     Var $List=[];
+    Var $ContentHash=[];
     Var $bInline=false;
     Var $bPreloaded=false;
 
@@ -88,7 +89,9 @@
     Function SaveTo($File, $Separator=' ', $Replace=false)
     {
       CreatePath(DirName($File));
-      File_Put_Contents($File, $this->ToString($Separator));
+      $Content=$this->ToString($Separator);
+      $this->ContentHash[]=md5($Content);
+      File_Put_Contents($File, $Content);
       if($Replace===false)
         return;
       $this->Clear();

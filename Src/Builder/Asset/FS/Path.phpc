@@ -78,6 +78,7 @@
       ForEach($this->GetSearch()->GetListArray($this->GetFullPath().'/')As $Item)
         $Res[$Item->GetLocalPath()]=$Cache->CalcMD5($Item->GetFullPath());
       KSort($Res, SORT_NATURAL);
+    //$this->Debug($Res);
       $Res=Implode(':', Array_Keys($Res)).'='.
         Implode(';', Array_Values($Res));
       $Res=md5($Res);
