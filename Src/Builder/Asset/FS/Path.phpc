@@ -48,9 +48,9 @@
     
     Function Search($Path, $bIsFile=true)
     {
-    //echo 'Search:',$Path,' ',$this->GetFullPath(),"\n";
+    //$this->Log('Debug', 'Search:',$Path,' ',$this->GetFullPath());
       $Path=$this->GetSubPath($Path);
-    //echo '  ',$Path,"\n";
+    //$this->Log('Debug', '  ',$Path);
       if(!$bIsFile && Is_Dir($Path) || $bIsFile && Is_File($Path))
         return $Path;
       return '';

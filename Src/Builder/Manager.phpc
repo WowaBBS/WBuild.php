@@ -70,7 +70,7 @@
       if(File_Exists($FileName))
         $this->AddPath(File_Get_Contents($FileName));
       elseif($Err)
-        echo '[Error] File not found: ', $FileName, "\n";
+        $this->Log('Error', 'File not found: ', $FileName);
     }
     
     Function LoadPathInstaled()
@@ -115,7 +115,7 @@
       if($this->Installed)
         return $this->Installed;
       $Reg=$this->Create_Object('/System/Reg');
-      echo 'Search installed Programs',"\n";
+      $this->Log('Log', 'Search installed Programs');
       $List=$Reg->SearchParam(
         [
           'HKLM\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall',

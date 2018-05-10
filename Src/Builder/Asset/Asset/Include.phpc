@@ -13,8 +13,8 @@
     {
       Parent::_Init($Args);
       $Res=Include $this->GetFullPath();
-    //echo '!!!',$this->GetFullPath(),"\n";
-    //echo '!!!',$this->GetDirFullPath(),"\n";
+     #$this->Log('Debug', '!!!',$this->GetFullPath());
+     #$this->Log('Debug', '!!!',$this->GetDirFullPath());
       $Path=$this->CreateAsset('Asset/Path', ['Path'=>$this->GetDirFullPath()]);
       $this->AddAssets($Res['Assets']);
       $Path->RemoveFromOuter();

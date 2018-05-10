@@ -14,7 +14,7 @@
       }
      #if($Def=$Args['>Detect']??false)
      #  $Args['Path']=$Compiler->GetDefaultUsingPath($Def);
-     #echo 'Path: ',$Args['Path'],"\n";
+     #$this->Log('Debug', 'Path: ',$Args['Path']);
       Parent::_Init($Args);
     }
     

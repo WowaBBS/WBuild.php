@@ -63,19 +63,19 @@
           return [];
       // TODO: Init by $Args
       $FileName=$this->Cpp;
-    //Echo 'Orig: ', $FileName, "\n";
+    //$this->Log('Debug', 'Orig: ', $FileName);
       $Res=[];
       $Remove=[];
       ForEach($List As $k=>$Item)
       {
         $SrcAsset=$Item['SrcAsset'];
         $SrcName=$SrcAsset->GetFileName();
-       #Echo 'Src: ', $SrcName, "\n";
+       #$this->Log('Debug', 'Src: ', $SrcName);
         if(StrCaseCmp($SrcName, $FileName)==0)
         {
-         #Echo 'Ok', "\n";
+         #$this->Log('Debug', 'Ok');
           if($SrcName!==$FileName)
-            echo '[Error] Name ',$SrcName,' Is not same ',$FileName,"\n";
+            $this->Log('Error', 'Name ',$SrcName,' Is not same ',$FileName);
         //UnSet($List[$k]);
           $Remove[]=$k;
           $Res[]=$Item;
@@ -88,17 +88,18 @@
      #{
      #  $SrcAsset=$Item['SrcAsset'];
      #  $SrcName=$SrcAsset->GetFileName();
-     #  Echo 'Rest: ', $SrcName, "\n";
+     #  $this->Log('Debug', 'Rest: ', $SrcName);
      #}
       switch(count($Res))
       {
-      case 0; Echo '[Error] StdAfx isn`t exist',"\n"; break;
+      case 0; $this->Log('Error', 'StdAfx isn`t exist'); break;
       case 1; break; // Ok
       default:
-        Echo '[Error] StdAfx files more then one:',"\n"; 
+        $Log=$this->Log('Error', 'StdAfx files more then one:');
         ForEach($Res As $Item)
-          Echo '  ',$Item['SrcAsset']->GetFullPath(),"\n"; 
-        while(count($Res)>1)
+          $Log('  ',$Item['SrcAsset']->GetFullPath());
+        $Log->Done();
+        while(Count($Res)>1)
           Array_Shift($Res);
       }
       return $Res;
@@ -107,21 +108,21 @@
     Function GetHeaderName()
     {
       if(!$this->bInited)
-        UnSupported();
+        $this->Log('Fatal', 'PCH Asset is not inited');
       return BaseName($this->Header);
     }
     
     Function GetHeaderPath()
     {
       if(!$this->bInited)
-        UnSupported();
+        $this->Log('Fatal', 'PCH Asset is not inited');
       return $this->Header;
     }
     
     Function GetDataFile()
     {
       if(!$this->bInited)
-        UnSupported();
+        $this->Log('Fatal', 'PCH Asset is not inited');
       return $this->DataFile;
     }    
   };

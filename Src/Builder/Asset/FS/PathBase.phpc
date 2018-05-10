@@ -70,7 +70,7 @@
         Static::_AddItem($Res, $Args, $Path);
     }
     
-    Static Function __ParseItemsForKey(Array $Path, Array $CheckKey, bool $z)
+    Protected Static Function __ParseItemsForKey($Outer, Array $Path, Array $CheckKey, bool $z)
     {
       $bHasKey=false;
       $Res=[];
@@ -78,7 +78,7 @@
         if(IsSet($CheckKey[$v]))
         {
           if($bHasKey)
-            UnSupported(); // Key already exxists
+            $Outer->Log('Fatal', 'Key already exists');
           $bHasKey=true;
         }
         elseif($bHasKey===$z)
@@ -86,14 +86,14 @@
       return $bHasKey? $Res:$Path;
     }
 
-    Static Function _ParseItemForKeys(Array &$Res, Array $Args, $Path)
+    Protected Static Function _ParseItemForKeys(Array &$Res, Array $Args, $Path)
     {
       if(Is_String($Path))
         return Static::_AddItem($Res, $Args, $Path);
 
       $Outer=$Args['Outer'];
-      $Path=Static::__ParseItemsForKey($Path, ['>Debug'  =>1], $Outer->IsDebug  ());
-      $Path=Static::__ParseItemsForKey($Path, ['>Static' =>1], $Outer->IsStatic ());
+      $Path=Static::__ParseItemsForKey($Outer, $Path, ['>Debug'  =>1], $Outer->IsDebug  ());
+      $Path=Static::__ParseItemsForKey($Outer, $Path, ['>Static' =>1], $Outer->IsStatic ());
       Static::_AddItems($Res, $Args, $Path);
     }
     
@@ -175,7 +175,7 @@
     
     Function MkDir()
     {
-    //echo 'MkDir ',$this->GetDirFullPath(),"\n";
+    //$this->Log('Debug', 'MkDir ',$this->GetDirFullPath());
       CreatePath($this->GetDirFullPath());
     }
     
@@ -193,7 +193,7 @@
         {
           $List=$Outer->GetAssetsR($AssetClass);
           $c=count($List);
-        //Echo 'Global Search ', $Path, ' in ',$AssetClass, ' (', $c,')', "\n";
+        //$this->Log('Debug', 'Global Search ', $Path, ' in ',$AssetClass, ' (', $c,')');
           if($c==0)
             continue;
           if($bFirst)
@@ -238,17 +238,13 @@
       
       if(!$bNoError)
       {
-        if($bIsFile)
-          echo 'File not found: \'',$Path,"'\n";
-        else
-          echo 'Dir not found: \'',$Path,"'\n";
-        echo '  Search:',"\n";
+        $Log=$Outer->Log('Fatal', ($bIsFile? 'File':'Dir'), ' not found: \'',$Path,'\'');
+        $Log('  Search:');
         ForEach($Searches As $Search)
-          echo '    '.$Search->GetFullPath(),"\n";
+          $Log('    '.$Search->GetFullPath());
         $Cfg['Path'   ]=$Path   ;
-        $Outer->Debug($Cfg);
-        
-        UnSupported();
+        $Log->Debug($Cfg);
+        $Log->Done();
       }
       return [null, $Path];
     }
@@ -268,7 +264,7 @@
       $FullPath=$this->GetFullPath();
       $l=StrLen($RootPath);
       if(SubStr($FullPath, 0, $l)!==$RootPath)
-        UnSupported(); // Unreacable case
+        $this->Log('Fatal', 'Unreachable case');
       
       return SubStr($FullPath, $l);
     }
@@ -323,7 +319,7 @@
       $Res=[];
       ForEach($List As $k=>$v)
       {
-      //echo $Filter,'===',$v->Info->Type,"\n";
+      //$this->Log('Debug', $Filter,'===',$v->Info->Type);
         if($v->Info->Type===$Filter)
           $Res[$v->Object_Id]=$v;
       }
@@ -379,7 +375,7 @@
     Function GetFileDependsR($Filter=false, $FilterR=false)
     {
       $Res=$this->GetFileDepends($FilterR);
-    //Echo 'GetFileDependsR ',$this->GetLocalPath(), ', ',$Filter,' =',count($Res), ' ', count($this->FileDepends),"\n";
+    //$this->Log('Debug', 'GetFileDependsR ',$this->GetLocalPath(), ', ',$Filter,' =',count($Res), ' ', count($this->FileDepends));
       $Res=Static::_GetFileDependsR($Res, $FilterR);
       $Res=Static::_Filter($Res, $Filter);
       return $Res;
@@ -396,11 +392,11 @@
         $this->AddFileDepends($this->GetAssets($v));
       elseif(Is_Object($v))
       {
-      //echo 'AddFileDepends ',$v->GetLocalPath(), ' to ' ,$this->GetLocalPath(),"\n";
+      //$this->Log('Debug', 'AddFileDepends ',$v->GetLocalPath(), ' to ' ,$this->GetLocalPath());
         $this->FileDepends[$v->Object_Id]=$v;
       }
       else
-        UnSupported();
+        $this->Log('Fatal', 'Uncceptable type "', GetType($v), '" of depends file');
     }
   };
 

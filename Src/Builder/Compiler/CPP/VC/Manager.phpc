@@ -96,7 +96,7 @@
       $BuilderVer=1;
       ForEach($Finder->Find() As $Item)
       {
-      //echo $Item['Path'], "\n";
+      //$this->Log('Debug', $Item['Path']);
         $R=$MapList->Get($Item['Path'],
           [
             'Builder'=>$BuilderVer,
@@ -156,8 +156,8 @@
     {
     //$Deb=$this->Loader->Get_Singleton('/Debug/Manager')->Get('Cfg.log');
     //$Deb->Debug([$Cfg, $Item]);
-    //echo 'VcVer  ',$Item['VcVer'],' in [',$Cfg['VC_Min'],'..',$Cfg['VC_Max'],"]\n";
-    //echo '  Win ',$Item['Win'],' == ',$Cfg['Win'],"\n";
+    //$this->Log('Debug', 'VcVer  ',$Item['VcVer'],' in [',$Cfg['VC_Min'],'..',$Cfg['VC_Max'],']');
+    //$this->Log('Debug', '  Win ',$Item['Win'],' == ',$Cfg['Win']);
       if($Cfg['VC_Min']> $Item['VcVer']) return false;
       if($Cfg['VC_Max']<=$Item['VcVer']) return false;
       if((bool)$Cfg['Win']!=(bool)$Item['Win']) return false;
@@ -172,7 +172,7 @@
       case 'arm':
         if(!$Cfg['arm']) return false;
         break;
-      default: Unsupported();
+      default: $this->Log('Fatal', 'Unreachable place');
       }
       return true;
     }

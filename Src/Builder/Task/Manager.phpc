@@ -28,7 +28,7 @@
     
     Function Create($Type='Base', $Vars=[])
     {
-      if($this->bPrepared) UnSupported();
+      if($this->bPrepared) $this->Log('Fatal', 'Task manager should be prepared for creating task');
       $Class='/Builder/Task/'.$Type;
       $Res=$this->Create_Object($Class, $Vars);
       $this->_Add($Res);
@@ -75,7 +75,7 @@
     
     Function Failed(C_Builder_Task_Base $Task)
     {
-      if(!$Task->bFailed) Unsupported();
+      if(!$Task->bFailed) $this->Log('Fatal', 'Failed in not failed =)');
 
       $Id=$Task->Object_Id;
 
@@ -88,7 +88,7 @@
     
     Function Finished(C_Builder_Task_Base $Task)
     {
-      if(!$Task->bFinished) Unsupported();
+      if(!$Task->bFinished) $this->Log('Fatal', 'Finished is not finished =)');
 
       $Id=$Task->Object_Id;
 
@@ -101,8 +101,8 @@
     
     Function Ready(C_Builder_Task_Base $Task)
     {
-      if($Task->bFailed) Unsupported();
-      if($Task->bFinished) Unsupported();
+      if($Task->bFailed) $this->Log('Fatal', 'Failed task can`t be ready');
+      if($Task->bFinished) $this->Log('Fatal', 'Finishd task can`t be ready');
 
       $Id=$Task->Object_Id;
 

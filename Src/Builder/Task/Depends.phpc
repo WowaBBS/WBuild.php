@@ -86,7 +86,7 @@
       ForEach($this->CheckInput As $i)
         if(!$i->Exists())
         {
-          echo '[Error] File not found ',$i->GetFullPath(),"\n";
+          $this->Log('Error', 'File not found ',$i->GetFullPath());
           $Res=1;
         }
       if($Res)
@@ -95,7 +95,7 @@
         if(!$i->Exists())
         {
           if($z)
-            echo '[Error] File not found ',$i->GetFullPath(),"\n";
+            $this->Log('Error', 'File not found ',$i->GetFullPath());
           $Res=2;
         }
       if($Res)
@@ -132,7 +132,7 @@
         $CheckInfo=$this->CheckInfo();
         if($CheckInfo===1)
         {
-          echo "[Error] Haven`t required files\n";
+          $this->Log('Error', 'Haven`t required files');
           if(true) // TODO: CleanOnFailed
             $this->CleanResult();
           return true; // TODO: Skip, haven`t required files
@@ -155,7 +155,7 @@
     
       if($CheckInfo===2)
       {
-        echo "[Error] Task is failed\n";
+        $this->Log('Error', 'Task is failed');
         return true; // TODO: Task is failed
       }
       return true;

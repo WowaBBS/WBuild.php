@@ -5,8 +5,7 @@
   {
     Static Function _ParseParams($Args)
     {
-      Echo '[Error] ',Implode("\n", $Args['Param']),"\n";
-      UnSupported();
+      $this->Log('Fatal', Implode("\n", $Args['Param']));
       return []; 
     }
   };

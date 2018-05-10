@@ -64,7 +64,7 @@
           $ObjNick=$Num.'/'.$Name;
           $Source=$Outer->CreateAsset('Cpp/Src', ['Path'=>$ObjNick.'.'.$FirstAsset->GetFileExt(), '>Create'=>1]);
           $Source->SetUnityBuild($UnityList);
-        //echo $Source->GetFullPath(), "\n";
+        //$Outer->Log('Debug', $Source->GetFullPath());
           if($RemoveType!=='')
             $Outer->RemoveAssets($RemoveType, $UnityList);
           if($bInternal)

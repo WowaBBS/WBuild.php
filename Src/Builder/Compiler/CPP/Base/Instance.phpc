@@ -92,12 +92,15 @@
     {
       $Items=$Args['Items'];
       if(false)
-      {
-        echo '>>>>>>>>>',"\n";
-        ForEach($Items As $Item)
-          echo $Item['Exec']->CachePath,"\n";
-        echo '<<<<<<<<<',"\n";
-      }
+        $this->Log('Debug', '_CompileSplit')->Call(
+          Function($Log) use ($Items)
+          {
+            $Log('>>>>>>>>>');
+            ForEach($Items As $Item)
+              $Log($Item['Exec']->CachePath);
+            $Log('<<<<<<<<<');
+          }
+        );
       $c=count($Items);
       if(!$c) return;
       if($c>2 && $this->Compile_CanGroupByDir($Args))
@@ -134,13 +137,16 @@
     Function Compile_(Array $Args)
     {          
       if(false)
-      {
-        echo '>>>>>>>>>',"\n";
-        echo 'Dir: ',$Args['Dir'],"\n";
-        ForEach($Args['Items'] As $Item)
-          echo $Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
-        echo '<<<<<<<<<',"\n";
-      }
+        $this->Log('Debug', 'Compile_')->Call(
+          Function($Log) use ($Args)
+          {
+            $Log('>>>>>>>>>');
+            $Log('Dir: ',$Args['Dir']);
+            ForEach($Args['Items'] As $Item)
+              $Log($Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath());
+            $Log('<<<<<<<<<');
+          }
+        );
       if(IsSet($Args['Dir']))
         $this->CompileDir_($Args);
       else
@@ -210,15 +216,18 @@
       $Exec     =$Args['Exec'     ];
 
       if(false)
-      {
-        echo '>>>>>>>>>',"\n";
-        echo 'Dir: ',$Args['Dir'],"\n";
-        $Item=$Args['First'];
-        echo $Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
-        ForEach($Args['Items'] As $Item)
-          echo $Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath(),"\n";
-        echo '<<<<<<<<<',"\n";
-      }
+        $this->Log('Debug', 'CompileDir_')->Call(
+          Function($Log) use ($Args)
+          {
+            $Log('>>>>>>>>>');
+            $Log('Dir: ',$Args['Dir']);
+            $Item=$Args['First'];
+            $Log($Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath());
+            ForEach($Args['Items'] As $Item)
+              $Log($Item['Exec']->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath());
+            $Log('<<<<<<<<<');
+          }
+        );
 
       $this->PrepareExec($Exec);
       $Exec->CheckInputs($Includes);

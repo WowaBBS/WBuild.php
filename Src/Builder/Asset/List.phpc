@@ -109,7 +109,7 @@
           else
           {
             $this->Debug($List);
-            echo 'Haven`t Type',"\n";
+            $this->Log('Error', 'Haven`t Type');
             UnSet($Args['Outer']);
             $this->Debug($Args);
             UnSupported();
@@ -148,19 +148,19 @@
        #$Deb=$this->Get_Singleton('/Debug/Manager')->Get('Asset_Sub.log');
        #$Deb->Debug($Param);
       }
-      $Args['Outer' ]=$this  ;
+      $Args['Outer' ]=$this  ; // Only for static methods
       $Args['Info'  ]=$Info  ;
     //$Args['Type'  ]=$Type  ;
       $Args['Param' ]=$Param ;
 
       if(IsSet($Param['>If']))
       {
-       #echo '>If ', $Info->Name,' ',Serialize($Param['>If']), "\n";
+       #$this->Log('Debug', '>If ', $Info->Name,' ',Serialize($Param['>If']));
         if(!$this->CheckCondition($Param['>If'], $Args))
           return [];
-       #echo 'IsDebug   =',$this->IsDebug   (),"\n";
-       #echo 'IsRelease =',$this->IsRelease (),"\n";
-       #echo "Ok\n";
+       #$this->Log('Debug', 'IsDebug   =',$this->IsDebug   ());
+       #$this->Log('Debug', 'IsRelease =',$this->IsRelease ());
+       #$this->Log('Debug', 'Ok');
         UnSet($Param['>If']);
         $Args['Param' ]=$Param ;
       }
@@ -211,7 +211,7 @@
           {
             Self::__Remove($P  ,$KeyType, $Key, $Asset);
             $Res[$Key]=$Asset;
-          //echo $Asset->Info->Name, "\n";
+           #$this->Log('Debug', $Asset->Info->Name);
           }
         //$Res+=$R; //+++
         }
@@ -272,7 +272,7 @@
         if($this->__RemoveAsset($KeyType, $Asset))
           $Res=true;
       if(!$Res)
-        Echo 'Asset not found for remove',"\n";
+        $this->Log('Error', 'Asset not found for remove');
       $this->_OnRemove($Asset);
       return $Res;
     }
@@ -281,9 +281,9 @@
     {
       if(Is_Null($bPublic))
         $bPublic=$Asset->IsPublic;
-    //Echo 'Public: ',$bPublic,"\n";
+    //$this->Log('Debug', 'Public: ',$bPublic);
       $List=$bPublic? $Asset->Public:$Asset->List;
-    //Echo 'List: ',Count($List),"\n";
+    //$this->Log('Debug', 'List: ',Count($List));
       if($bDebug)
       {
         $Added=[];

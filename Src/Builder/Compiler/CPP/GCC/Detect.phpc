@@ -35,7 +35,8 @@
           $FileObj=$PathObj.$k.'.o'   ;
           $FileExe=$PathExe.$k.'.exe' ;
           
-        //echo '>',$File,"\n";
+        //$this->Log('Log', '>',$File);
+
           $Res=[
             "@echo off\r\n",
             'call "',$File,'"',"\r\n",

@@ -13,7 +13,7 @@
         $i++;
         if(!IsSet($Item['>If']))
           if(Count($Param)!=$i)
-            UnSupported();
+            $Outer->Log('Fatal', 'Operator ">If" hasn`t parameters');
       }
       ForEach($Param As $Item)
       {

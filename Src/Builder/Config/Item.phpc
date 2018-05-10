@@ -1,5 +1,7 @@
 <?
-  class C_Builder_Config_Item
+  $Loader->Load_Class('/Object');
+
+  class C_Builder_Config_Item extends C_Object
   {
     Var $Name     ='';
     Var $Alias    =[]; // +Alias, {Name1=>x, Name2=>x}
@@ -11,13 +13,13 @@
     
     Function Init($Info)
     {
-      self::Set_Map_Info($this->Alias    ,$Info ,'Key'      );
-      self::Set_Map_Info($this->Alias    ,$Info ,'Alias'    );
-      self::Set_Map_Info($this->Parent   ,$Info ,'Parent'   );
-      self::Set_Map_Info($this->Group    ,$Info ,'Group'    );
-      self::Set_Map_Info($this->Required ,$Info ,'Required' );
-      self::Set_Map_Info($this->Depend   ,$Info ,'Depend'   );
-    //self::Set_Map_Info($this->Set      ,$Info ,'Set'      );
+      self::Set_Map_Info($this, $this->Alias    ,$Info ,'Key'      );
+      self::Set_Map_Info($this, $this->Alias    ,$Info ,'Alias'    );
+      self::Set_Map_Info($this, $this->Parent   ,$Info ,'Parent'   );
+      self::Set_Map_Info($this, $this->Group    ,$Info ,'Group'    );
+      self::Set_Map_Info($this, $this->Required ,$Info ,'Required' );
+      self::Set_Map_Info($this, $this->Depend   ,$Info ,'Depend'   );
+    //self::Set_Map_Info($this, $this->Set      ,$Info ,'Set'      );
       ForEach($this->Alias As $k=>$tmp)
       {
         $this->Name=$k;
@@ -61,7 +63,7 @@
     
     Function Set($Set, $v)
     {
-    //Echo $this->Name, '=>', $v, "\n";
+    //$this->Log('Debug', $this->Name, '=>', $v)
       $i=$Set->Value[$this->Name];
       if($i===$v)
         return;
@@ -102,12 +104,8 @@
     Function Check($Res, $v)
     {
       if(!IsSet($Res[$this->Name]))
-      {
-       #return false; // This is really error
-        Echo '[Error] Config key ',$this->Name,' don`t find [',Count($Res),"]\n";
-        Echo '  Allowed keys [',Implode(', ', Array_Keys($Res)),"]\n";
-        UnSupport();
-      }
+        $this->Log('Fatal', 'Config key ',$this->Name,' don`t find [',Count($Res),']')
+          ('  Allowed keys [',Implode(', ', Array_Keys($Res)),']');
       $i=$Res[$this->Name];
       if($v===true) return $i!=0 && $i!==-1;
       if($v>0) return $i>= $v;
@@ -116,15 +114,15 @@
     }
    
     //****************************************************************
-    Private Static Function Set_Map_Info(&$Field, $Info, $Name)
+    Private Static Function Set_Map_Info($This, &$Field, $Info, $Name)
     {
       if(!IsSet($Info[$Name]))
         return false;
     //$Value=$Info[$Name];
-      return self::Set_Map($Field, $Info[$Name]);
+      return self::Set_Map($This, $Field, $Info[$Name]);
     }
     
-    Private Static Function Set_Map(&$Field, $Value)
+    Private Static Function Set_Map($This, &$Field, $Value)
     {
       If(Is_String($Value))
       {
@@ -133,7 +131,7 @@
       }
       If(!Is_Array($Value))
       {
-        echo '[Error] 12341252345',"\n";
+        $This->Log('Error', '12341252345');
         Return false;
       }
       ForEach($Value as $k=>$v)
@@ -145,12 +143,12 @@
         }
         if(!Is_String($k))
         {
-          echo '[Error] 98347593487',"\n";
+          $This->Log('Error', '98347593487');
           Continue;
         }
         if(IsSet($Field[$k]))
         {
-          echo '[Error] 84857364875',"\n";
+          $This->Log('Error', '84857364875');
           Continue;
         }
         $Field[$k]=$v;
@@ -159,7 +157,7 @@
  
     Private Static Function Merge_Map(&$V1, $V2) { $V1=$V2+$V1; } //+++
   /*
-    Private Static Function Set_Set_Info(&$Field, $Info, $Name)
+    Private Static Function Set_Set_Info($This, &$Field, $Info, $Name)
     {
       if(!IsSet($Info[$Name]))
         return false;
@@ -168,7 +166,7 @@
         $Value=[$Value];
       If(!Is_Array($Value))
       {
-        echo '[Error] 83459834857',"\n";
+        $This->Log('Error', '83459834857');
         return false;
       }
       Self::Merge_Set($Field, $Value);

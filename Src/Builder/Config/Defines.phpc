@@ -113,26 +113,25 @@
         
         if(!Is_String($k))
         {
-          Echo '[Error] Unknown key format ', $k, '=>', $v, "\n";
+          $this->Log('Error', 'Unknown key format ', $k, '=>', $v);
           Continue;
         }
         
         if(!Is_Int($v) && !Is_Bool($v)) // TODO: Multi value?? && !Is_Array($v)
         {
-          Echo '[Error] Unknown value format ', $k, '=>', $v, "\n";
+          $this->Log('Error', 'Unknown value format ', $k, '=>', $v);
           Continue;
         }
         
         if(!IsSet($Keys[$k]))
         {
-          Echo '[Error] Key don`t find ', $k, '=>', $v, "\n";
-        //UnSupported();
+          $this->Log('Error', 'Key don`t find ', $k, '=>', $v);
           Continue;
         }
           
         If(IsSet($Res[$k]))
         {
-          Echo '[Error] Dublicate key ', $k, '=>', $v, "\n";
+          $this->Log('Error', 'Dublicate key ', $k, '=>', $v);
           Continue;
         }
         

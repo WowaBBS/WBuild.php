@@ -28,11 +28,11 @@
       $this->CacheDir =$Args['CacheDir' ];
       $this->Modules  =$Args['Modules'  ];
     //$this->MD5_Storage=$this->Modules->Manager->Cache->GetMD5Enum($this->CacheDir.'/MD5_EnumDir');
-    //Echo 'Modules ', $this->CacheDir, "\n";
+    //$this->Log('Debug', 'Modules ', $this->CacheDir);
       $this->MD5_Storage =$this->Modules->Manager->Cache->GetMD5Storage($this->CacheDir.'/');
       $this->EnumCache   =$this->Modules->Manager->Cache->GetEnumDir($this->CacheDir.'/');
-    //Echo 'MD5_Storage ', $this->MD5_Storage ->FullPath, "\n";
-    //Echo 'EnumCache   ', $this->EnumCache   ->FullPath, "\n";
+    //$this->Log('Debug', 'MD5_Storage ', $this->MD5_Storage ->FullPath);
+    //$this->Log('Debug', 'EnumCache   ', $this->EnumCache   ->FullPath);
       if(IsSet($Args['Parent'   ])) $this->Parent   =$Args['Parent'   ];
       if(IsSet($Args['Name'     ])) $this->Name     =$Args['Name'     ];
       if(IsSet($Args['FullName' ])) $this->FullName =$Args['FullName' ];

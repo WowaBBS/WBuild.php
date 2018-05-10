@@ -18,10 +18,10 @@
       $this->Manager =$this->Modules->Manager;
       $Args['Outer']=false;
     //$Key=Serialize($this->Context->GetContextId());
-    //Echo 'MD5_Storage ', $this->Module->MD5_Storage ->FullPath, "\n";
-    //Echo 'EnumCache   ', $this->Module->EnumCache   ->FullPath, "\n";
+    //$this->Log('Debug', 'MD5_Storage ', $this->Module->MD5_Storage ->FullPath);
+    //$this->Log('Debug', 'EnumCache   ', $this->Module->EnumCache   ->FullPath);
       $this->EnumCache = $this->Module->EnumCache->AllocEnumDir($Key, 'I', ['NoZero'=>true, 'Pad'=>1]); //'Instance', ['NoZero'=>true,  'Pad'=>1, 'Split'=>'_'] , ['Pad'=>1, 'NoZero'=>true]
-    //Echo 'EnumCacheI  ', $this->EnumCache   ->FullPath, "\n";
+    //$this->Log('Debug', 'EnumCacheI  ', $this->EnumCache   ->FullPath);
       parent::_Init($Args);
     }
     

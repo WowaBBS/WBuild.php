@@ -28,11 +28,11 @@
       if(!IsSet($List[$Type]))
         $List[$Type]='/Builder/Condition/'.$Type;
 
-    //echo 'CreateCondition ',$Type,"\n";
+    //$this->Log('Fatal', 'CreateCondition ',$Type);
       $Res=$this->Create_Object($List[$Type], ['Param'=>$Args, 'Factory'=>$this]);
       if(!$Res)
       {
-        Echo '[Error] Condition ',$Type,' is not exists', "\n";
+        $this->Log('Error', 'Condition ',$Type,' is not exists');
         $Type='Error';
         $Res=$this->Create("Condittion not exists");
       }

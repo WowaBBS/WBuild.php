@@ -15,10 +15,7 @@
         if(true) // TODO: Only if creating
           Return false;
         else
-        {
-          echo 'Using ', $this->GetLocalPath(), ' hasn`t parent',"\n";
-          UnSupported();
-        }
+          $this->Log('Fatal', 'Using ', $this->GetLocalPath(), ' hasn`t parent');
       return $this->Parent->IsSystem();
     }
     

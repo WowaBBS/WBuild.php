@@ -13,7 +13,7 @@
     Static Function Compile($Outer, $Compiler, $Param)
     {
       $OutPath=$Param['OutPath'];
-     #echo 'OutPath: ',$OutPath ,"\n";
+     #$Outer->Log('Debug', 'OutPath: ',$OutPath);
     
       $PathObjAsset=$Outer->CreateAsset('Cpp/ObjPath', $OutPath.'Obj');
 
@@ -38,8 +38,8 @@
         $Num=$EnumCache->AllocNum($Dir, 'Obj', ['Pad'=>1]);
         $ObjNick=$Num.'/'.$Name;
         $ObjAsset=$Outer->CreateAsset('Cpp/Obj', ['Path'=>$Compiler->GetObjFile($ObjNick), '>Create'=>1]);
-       #echo '  ObjNick: ',$ObjNick,"\n";
-       #echo '  ObjAsset: ',$ObjAsset->GetFullPath(),"\n";
+       #$Outer->Log('Debug', '  ObjNick: ',$ObjNick);
+       #$Outer->Log('Debug', '  ObjAsset: ',$ObjAsset->GetFullPath());
         $Exec=$ObjAsset->CreateExec($OutPath.'Task/Obj/'.$ObjNick);
         
         $Items[]=[

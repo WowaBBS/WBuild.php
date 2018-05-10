@@ -30,7 +30,7 @@
       if(IsSet($Res[$Id]))
       {
         if($Res[$Id]===true)
-          echo "[Error] Cyclic dependencies\n";
+          $this->Log('Error', 'Circular dependencies');
         return;
       }
       $Res[$Id]=true;

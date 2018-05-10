@@ -24,10 +24,14 @@
         $this->Instance=$Module->CreateInstance($Context);
       else
       {
-        echo '[Error] Module ',$this->Name," not found\n";
-        echo "  Modules:\n";
-        ForEach($Modules->GetModules() As $i)
-          echo '    ',$i->GetName(),"\n";
+        $this->Log('Error', 'Module ',$this->Name,' not found')->Call(
+          Function($Log) Use ($Modules)
+          {
+            $Log('  Modules:');
+            ForEach($Modules->GetModules() As $i)
+              $Log('    ', $i->GetName());
+          }
+        );
       }
       
       if($this->Instance)
