@@ -7,7 +7,8 @@
     {
       $ExeName=Static::_GetName($Param, $Outer);
       $bDebug=$Outer->IsDebug();
-      $_d=$bDebug? '_d':'';
+      $DebugPostfix =$Param['DebugPostfix' ]??True;
+      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
 
       $OutPath=$Param['OutPath'];
     

@@ -10,11 +10,14 @@
       // $Mode==2 -- Compile but one liberary file
       // $Mode==3 -- Compile and generate DLL if avalible
       $Mode=$Outer->IsStatic()? 2:3; // TODO: Customization
+
       $bDebug=$Outer->IsDebug();
-      $_d=$bDebug? '_d':'';
+      $DebugPostfix =$Param['DebugPostfix' ]??True;
+      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
+      
       $OutPath=$Param['OutPath'];
       
-      $DLL=IsSet($Param['DLL'])? $Param['DLL']:'';
+      $DLL=IsSet($Param['DLL'])? $Param['DLL']:''; // TODOL "??" ?
       $IsDll = $Mode>=3 && $DLL!=='';
       $IsLib = $Mode>=2 && !$IsDll;
       $IsObj = $Mode>=1;

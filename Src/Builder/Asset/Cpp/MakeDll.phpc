@@ -5,11 +5,11 @@
   {
     Static Function Make($Outer, $Compiler, $Param)
     {
-      $OutPath     =$Param['OutPath'    ];
-      $bUsing      =$Param['Using'      ]??false;
-      $bAllowDebug =$Param['AllowDebug' ]??$bUsing;
-      $bDebug=$bAllowDebug && $Outer->IsDebug();
-      $_d=$bDebug? '_d':'';
+      $OutPath      =$Param['OutPath'      ];
+      $bManaged     =$Param['Managed'      ]??false;
+      $DebugPostfix =$Param['DebugPostfix' ]??$bManaged;
+      $bDebug=$DebugPostfix && $Outer->IsDebug();
+      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
       
       $LibName=Static::_GetName($Param, $Outer);
       
@@ -40,7 +40,7 @@
 
       $PathDllAsset->RemoveFromOuter();
       
-      if($bUsing)
+      if($bManaged)
       {
         $Using=$Outer->CreateAsset('Cpp/Using', ['Path'=>$DllAsset->GetFullPath(), '>Create'=>1]);
         $Using->AddFileDepends($DllAsset->GetFileDepends());

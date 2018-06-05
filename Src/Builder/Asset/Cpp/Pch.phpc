@@ -23,7 +23,7 @@
       parent::_InitParam($Param);
       
       $this->Force    =$Param['Force'  ]??false              ; UnSet($Param['Force'  ]);
-      $this->Name     =$Param['Name '  ]??'StdAfx'           ; UnSet($Param['Name'   ]);
+      $this->Name     =$Param['Name'   ]??'StdAfx'           ; UnSet($Param['Name'   ]);
     //$this->DataFile =$Param['File '  ]??false              ; UnSet($Param['File'   ]);
       $this->Header   =$Param['Header' ]??$this->Name.'.h'   ; UnSet($Param['Header' ]);
       $this->Cpp      =$Param['Cpp'    ]??$this->Name.'.cpp' ; UnSet($Param['Cpp'    ]);
