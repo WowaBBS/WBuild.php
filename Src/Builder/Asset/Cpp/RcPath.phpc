@@ -1,15 +1,14 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/Path');
 
-  class C_Builder_Asset_Cpp_SrcPath extends C_Builder_Asset_FS_Path
+  class C_Builder_Asset_Cpp_RcPath extends C_Builder_Asset_FS_Path
   {
     Protected Function _GetSearchPathClass()
     {
       return [];
     }
 
-    Static Function GetDefMask() { return '*.cpp;*.c'; }
-    
+    Static Function GetDefMask() { return '*.rc'; }
   //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
   };
 ?>

@@ -89,19 +89,18 @@
       return $Res;
     }
 
-    Function Merge()
+    Function Merge(...$Args)
     {
       if($this->Has_NS)
         return $this;
       
-      $List=func_get_args();
-      ForEach($List As $Item)
+      ForEach($Args As $Item)
       {
         if(Is_String($Item))
           $Item=Self::Get($Item);
         
         if($Item->Has_NS)
-          return self::Get($this->Type.$Item->NS_Str);
+          return Self::Get($this->Type.$Item->NS_Str);
       }
       return $this;
     }

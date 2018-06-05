@@ -6,33 +6,52 @@
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
-      if(IsSet($Args['Search'])) $this->Search=$Args['Search'];
+   #}
+   #
+   #Function _InitParam(Array &$Param)
+   #{
+   #   parent::_InitParam($Param);
+   #
+   #  $Mask = $Param['>Mask' ]?? Static::GetDefMask(); UnSet($Param['>Mask' ]);
+   #  $Map  = $Param['>Map'  ]?? [];                   UnSet($Param['>Map'  ]);
+      $Mask = $Args['>Mask' ]?? Static::GetDefMask();
+      $Map  = $Args['>Map'  ]?? [];
+      if($Mask!=='')
+      {
+        $lMask=Explode('|', $Mask);
+        if(Count($lMask)>2)
+          $this->Log('Fatal', 'Mask error: ', $Mask);
+        if(IsSet($lMask[1]) && $lMask[1]!=='')
+          ForEach(Explode(';' ,$lMask[1]) As $M)
+            $Map[$M]=0;
+        if($lMask[0]==='')
+          $Map['*']=1;
+        else
+        {
+          ForEach(Explode(';' ,$lMask[0]) As $M)
+            $Map[$M]=1;
+          if(!IsSet($Map['*']))
+            $Map['*']=0;
+        }
+      }
+   //if($Map) $this->Debug($Map);
+      if($Map) $this->Search=['Filter'=>['Map'=>$Map]];
     }
+
+    Static Function GetDefMask() { return ''; }
     
     Function GetDirFullPath()
     {
       return $this->GetFullPath();
     }
 
-    Static $Search_Def=[
-      'Mask'     =>false,
-      'NoMask'   =>false,
-      'Hidden'   =>false,
-    //'Include'  =>[],
-      'Exclude'  =>[],
-    //'CallBack' =>False,
-    ];
-      
     Protected Function GetSearch()
     {
       if(IsSet($this->Search) && !Is_Array($this->Search))
         return $this->Search;
       
-      $Res=$this->Create_Object('/FS/Search', Static::$Search_Def);
-      if(IsSet($this->Search))
-        $Res->SetParams($this->Search);
-      $this->Search=$Res;
-      return $Res;
+      $Res=$this->Create_Object('/FS/Search/Folder', $this->Search ??[]);
+      return $this->Search=$Res;
     }
     
     Function GetSubPath($Path)
@@ -69,13 +88,18 @@
       $this->md5='';
     }
     
+    Function GetFiles()
+    {
+      return $this->GetSearch()->GetListArray($this->GetFullPath());
+    }
+    
     Function GetMD5()
     {
       if($this->md5)
         return $this->md5;
       $Cache=$this->GetMD5Cache();
       $Res=[];
-      ForEach($this->GetSearch()->GetListArray($this->GetFullPath().'/')As $Item)
+      ForEach($this->GetFiles() As $Item)
         $Res[$Item->GetLocalPath()]=$Cache->CalcMD5($Item->GetFullPath());
       KSort($Res, SORT_NATURAL);
     //$this->Debug($Res);

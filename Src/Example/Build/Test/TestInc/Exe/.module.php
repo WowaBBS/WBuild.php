@@ -5,9 +5,10 @@
         'TestInc/Lib1',
         'TestInc/Lib2', // Fix bug of VC
         'TestInc/Lib3',
+        'TestInc/Inc',
       ],
       ['Cpp/SrcPath' ,''],
-      ['Cpp/Include' ,'Inc'],
+    //['Cpp/Include' ,'Inc'],
       ['Cpp/SrcPath' ,''],
       ['Cpp/Src'     ,'TestIncExe.cpp'],
       ['Public'],

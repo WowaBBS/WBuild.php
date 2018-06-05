@@ -10,13 +10,13 @@
 
     Protected Function _Cloneable() { return true; }
     
-    Function Add() // VarArgs
+    Function Add(...$Args)
     {
-      $this->AddItem(func_get_args());
+      $this->AddItem($Args);
       return $this;
     }
     
-    Function AddItem($Item, $Key=false) // VarArgs
+    Function AddItem($Item, $Key=false)
     {
       if(Is_Array($Item))
         $Item=Implode($Item);
@@ -118,16 +118,15 @@
       return $this->RemoveSet($Set);
     }
     
-    Function RemoveAny() // VarArgs
+    Function RemoveAny(...$Args)
     {
-      return $this->RemoveAnyList(func_get_args());
+      return $this->RemoveAnyList($Args);
     }
     
-    Function Override() // VarArgs
+    Function Override(...$Args)
     {
-      $List=func_get_args();
-      $this->RemoveAnyList($List);
-      ForEach($List As $Item)
+      $this->RemoveAnyList($Args);
+      ForEach($Args As $Item)
         $this->Add($Item);
     }
     
@@ -147,9 +146,9 @@
       return $this->HasSet($Set);
     }
     
-    Function HasAny() // VarArgs
+    Function HasAny(...$Args)
     {
-      return $this->HasAnyList(func_get_args());
+      return $this->HasAnyList($Args);
     }
     
     Function ToString($Separator=' ')

@@ -1,7 +1,9 @@
 <?
-  Require_Once '../../Using.php';
- 
-  $Manager=$Loader->Create_Object('/Builder/Manager', ['Modules'=>['Test']]);
+  $MainTarget ='Target';
+  $OutTasks   ='_Tasks.bat';
+  $Modules    ='Test';
+//$Op         ='Build';
+
   $Args=[
     'Config'=>['Win32', 'VC'=>-2017],
     'Assets'=>[
@@ -20,21 +22,5 @@
       ],
     ],
   ];
-  $Context=$Manager->Create_Context($Args);
-//$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Context.deb');
-//$Deb->Debug($Context->GetContextId());
-//$Instance=$Manager->Modules->Get('WSound')->CreateInstance($Context);
-  $Instance=$Manager->Modules->Get('Target')->CreateInstance($Context);
-//$Instance=$Manager->Modules->Get('TestPCH')->CreateInstance($Context);
-  $Tasks=$Instance->Make();
-  $Res=[];
-  ForEach($Tasks As $k=>$v)
-    $Res=Array_Merge($Res, $v->List);
-  $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('_Tasks.bat');
-//$Deb->Debug($Instance->Public);
-//$Deb->Debug($Tasks);
-  $Res=Implode("\r\n", $Res);
-  $Deb->Write($Res);
-//$Modules->Exec();
-  $Manager->Done();
+  Require_Once '../../Compile.php7';
 ?>

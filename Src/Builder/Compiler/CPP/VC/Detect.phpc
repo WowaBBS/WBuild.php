@@ -36,7 +36,7 @@
     //['Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat'    ,'?'     ,'?'     ,],
     ];
     
-    Function GetVersion() { return 4; }
+    Function GetVersion() { return 5; }
   
     function Detect($Vars)
     {
@@ -65,6 +65,26 @@
       
       $CurrEnv=$this->Create_Object('/System/Env');
       $CurrEnv->LoadCurrent();
+
+      static $Removes_VcVars=[
+      //'CommandPromptType'  ,
+        'DevEnvDir'          ,
+        'ExtensionSdkDir'    ,'Framework40Version' ,'FrameworkDir'       ,'FrameworkDIR32'     ,
+        'FrameworkDIR64'     ,'FrameworkVersion'   ,'FrameworkVersion32' ,'FrameworkVersion64' ,
+        'IFCPATH'            ,'INCLUDE'            ,'LIB'                ,'LIBPATH'            ,
+        'NETFXSDKDir'        ,'Platform'           ,'UCRTVersion'        ,'UniversalCRTSdkDir' ,
+        'VCIDEInstallDir'    ,'VCINSTALLDIR'       ,'VCToolsInstallDir'  ,'VCToolsRedistDir'   ,
+        'VCToolsVersion'     ,
+        'VisualStudioVersion'  ,'VS150COMNTOOLS'       ,'VSCMD_ARG_app_plat'   ,
+        'VSCMD_ARG_HOST_ARCH'  ,'VSCMD_ARG_TGT_ARCH'   ,'VSCMD_VER'            ,
+        'VSINSTALLDIR'         ,'VSSDK150INSTALL'      ,
+        'WindowsLibPath'       ,'WindowsSdkBinPath'    ,'WindowsSdkDir'        ,
+        'WindowsSDKLibVersion' ,'WindowsSdkVerBinPath' ,'WindowsSDKVersion'    ,
+        'WindowsSDK_ExecutablePath_x64'    ,'WindowsSDK_ExecutablePath_x86'    ,
+      ];
+      ForEach($Removes_VcVars As $Remove)
+        $CurrEnv->Remove($Remove);
+
       $ItemEnv=$this->Create_Object('/System/Env');
       File_Put_Contents($PathVc.'BaseEnv.bat', $CurrEnv->ToCmd());
       
@@ -122,7 +142,7 @@
           $CurrEnv->LoadCurrent();
           $ItemEnv->Minus($CurrEnv);
           // TODO:
-          $Removes=[
+          static $Removes_PreInit=[
             '__VSCMD_PREINIT_PATH'    ,
             '__VSCMD_PREINIT_INCLUDE' ,
             '__VSCMD_PREINIT_LIB'     ,
@@ -130,7 +150,7 @@
             '__VSCMD_PREINIT_VS150COMNTOOLS' ,
             '__VSCMD_PREINIT_VCToolsVersion' ,
           ];
-          ForEach($Removes As $Remove)
+          ForEach($Removes_PreInit As $Remove)
             $ItemEnv->Remove($Remove);
           File_Put_Contents($FileVc, $ItemEnv->ToCmd());
           // End Env

@@ -1,7 +1,6 @@
 <?
-  include '..\..\..\Using.php';
-  include 'list.php';
-//Include 'system.php';
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  include 'List.php';
 
 //$Loader->Using_Module('/TSpeed');
 //$Loader->Using_Module('/Error');

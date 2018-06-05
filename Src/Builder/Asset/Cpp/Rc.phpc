@@ -11,7 +11,7 @@
     
     Protected Function _GetSearchPathClass()
     {
-      return ['Cpp/SrcPath', 'Cpp/Include'];
+      return ['Cpp/RcPath', 'Cpp/SrcPath', 'Cpp/Include'];
     }
 
     Static Function MakeRc($Outer, $RcAsset)

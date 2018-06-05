@@ -119,6 +119,7 @@
         ForEach($Info->List As $Key)
           $this->__AddAsset($Key, $Obj);
         $Res[]=$Obj;
+        $this->DoEvent('Created', $Obj);
       }
     }
     
@@ -151,7 +152,6 @@
       $Args['Outer' ]=$this  ; // Only for static methods
       $Args['Info'  ]=$Info  ;
     //$Args['Type'  ]=$Type  ;
-      $Args['Param' ]=$Param ;
 
       if(IsSet($Param['>If']))
       {
@@ -162,7 +162,7 @@
        #$this->Log('Debug', 'IsRelease =',$this->IsRelease ());
        #$this->Log('Debug', 'Ok');
         UnSet($Param['>If']);
-        $Args['Param' ]=$Param ;
+       //$Args['Param' ]=$Param ;
       }
       
       if(IsSet($Param['>Debug']))
@@ -170,6 +170,14 @@
         $Args['Debug']=$Param['>Debug'];
         UnSet($Param['>Debug']);
       }
+      
+      if(IsSet($Param['>Keys']))
+      {
+        $Args['>Keys']=$Param['>Keys'];
+        UnSet($Param['>Keys']);
+      }
+      
+      $Args['Param' ]=$Param ;
       
       $Res=[];
       $this->_Create($Res, $Args);
@@ -289,8 +297,8 @@
         $Added=[];
         ForEach($List As $KeyType=>$l)
           ForEach($l As $K=>$v)
-            if(!$this->__ExistsAsset($KeyType, $v, $this->IsPublic))
-              self::__Add($Added, $KeyType, $K, $v);
+          //if(!$this->__ExistsAsset($KeyType, $v, $this->IsPublic))
+            self::__Add($Added, $KeyType, $K, $v);
               
         ForEach($Added As $k=>$l)
           $Added[$k]=Array_Values($l);
@@ -301,8 +309,8 @@
       }
       ForEach($List As $KeyType=>$l)
         ForEach($l As $v)
-          if(!$this->__ExistsAsset($KeyType, $v, $this->IsPublic))
-            $this->__AddAsset($KeyType, $v);
+        //if(!$this->__ExistsAsset($KeyType, $v, $this->IsPublic))
+          $this->__AddAsset($KeyType, $v);
     }
   //****************************************************************
     

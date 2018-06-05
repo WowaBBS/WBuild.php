@@ -49,6 +49,15 @@
     {
       return $this->Module->GetMD5Cache($FullPath);
     }
-  // gerald+donald=robert
+
+  //****************************************************************
+  // Events
+  
+    Protected Function _DoEvent($Asset, $Type, ...$Args)
+    {
+      return $this->Module->_DoAssetEvent($Asset, $Type, ...$Args);
+    }
+    
+  //****************************************************************
   };
 ?>

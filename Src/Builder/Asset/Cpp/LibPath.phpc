@@ -8,6 +8,8 @@
       return [];
     }
    
+    Static Function GetDefMask() { return '*.lib;*.a'; }
+    
   //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
     Static Function _AddItem(Array &$Res, Array $Args, String $Path)
     {

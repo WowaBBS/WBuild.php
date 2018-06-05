@@ -18,9 +18,9 @@
     
     Function AllocLabelIdx() { return Self::$LabelIdx++; }
     
-    Function Descr() // VarArgs
+    Function Descr(...$Args)
     {
-      $this->Descr=Implode(func_get_args());
+      $this->Descr=Implode($Args);
       $this->Exec('');
       $this->Exec('');
       ForEach(Explode("\n", $this->Descr) As $Line)

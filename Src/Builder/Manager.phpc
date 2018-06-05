@@ -1,6 +1,7 @@
 <?
   $Loader->Parent_Class('/Object');
 //$Loader->Load_Class('/Builder/Module');
+  $Loader->Load_Type('/System/Delegate');
   $Loader->Load_Lib('/FS/Utils');
 
   class C_Builder_Manager extends C_Object
@@ -10,16 +11,17 @@
   
     Var $Modules;
     
+    Var $OnAsset;
+    
     Function _Init(Array $Args)
     {
+      $this->OnAsset=new TDelegate();
       parent::_Init($Args);
       $this->CacheDir=FileName_Normalize(RealPath('./').'/'.($Args['CacheDir']??$this->CacheDir)).'/';
       $this->Cache=$this->Create_Object('/Cache/Manager', [$this->CacheDir]);
       $ModulesArgs= $Args['Modules']??[''];
       $ModulesArgs['CacheDir']='Modules';
       $ModulesArgs['Manager']=$this;
-      $this->LoadPathEnv();
-      $this->LoadPathInstaled();
       $this->Modules=$this->Create_Object('/Builder/Modules', $ModulesArgs);
     }
  
@@ -44,7 +46,20 @@
     //****************************************************************
     // Paths
    
-    Var $Paths=[]; // Path for searching several programs
+    Protected $Paths=[]; // Path for searching several programs
+    Protected $Paths_Inited=false; // Path for searching several programs
+    
+    Function GetPaths()
+    {
+      if($this->Paths_Inited)
+        return $this->Paths;
+      
+      $this->LoadPathEnv();
+      $this->LoadPathInstaled();
+      
+      $this->Paths_Inited=true;
+      return $this->Paths;
+    }
     
     Function AddPath($Path)
     {
@@ -97,7 +112,7 @@
     //****************************************************************
     // Programs
     Var $Programs=[];
-    Var $Installed=[];
+    Protected $Installed=[];
     
     Function GetProgram($Name, Array $Args=[])
     {
@@ -143,6 +158,14 @@
       return $this->Installed;
     }
    
-    //****************************************************************
+  //****************************************************************
+  // Events
+  
+    Function _DoAssetEvent($Asset, $Type, ...$Args)
+    {
+      return ($this->OnAsset)($Asset, $Type, ...$Args);
+    }
+    
+  //****************************************************************
   };
 ?>

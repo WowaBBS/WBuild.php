@@ -7,7 +7,8 @@
   {
   //Var $AssetClass=''; // TODO: Move into class object;
   //Function GetAssetClass() { return $this->AssetClass; }
-    Var $Outer=false;
+    Var $Info  =null;
+    Var $Outer =false;
     
     Protected Function _Init(Array $Args)
     {
@@ -28,6 +29,16 @@
         $this->_InitParam($Param);
         Self::CheckEmptyParam($Param);
       }
+      if(IsSet($Args['>Keys']))
+        $this->Keys=(Array)$Args['>Keys'];
+    }
+    
+    Function HasKey($Key)
+    {
+      ForEach($this->Keys ?? [] As $_Key)
+        if($_Key===$Key)
+          return true;
+      return false;
     }
     
     //****************************************************************
@@ -85,6 +96,7 @@
       if(!Count($Param)) return;
 
       Var_Dump($Param);
+      // TODO: Log
       throw new Exception('Invalid parameters');
     }
     
@@ -153,10 +165,10 @@
   /*
     Var $Depends=[];
     
-    Function DependsOn()
+    Function DependsOn(... $Args)
     {
     //return;
-      ForEach(func_get_args() As $Item)
+      ForEach($Args As $Item)
         If(!Is_Array($Item))
           $this->Depends[$Item->Object_Id]=$Item;
         Else ForEach($Item As $I)
@@ -169,25 +181,11 @@
   //****************************************************************
   // Context
     
-    Function GetManager()
-    {
-      return $this->GetModuleInstance()->Manager;
-    }
-    
-    Function GetModuleInstance()
-    {
-      return $this->Outer->GetModuleInstance();
-    }
-    
-    Function GetContext()
-    {
-      return $this->GetModuleInstance()->Context;
-    }
-    
-    Function GetConfig()
-    {
-      return $this->GetContext()->Config;
-    }
+    Function GetModuleInstance() { return $this->Outer->GetModuleInstance(); }
+    Function GetManager() { return $this->GetModuleInstance()->Manager; }
+    Function GetModule() { return $this->GetModuleInstance()->GetModule(); }
+    Function GetContext() { return $this->GetModuleInstance()->Context; }
+    Function GetConfig() { return $this->GetContext()->Config; }
     
     Function AddFrom(C_Builder_Asset_List $Asset, $bPublic=null, $bDebug=false)
     {
@@ -209,6 +207,15 @@
       }
       return C_Builder_Asset_FS_PathBase::GlobalSearch($File, $this, $Cfg);
     }
+  //****************************************************************
+  // Events
+  
+    Function DoEvent($Type, ...$Args) { return $this->_DoEvent($this, $Type, ...$Args); }
+    Protected Function _DoEvent($Asset, $Type, ...$Args)
+    {
+      return $this->Outer->_DoEvent($Asset, $Type, ...$Args);
+    }
+    
   //****************************************************************
   
     Function ShouldBePrivate ($v) { return $v; }

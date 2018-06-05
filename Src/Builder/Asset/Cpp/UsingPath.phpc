@@ -18,6 +18,8 @@
       Parent::_Init($Args);
     }
     
+    Static Function GetDefMask() { return '*.dll'; }
+    
     Function IsSystem()
     {
       return $this->IsSystem??false;

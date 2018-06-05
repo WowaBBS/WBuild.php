@@ -41,10 +41,10 @@
       $Res[$Id]=$this;
     }
     
-    Function Depends()
+    Function Depends(... $Depends)
     {
-      ForEach(Func_Get_Args()As $i)
-        $this->Depends[$i->Object_Id]=$i;
+      ForEach($Depends As $Depend)
+        $this->Depends[$Depend->Object_Id]=$Depend;
     }
     
     Function _Prepare()

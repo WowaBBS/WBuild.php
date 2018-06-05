@@ -1,3 +1,12 @@
 @echo off
 cls
-D:\Langs\callphp7 "Compile.php7" >Output.txt 2>Error.txt
+
+setlocal
+
+set Redirect=cscript //B ../../Redirect.js
+set OutError=%0.err
+set OutLog=%0.log
+
+D:\Langs\callphp7 "Compile.php7" 2>%OutError% | %Redirect% 2>%OutLog%
+
+endlocal

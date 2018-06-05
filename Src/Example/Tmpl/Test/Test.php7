@@ -1,0 +1,27 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  
+  Set_Time_Limit(1);
+
+  $TLoader=$Loader->Create_Object('/Tmpl/Loader');
+  $Manager_Args=Array(
+    'Parser'=>Array(
+      'Tag_First' =>'{',
+      'Tag_Last'  =>'}',
+    ),
+  );
+  $TLoader->Types['w2_cpp']=$Loader->Create_Object('/Tmpl/W2/Manager', $Manager_Args);
+  $TLoader->DefType='w2_cpp';
+  
+  $Dir_Out='Out/';
+  $Vars=[];
+//$TLoader->Load_Template($Vars, '/WOpenAL/Effect/Check.h' );
+  $TLoader->String_Template ($Vars, '{Var:Prg.Arch/7Zip.Path}');
+  
+  $Vars=[
+    'Effects'=>[
+      ['CPP'=>'[Effects.0.CPP]'],
+    ],
+    'CPP_Align'=>'[CPP_Align]',
+  ];
+?>

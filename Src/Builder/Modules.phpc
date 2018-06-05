@@ -126,5 +126,15 @@
       Parent::_Debug_Info($Res);
       UnSet($Res['Manager']);
     }
+
+  //****************************************************************
+  // Events
+  
+    Function _DoAssetEvent($Asset, $Type, ...$Args)
+    {
+      return $this->Manager->_DoAssetEvent($Asset, $Type, ...$Args);
+    }
+    
+  //****************************************************************
   };
 ?>

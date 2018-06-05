@@ -55,6 +55,9 @@
         '>Create'      ,
         '>FileDepends' ,
         '>Parent'      ,
+        '>Keys'        ,
+        '>Map'         ,
+        '>Mask'        ,
       ];
     }
     

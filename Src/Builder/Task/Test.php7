@@ -1,5 +1,5 @@
 <?
-  Require_Once '../../Using.php';
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
 
   $Manager=$Loader->Create_Object('/Builder/Task/Manager');
   $A=$Manager->Create(); $A->Name='A';

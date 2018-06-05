@@ -134,5 +134,16 @@
     }
     
     Function GetName() { return $this->FullName; }
+
+  //****************************************************************
+  // Events
+  
+    Function _DoAssetEvent($Asset, $Type, ...$Args)
+    {
+      return $this->Modules->_DoAssetEvent($Asset, $Type, ...$Args);
+    }
+    
+  //****************************************************************
+    
   };
 ?>

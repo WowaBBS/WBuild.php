@@ -3,9 +3,18 @@
 
   class C_Builder_Asset_Cpp_Include extends C_Builder_Asset_FS_Path
   {
+    Var $Safe=true;
+  
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+    }
+  
     Protected Function _GetSearchPathClass()
     {
       return [];
     }
+
+    Static Function GetDefMask() { return '*.h;*.hpp;*.inc'; }
   };
 ?>
