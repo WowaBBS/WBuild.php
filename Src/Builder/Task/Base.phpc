@@ -57,12 +57,12 @@
     
     Private Function EventFromTask($Task)
     {
-      if($this->bFailed   ) return UnReachable();
-      if($this->bFinished ) return UnReachable();
-      if(!IsSet($this->WaitFor[$Task->Object_Id])) return UnReachable();
+      if($this->bFailed   ) return $this->Log('Fatal', 'UnReachable');
+      if($this->bFinished ) return $this->Log('Fatal', 'UnReachable');
+      if(!IsSet($this->WaitFor[$Task->Object_Id])) return $this->Log('Fatal', 'UnReachable');
       UnSet($this->WaitFor[$Task->Object_Id]);
       if($Task->bFailed) return $this->Failed();
-      if(!$Task->bFinished) return UnReachable();
+      if(!$Task->bFinished) return $this->Log('Fatal', 'UnReachable');
       if(Count($this->WaitFor)===0) return $this->Ready();
       // Wait finishing for another tasks
     }
@@ -96,7 +96,7 @@
     
     Private Function SendEvent()
     {
-      if(!$this->bFinished && !$this->bFailed) UnReachable();
+      if(!$this->bFinished && !$this->bFailed) $this->Log('Fatal', 'UnReachable');
       ForEach($this->SendTo As $SendTo)
         $SendTo->EventFromTask($this);
       $this->SendTo=[];

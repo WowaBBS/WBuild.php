@@ -39,7 +39,7 @@
     {
       $Id=$Task->Object_Id;
       if(IsSet($this->List[$Id]))
-        UnReachable();
+        $this->Log('Fatal', 'UnReachable');
       $Task->Manager=$this;
       $this->List[$Id]=$Task;
     }
@@ -56,7 +56,7 @@
     
     Function Prepare()
     {
-      if($this->bPrepared) UnReachable();
+      if($this->bPrepared) $this->Log('Fatal', 'UnReachable');
       $this->bPrepared=true;
       ForEach($this->List As $Task)
         $this->_Prepare($Task);

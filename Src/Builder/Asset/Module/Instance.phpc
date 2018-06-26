@@ -24,6 +24,16 @@
     //$this->Log('Debug', 'EnumCacheI  ', $this->EnumCache   ->FullPath);
       parent::_Init($Args);
     }
+
+    Function GetDependsModule($Name)
+    {
+      $List=$this->GetAssets('Module/Depends');
+      ForEach($List As $Depends)
+        if($Depends->Name===$Name)
+          return $Depends->Instance;
+      $this->Log('Fatal', 'Module "', $Name, '" not found');
+      return null;
+    }
     
     Function IsInstance() { return true; }
     

@@ -8,6 +8,6 @@
       return [];
     }
     
-    Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
+  //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
   };
 ?>

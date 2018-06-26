@@ -29,13 +29,24 @@
         $Defines->Get($k)->Set($this, $v);
     }
     
+    Function InlineCheck($List)
+    {
+      $Values=$this->Defines->ValidateSet($List);
+      return $this->Check($Values);
+    }
+    
     Function Check($List)
     {
       $Res=&$this->Value;
       $Keys=$this->Defines->GetList();
       ForEach($List as $k=>$v)
+      {
+        if(!IsSet($Keys[$k]))
+          $this->Log('Fatal', 'Config key ',$k,' not fonud [',Count($Res),']')
+            ('  Allowed keys [',Implode(', ', Array_Keys($Keys)),']');
         if(!$Keys[$k]->Check($Res, $v))
           return false;
+      }
       return true;
     }
 

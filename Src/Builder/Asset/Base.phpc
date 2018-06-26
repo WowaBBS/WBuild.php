@@ -186,6 +186,10 @@
     Function GetModule() { return $this->GetModuleInstance()->GetModule(); }
     Function GetContext() { return $this->GetModuleInstance()->Context; }
     Function GetConfig() { return $this->GetContext()->Config; }
+    Function GetDependsModule($Name)
+    {
+      return $this->GetModuleInstance()->GetDependsModule($Name);
+    }
     
     Function AddFrom(C_Builder_Asset_List $Asset, $bPublic=null, $bDebug=false)
     {

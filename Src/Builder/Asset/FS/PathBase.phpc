@@ -32,17 +32,25 @@
       $this->HasNext=$Args['HasNext']??false;
       if(IsSet($Args['>Parent']))
       { // TODO: SetPath
-        $this->Parent=$Args['>Parent'];
+        $Parent=$Args['>Parent'];
+        if(Is_String($Parent))
+        {
+          $ParentAsset=$Parent;
+          $Parent=$this->GetLastAsset($ParentAsset);
+          if(!$Parent)
+            $this->Log('Fatal', 'Parent asset "', $ParentAsset, '" not found');
+        }
+        $this->Parent=$Parent;
         $this->LocalPath=$Args['Path'];
-        $this->FullPath=Self::NormPath($this->Parent->GetSubPath($this->LocalPath));
+        $this->FullPath=Self::NormPath($Parent->GetSubPath($this->LocalPath));
       }
       else
     //if(IsSet($Args['Path']))
-      $this->SetPath(
-        $Args['Path'],
-        $Args['>Create'      ]??false,
-        $Args['>NoSearch'    ]??false
-      );
+        $this->SetPath(
+          $Args['Path'],
+          $Args['>Create'      ]??false,
+          $Args['>NoSearch'    ]??false
+        );
       if(IsSet($Args['>FileDepends']))
         $this->AddFileDepends($Args['>FileDepends']); 
     }
