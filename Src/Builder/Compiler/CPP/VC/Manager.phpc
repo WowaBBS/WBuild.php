@@ -38,6 +38,7 @@
       $Item['PDB'         ]='v'  .$VcVer;
       $Item['DirVersion'  ]='MSC'.$VcVer;
       $Item['ShowVersion' ]='MSC'.$VcVer;
+      $Item['Version'     ]=0;
       $Item['Year'        ]=0;
       ForEach(Static::$Versions As $I)
         if($I[2]>=$VcVer)
@@ -48,17 +49,18 @@
         $Item['PDB'         ]='v'.$I[1][0].$I[1][1];
         $Item['DirVersion'  ]=$I[6]??$I[0].$I[1][0].'x'.$I[1][1];
         $Item['ShowVersion' ]=$I[7]??$Item['ShowVersion' ];
+        $Item['Version'     ]=$I[3];
         $Item['Year'        ]=$I[4]??0;
       }
     }
     
-    Private Function _Get(&$Item)
+    Private Function _Get($Info)
     {
     //$Key='Instance';
-    //if(IsSet($Item[$Key]))
-    //  return $Item[$Key];
-      $Res=$this->Create_Object('/Builder/Compiler/CPP/VC/Instance', ['Item'=>$Item]);
-    //$Item[$Key]=$Res;
+    //if(IsSet($Info[$Key]))
+    //  return $Info[$Key];
+      $Res=$this->Create_Object('/Builder/Compiler/CPP/VC/Instance', ['Info'=>$Info, 'Manager'=>$this]);
+    //$Info[$Key]=$Res;
       return $Res;
     }
     
@@ -125,24 +127,39 @@
       $this->List=$Res;
     }
     
-    Private Function MsVer($v)
+    Function NormalizeVersion($v)
     {
-      if($v==1) return 1;
       if($v<20) $v+=2000; // Year
-      if($v<2002) return $v; //_MSC_VER
+      if($v<2002) return [$v*100000, ($v+1)*100000-1]; //_MSC_VER
+      if($v>3000) return [$v, $v]; //_MSC_FULL_VER
+      $Res=[];
       ForEach(Static::$Versions As $I)
         if(($I[4]??0)==$v)
-          return $I[2];
+          $Res[]=$I[2];
+      $C=Count($Res);
+      if($C===0)
+      {
+        $this->Log('Fatal', 'Visual Studio verion ', $v, ' is incorrect');
+        return [0, 0];
+      }
+      $Res=[$Res[0]*100000, ($Res[$C-1]+1)*100000-1];
+      return $Res;
+    }
+    
+    Private Function MsVer($v)
+    {
+      if($v===1) return [1, 1];
+      return $this->NormalizeVersion($v);
     }
     
     Function ParseConfig($Config)
     {
       if(!Is_Object($Config))
-        UnReachable();
+        $this->Log('Fatal', 'UnReachable');
       $VC  =$Config->Value['VC'      ];
       $Res=[
-        'VC_Min' =>$VC>0? $this->MsVer( $VC):0,
-        'VC_Max' =>$VC<0? $this->MsVer(-$VC):10000,
+        'VC_Min' =>$VC>0? $this->MsVer( $VC)[0]:0,
+        'VC_Max' =>$VC<0? $this->MsVer(-$VC)[1]:1000000000,
         'Win'    =>$Config->Value['Windows' ],
         'x86'    =>$Config->Value['x86'     ],
         'arm'    =>$Config->Value['arm'     ],
@@ -158,8 +175,9 @@
     //$Deb->Debug([$Cfg, $Item]);
     //$this->Log('Debug', 'VcVer  ',$Item['VcVer'],' in [',$Cfg['VC_Min'],'..',$Cfg['VC_Max'],']');
     //$this->Log('Debug', '  Win ',$Item['Win'],' == ',$Cfg['Win']);
-      if($Cfg['VC_Min']> $Item['VcVer']) return false;
-      if($Cfg['VC_Max']<=$Item['VcVer']) return false;
+    //$this->Debug([$Cfg['VC_Min'], $Cfg['VC_Max'], $Item['VcFullVer']]);
+      if($Cfg['VC_Min']> $Item['VcFullVer']) return false;
+      if($Cfg['VC_Max']<=$Item['VcFullVer']) return false;
       if((bool)$Cfg['Win']!=(bool)$Item['Win']) return false;
       switch($Item['CPU'])
       {
@@ -185,9 +203,7 @@
       $Cfg=$this->ParseConfig($Config);
       ForEach($this->List As $Item)
         if($this->CheckCfg($Cfg, $Item))
-           return $this->Create_Object('/Builder/Compiler/CPP/VC/Instance', [
-              'Info'=>$Item,
-           ]);
+           return $this->_Get($Item);
       return null;
     }
   }   

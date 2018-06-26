@@ -5,9 +5,19 @@
   {
     Static $ShortName='CPP';
     Var $DirVersion='Vx';
+    Var $Manager=null;
   //Var $Path='Path/Of/Compiler';
   
     Abstract Function GetCompilerIdHash();
+    Abstract Function CMake_GetGenerator();
+    Abstract Function IsCompiler($Name);
+    Abstract Function CompareVersion($Name);
+    
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      $this->Manager=$Args['Manager'];
+    }
   
     Function _Prepare($Exec)
     {

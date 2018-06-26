@@ -12,6 +12,37 @@
     Var $Info;
     
     Function GetCompilerIdHash() { return $this->VCVars; }
+
+    Function IsCompiler($Name) { return static::$ShortName===$Name; }
+    Function CompareVersion($Ver)
+    {
+      $Ver=$this->Manager->NormalizeVersion($Ver);
+      $Current=$this->Info['VcFullVer'];
+    //$this->Debug([$Current, $Ver]);
+      if($Current<$Ver[0]) return -1;
+      if($Current>$Ver[1]) return  1;
+                           return  0;
+    }
+    
+    Function CMake_GetPlatform($Asset)
+    {
+      if(!$Asset) return '';
+      $Config=$Asset->GetConfig();
+      if($Config->InlineCheck(['Win32'     ])) return ''            ; // Win32?
+      if($Config->InlineCheck(['Win64'     ])) return 'Win64'       ;
+      if($Config->InlineCheck(['Win', 'arm'])) return 'ARM'         ;
+                                               return 'Unsupported' ; 
+    }
+    
+    Function CMake_GetGenerator($Asset=null)
+    {
+      $Platform=$this->CMake_GetPlatform($Asset);
+      if($Platform==='' || $Platform==='Win32')
+        $Platform='';
+      else
+        $Platform=' '.$Platform;
+      return 'Visual Studio '.$this->Info['Version'][0].' '.$this->Info['Year'].$Platform;
+    }
     
     Function DetectUsingPath($Path)
     {
