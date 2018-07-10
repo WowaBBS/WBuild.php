@@ -110,83 +110,16 @@
     Function DefineDLLImport () { return '__declspec(dllimport)'; }
   //Function DefineDLLProxy  () { return '__declspec(dllimport dllexport)'; }
 
-    Protected Function _CompileDir($Args)
-    {
-      $Outer    =$Args['Outer'    ];
-      $Items    =$Args['Items'    ];
-      $Params   =$Args['Params'   ];
-      $Exec     =$Args['Exec'     ];
-      $Dir      =$Args['Dir'      ]; //$ObjAsset->GetDirFullPath()
-      
-      $Params   =clone $Params;
-    
-      $Params->Add('-c');
-      ForEach($Items As $Item)
-        $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
-      
-      $Params->Add('/Fo"',$Dir.'/"');
-      $FileParams=$Exec->CachePath.'.Opt';
-      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
-      
-      $this->Exec_Cl($Exec, $Params);
-    }
-    
-    Protected Function _CompileItem(Array $Args)
-    {
-      $SrcAsset =$Args['SrcAsset' ];
-      $ObjAsset =$Args['ObjAsset' ];
-      $Exec     =$Args['Exec'     ];
-      $Params   =$Args['Params'   ];
-      
-      $Params->Add('-c "' ,$SrcAsset->GetFullPath(),'"');
-    //$Params->Add('/Fo:"',$ObjAsset->GetFullPath(),'"');
-      $Params->Add('/Fo"' ,$ObjAsset->GetFullPath(),'"');
-
-      $FileParams=$Exec->CachePath.'.Opt';
-      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
-      
-      $this->Exec_Cl($Exec, $Params);
-    }
-    
-    Protected Function _CompileSplit(Array &$Res, Array $Args)
-    {
-      $Outer    = $Args['Outer'    ];
-      $Items    =&$Args['Items'    ];
-      $Params   = $Args['Params'   ];
-
-      if($Pch=$Outer->GetLastAsset('Cpp/Pch'))
-        if($StdAfx=$Pch->Extract($Items, $Args))
-        {
-          $Params->Add('/Fp"',$Pch->GetDataFile(),'"');
-          $_Params=clone $Params;
-          $_Params ->Add('/Yc"',$Pch->GetHeaderName(),'"');
-          $Params  ->Add('/Yu"',$Pch->GetHeaderName(),'"');
-          $_Args=$Args;
-          $_Args['Items'    ]=&$StdAfx  ; // It is fix of big bag
-          $_Args['Pch'      ]= $Pch     ;
-          $_Args['Params'   ]= $_Params ;
-          
-          $Res[]=$_Args;
-          
-          ForEach($Items As $Item)
-            $Item['Exec']->CheckFile($StdAfx[0]['ObjAsset']);
-          UnSet($Item);
-
-          if($Pch->IsForce())
-            $Params->Add('/FI',$Pch->GetHeaderPath());
-        }
-     #$Deb=$this->Loader->Get_Singleton('/Debug/Manager')->Get('Split.log');
-     #  ForEach($Args['Items'] As $j=>$Item)
-     #    $Deb->Writeln('!'.$j.' '.$Item['ObjAsset']->GetLocalPath());
-     #  ForEach($_Args['Items'] As $j=>$Item)
-     #    $Deb->Writeln('='.$j.' '.$Item['ObjAsset']->GetLocalPath());
-     #  ForEach($Items As $j=>$Item)
-     #    $Deb->Writeln('?'.$j.' '.$Item['ObjAsset']->GetLocalPath());
-      parent::_CompileSplit($Res, $Args);
-    }
-
     Protected Function _CompileParams(Array $Args)
     {
+      {
+        $L=[];
+        ForEach($Args['Items'] As $Item)
+          $L[]=$Item['SrcAsset']->ToDebugInfo();
+        $this->Debug($L);
+        if(!$Args['Outer'])
+          $this->Debug($Args);
+      }
       $Defines   = $Args['Defines'   ];
       $Includes  = $Args['Includes'  ];
       $Using     = $Args['Using'     ];
@@ -233,6 +166,50 @@
       }
 
       return $Params;
+    }
+    
+    Protected Function _Compile(Array $Args)
+    {
+      $Items        =$Args['Items'        ];
+      $Exec         =$Args['Exec'         ];
+      $Dir          =$Args['Dir'          ]??False; //$ObjAsset->GetDirFullPath()
+      $PchType      =$Args['PchType'      ]??'NoUse';
+      $Pch          =$Args['Pch'          ]??False;
+      $ForceInclude =$Args['ForceInclude' ]??[];
+
+      $Params=$this->_CompileParams($Args);
+      
+      ForEach($ForceInclude As $ForceIncludeItem)
+        $Params->Add('/FI', $ForceIncludeItem);
+
+      Switch($PchType)
+      {
+      Case 'NoUse'  : Break;
+      Case 'Create' :
+        $Params->Add('/Fp"', $Pch->GetDataFile(),'"');
+        $Params->Add('/Yc"', $Pch->GetHeaderName(),'"');
+        Break;
+      Case 'Use'    :
+        $Params->Add('/Fp"', $Pch->GetDataFile(),'"');
+        $Params->Add('/Yu"', $Pch->GetHeaderName(),'"');
+        Break;
+      Default: $this->Log('Fatal', 'Unreachable');
+      }
+      
+      $Params->Add('-c');
+      ForEach($Items As $Item)
+        $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
+      
+      if($Dir!==False)
+        $Params->Add('/Fo"',$Dir.'/"');
+      ElseIf(Count($Items)==1)
+        $Params->Add('/Fo"' ,End($Items)['ObjAsset']->GetFullPath(),'"');
+      Else
+        $this->Log('Fatal', 'Unreachable');
+      $FileParams=$Exec->CachePath.'.Opt';
+      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
+      
+      $this->Exec_Cl($Exec, $Params);
     }
     
     Protected Function Compile_CanGroupByDir(Array $Args) { return true; }

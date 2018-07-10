@@ -33,25 +33,26 @@
       return $Res;
     }
     
-    Function GetPchFile    ($Name) { return $Name.'.PreCompledHeader' ; }
-    Function GetObjFile    ($Name) { return $Name.'.Object'           ; }
-    Function GetExeFile    ($Name) { return $Name.'.Executable'       ; }
-    Function GetDllFile    ($Name) { return $Name.'.Dynamic'          ; }
-    Function GetDllLibFile ($Name) { return $Name.'.Dynamic.Liberary' ; }
-    Function GetLibFile    ($Name) { return $Name.'.Liberary'         ; }
-    
-    Function DefineDLLExport () { return 'Export Of DLL'; }
-    Function DefineDLLImport () { return 'Import Of DLL'; }
-  //Function DefineDLLProxy  () { return 'Proxy  Of DLL'; }
+    Abstract Function GetPchFile    ($Name); // { return $Name.'.PreCompledHeader' ; }
+    Abstract Function GetObjFile    ($Name); // { return $Name.'.Object'           ; }
+    Abstract Function GetExeFile    ($Name); // { return $Name.'.Executable'       ; }
+    Abstract Function GetDllFile    ($Name); // { return $Name.'.Dynamic'          ; }
+    Abstract Function GetDllLibFile ($Name); // { return $Name.'.Dynamic.Liberary' ; }
+    Abstract Function GetLibFile    ($Name); // { return $Name.'.Liberary'         ; }
+
+    Abstract Function DefineDLLExport (); // { return 'Export Of DLL'; }
+    Abstract Function DefineDLLImport (); // { return 'Import Of DLL'; }
+  //Abstract Function DefineDLLProxy  (); // { return 'Proxy  Of DLL'; }
   
     Function DetectUsingPath($Path) {}
     
-    Protected Function _CompileItem (Array $Args) {}
-    Protected Function _Compile     (Array $Args) {}
-    Protected Function _BuildExe    (Array $Args) {}
-    Protected Function _BuildDll    (Array $Args) {}
-    Protected Function _BuildRc     (Array $Args) {}
-    Protected Function _BuildResX   (Array $Args) {}
+  //Abstract Protected Function _CompileDir  (Array $Args); // {}
+  //Abstract Protected Function _CompileItem (Array $Args); // {}
+    Abstract Protected Function _Compile     (Array $Args); // {}
+    Abstract Protected Function _BuildExe    (Array $Args); // {}
+    Abstract Protected Function _BuildDll    (Array $Args); // {}
+    Abstract Protected Function _BuildRc     (Array $Args); // {}
+    Abstract Protected Function _BuildResX   (Array $Args); // {}
     
     Function PrepareExec($Exec){ }
     
@@ -75,7 +76,6 @@
         //TODO: $Item['ObjAsset']->AddFileDepends($Item['SrcAsset']->GetFileDepends()); // Dll and Libs
         }
       
-      $Args['Params']=$this->_CompileParams($Args);
       $Res=[];
       $this->_CompileSplit($Res, $Args);
      #$Deb=$this->Loader->Get_Singleton('/Debug/Manager')->Get('Split.log');
@@ -92,15 +92,40 @@
         $this->Compile_($_Args);
     }
     
-    Protected Function _CompileParams(Array $Args)
-    {
-      $Params=$this->CreateParams();
-      return $Params;
-    }
-    
     Protected Function _CompileSplit(Array &$Res, Array $Args)
     {
-      $Items=$Args['Items'];
+    //$Items=$Args['Items'];
+    //***
+      $Outer    = $Args['Outer'    ];
+      $Items    =&$Args['Items'    ];
+
+      if($Pch=$Outer->GetLastAsset('Cpp/Pch'))
+        if($StdAfx=$Pch->Extract($Items, $Args))
+        {
+          $Args['Pch'       ]=$Pch;
+          $_Args=$Args;
+          UnSet($_Args['Items'  ]); // Fix of big bug
+          $_Args['Items'    ]=&$StdAfx  ; // It is fix of big bag
+          $_Args['PchType' ]='Create';
+          $Args['PchType'   ]='Use';
+          $Args['PchAssets' ]=$StdAfx[0]['ObjAsset'];
+          
+          $Res[]=$_Args;
+          
+          ForEach($Items As $Item)
+            $Item['Exec']->CheckFile($Args['PchAssets' ]);
+          UnSet($Item);
+
+          if($Pch->IsForce())
+          { // TODO: AssetArray
+            $ForceInclude=[$Pch->GetHeaderPath()];
+            if(IsSet($Args['ForceInclude']))
+              ForEach($Args['ForceInclude'] As $FI)
+                $ForceInclude[]=$FI;
+            $Args['ForceInclude']=$ForceInclude;
+          }
+        }
+    //***
       if(false)
         $this->Log('Debug', '_CompileSplit')->Call(
           Function($Log) use ($Items)
@@ -115,7 +140,6 @@
       if(!$c) return;
       if($c>2 && $this->Compile_CanGroupByDir($Args))
       {
-        $Params   =$Args['Params'   ];
         $Groups=[];
         ForEach($Items As $Item)
         {
@@ -133,7 +157,6 @@
           UnSet($_Args['Items'  ]); // Fix of big bug
           $_Args['Dir'     ]=$GPath; //$ObjAsset->GetDirFullPath();
           $_Args['Items'   ]=$GItems;
-          $_Args['Params'  ]=clone $Params;
           $_Args['Exec'    ]=$First['Exec'     ];
           $_Args['First'   ]=$First;
           $Res[]=$_Args;
@@ -141,7 +164,9 @@
         }
       }
       else
+      {
         $Res[]=$Args;
+      }
     }
     
     Function Compile_(Array $Args)
@@ -170,11 +195,9 @@
       $Using     = $Args['Using'     ];
       $UsingPath = $Args['UsingPath' ];
       $Items     = $Args['Items'     ];
-      $Params    = $Args['Params'    ];
       
       ForEach($Items As $k=>$Item)
       {
-        $Items[$k]['Params']=clone $Params; // Fix of big bug
         $SrcAsset =$Item['SrcAsset' ];
         $ObjAsset =$Item['ObjAsset' ];
         $Exec     =$Item['Exec'     ];
@@ -187,35 +210,23 @@
         $Exec->CheckInputs($Using);
         $Exec->CheckFile($SrcAsset);
         $Exec->MkDir($ObjAsset);
+
+        $_Args=$Args;
+        UnSet($_Args['Items'  ]); // Fix of big bug
+        $_Args['Items'  ]=[$Item];
+        $_Args['Exec'   ]=$Item['Exec'];
+        $_Args['Dir'    ]=False;
+        $this->_Compile($_Args);
+        $Exec->CheckResultFile($ObjAsset);
+        $Exec->SaveCallTo();
+        $Exec->Finish();
         
         UnSet($SrcAsset );
         UnSet($ObjAsset );
         UnSet($Exec     );
-        UnSet($Item);
+        UnSet($Item     );
       }
       $Args['Items']=$Items; // Fix of big bug
-    
-      $this->_CompileItems($Args);
-
-      ForEach($Items As $Item)
-      {
-        $ObjAsset =$Item['ObjAsset' ];
-        $Exec     =$Item['Exec'     ];
-      
-        $Exec->CheckResultFile($ObjAsset);
-        $Exec->SaveCallTo();
-        $Exec->Finish();
-
-        UnSet($ObjAsset );
-        UnSet($Exec     );
-        UnSet($Path     );
-      }
-    }
-    
-    Protected Function _CompileItems(Array $Args)
-    {
-      ForEach($Args['Items']As $Item)
-        $this->_CompileItem($Item);
     }
     
     Protected Function CompileDir_(Array $Args)
@@ -254,7 +265,7 @@
         UnSet($SrcAsset );
       } 
     
-      $this->_CompileDir($Args);
+      $this->_Compile($Args);
 
       ForEach($Items As $Item)
       {
@@ -272,8 +283,6 @@
       $Exec->SaveCallTo();
       $Exec->Finish();
     }
-    
-    Protected Function _CompileDir($Args) { FAbstract(); }
     
     Static Function AgregateLibs($Libs)
     {
