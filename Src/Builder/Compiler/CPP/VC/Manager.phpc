@@ -133,16 +133,26 @@
       if($v<2002) return [$v*100000, ($v+1)*100000-1]; //_MSC_VER
       if($v>3000) return [$v, $v]; //_MSC_FULL_VER
       $Res=[];
-      ForEach(Static::$Versions As $I)
+      $bLast=false;
+      ForEach(Static::$Versions As $k=>$I)
         if(($I[4]??0)==$v)
           $Res[]=$I[2];
+        else if($Res)
+        {
+          $Res[]=$I[2];
+          $bLast=true;
+          break;
+        }
       $C=Count($Res);
       if($C===0)
       {
         $this->Log('Fatal', 'Visual Studio verion ', $v, ' is incorrect');
         return [0, 0];
       }
-      $Res=[$Res[0]*100000, ($Res[$C-1]+1)*100000-1];
+      if($bLast)
+        $Res=[$Res[0]*100000,  $Res[$C-1]   *100000-1];
+      else
+        $Res=[$Res[0]*100000, ($Res[$C-1]+1)*100000-1];
       return $Res;
     }
     
@@ -159,7 +169,7 @@
       $VC  =$Config->Value['VC'      ];
       $Res=[
         'VC_Min' =>$VC>0? $this->MsVer( $VC)[0]:0,
-        'VC_Max' =>$VC<0? $this->MsVer(-$VC)[1]:1000000000,
+        'VC_Max' =>$VC<0? $this->MsVer(-$VC)[0]:1000000000,
         'Win'    =>$Config->Value['Windows' ],
         'x86'    =>$Config->Value['x86'     ],
         'arm'    =>$Config->Value['arm'     ],
