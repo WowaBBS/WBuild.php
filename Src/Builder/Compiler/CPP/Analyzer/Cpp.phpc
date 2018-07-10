@@ -1,0 +1,449 @@
+<?
+  $Loader->Parent_Class('/Builder/Compiler/CPP/Analyzer/Text');
+  
+  Class C_Builder_Compiler_CPP_Analyzer_Cpp Extends C_Builder_Compiler_CPP_Analyzer_Text
+  {
+    var $Include_Replace       = !true ;
+    
+    var $Detect_Header         = true  ;
+    var $Include_Guard_Remove  = true  ;
+    var $Include_Guard_Add     = false ;
+  //var $Include_Guard_Replace = false ;
+    var $Pragma_Once_Remove    = true  ;
+    var $Pragma_Once_Add       = true  ;
+    var $Warn_Block_Inline     = false ;
+    
+    var $Path_Replace= Array(
+      '"'=>Array(
+        'Abs'=>Array( // "a/b/c.h"
+          '<' =>'Abs'  , // "a/b/c.h"
+          '>' =>'Abs'  , // "b/c.h", "c.h"
+        ),
+        'Rel'=>Array( // "../b/c.h"
+          '<' =>'Rel'  , // "a/b/c.h"
+          '>' =>'Rel'  , // "b/c.h", "c.h"
+        ),
+      ),
+      '<'=>Array(
+        'Abs'=>Array( // "a/b/c.h"
+          '<' =>'Abs'  , // "a/b/c.h"
+          '>' =>'Abs'  , // "b/c.h", "c.h"
+        ),
+      ),
+    );
+    
+    Var $Includes=[];
+    
+    Function AddInclude($Include)
+    {
+      $Type=$Include[0].$Include[StrLen($Include)-1];
+      $Path=SubStr($Include, 1, -1);
+      If(!IsSet($this->Includes[$Path]))
+        $this->Includes[$Path]=0;
+      Switch($Type)
+      {
+      Case '<>' : $this->Includes[$Path]|=1; break;
+      Case '""' : $this->Includes[$Path]|=2; break;
+      Default   : $this->Warning(-1, 'Unknown #include ', $Include);
+      }
+    }
+    
+    function _Include_Replacer($m)
+    {
+      $Path=$m[2];
+      $Start =SubStr($Path, 0, 1);
+      $End   =SubStr($Path, -1, 1);
+      $Path=StrTr($Path, '\\', '/');
+      $Path=SubStr($Path, 1,-1);
+      $Path=$this->_PathReplace($Path, $Start); //'#include');
+      //echo $m[0], "!\n";
+      return $m[1].$Start.$Path.$End;
+    }
+    
+    function Check_InlineCR($S)
+    {
+      $in=StrRPos($S,'\\');
+      if($in===false) return false;
+      return StrLen($S)===$in+1;
+    //return StrLen(Trim(SubStr($S, $in+1)))==0;
+    }
+    
+    function Check_Comments($i, $S)
+    {
+      $l=StrLen($S);
+      $m=0;
+      $ic=false; // // || /*
+      $IsBlockComment=false;
+      for($j=0; $j<$l; $j++)
+        switch($m)
+        {
+        case 0:
+          switch($S[$j])
+          {
+          case "'": $m=1; break; // 'string'
+          case '"': $m=2; break; // "string"
+          case '/': $m=5; break; //
+          }
+          break;
+        case 1: // str1
+          switch($S[$j])
+          {
+          case "'": $m=0; break;
+          case '\\': $m=3; break;
+          }
+          break;
+        case 2: // str2
+          switch($S[$j])
+          {
+          case '"': $m=0; break;
+          case '\\': $m=4; break;
+          }
+          break;
+        case 3: $m=1; break; // str1 slash
+        case 4: $m=2; break; // str2 slash
+        case 5:
+          switch($S[$j])
+          {
+          case '/': $m=6; $ic=$j-1; break 3;
+          case '*': $m=7; $ic=$j-1; break 2;
+          }
+          $m=0;
+          break;
+        case 6: break; // unreachable
+        case 7:
+          switch($S[$j])
+          {
+          case '*': $m=8; break;
+          }
+          break;
+        case 8:
+          switch($S[$j])
+          {
+          case '/': $m=0;
+            if($this->Warn_Block_Inline)
+              $this->Warning($i.':'.$ic, 'Block inline comment');
+            $S=SubStr($S, 0, $ic).' '.SubStr($S, $j+1);
+            $j=$ic;
+            $ic=false;
+            break;
+          }
+          break;
+        }
+      $IsComment=false;
+      switch($m)
+      {
+      case 0: break; // Normal
+      case 1: // str1
+      case 2: // str2
+      case 3: // str1 slash
+      case 4: // str2 slash
+        $this->Warning($i, 'String is not ended');
+        break;
+      case 5: // / 
+      //$this->Warning($i, 'Unknown slash');
+        break;
+      case 6:  // //
+        $S=SubStr($S, 0, $ic);
+        $IsComment=true;
+        break;
+      case 7: // /*
+      case 8: // /* *
+        $S=SubStr($S, 0, $ic);
+        $IsBlockComment=true;
+        $IsComment=true;
+        break;
+      }
+    //echo $m,':';
+      return Array(
+        $S,
+        $IsComment, // IsComment
+        $IsBlockComment
+      );
+    }
+    
+    function _Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define)
+    {
+      if($Res_PragmaOnce!=false && !$Res_Fail && $Res_IfNDef!==false && $Res_Define!==false)
+        $this->Warning($Res_IfNDef, 'Pragma_Once_Fail');
+      return true;
+    }
+  
+    function Detect_Pragma_Once($C)
+    {
+      $Res_PragmaOnce =false;
+      $Res_IfNDef     =false;
+      $Res_Define     =false;
+      $Res_EndIf      =false;
+      $Res_Fail       =false;
+      $Res_Check      =false;
+      
+      $c=Count($C);
+      $Mode=0;
+      $Line_Counter =0; //< Counter of not empty lines
+      $If_Level     =0; //< Level of if block
+      $IfNDef_First ='';
+      for($i=0; $i<$c; $i++)
+      {
+        $S=$C[$i];
+        switch($Mode)
+        {
+        case 0:
+          $R=$this->Check_Comments($i, $S);
+          $S  =$R[0];
+          $ic =$R[1]; // IsComment
+          if($R[2]!==false)
+            $Mode=1;
+        
+          $S=Trim($S);
+          if(StrLen($S)===0)
+            continue;
+          $Line_Counter++;
+          if($ic===false)
+            if($this->Check_InlineCR($S))
+              $Mode=2;
+          //if(StrPos($S,'#')!==false)
+          //echo $S, "\n";
+          if(StrPos($S,'#')!==false)
+          if(preg_match('/^#\s*(.+)$/', $S, $Match)===1)
+          {
+            $Sub=$Match[1];
+          //echo $Match[0], "\n";
+            if(preg_match('/^(\w+)\s*(\S*)\s*(.*)$/', $Sub, $Match)!==false)
+            {
+              $m1=$Match[1];
+              $m2=$Match[2];
+              $m3=$Match[3];
+              switch($m1)
+              {
+              case 'ifndef'  :
+                if($If_Level===0)
+                {
+                //echo $S,"\n";
+                  if($IfNDef_First==='' && 
+                     $Res_Fail === false &&
+                     $Line_Counter==1)
+                  {
+                    $IfNDef_First=$m2;
+                  //echo $S,"\n";
+                  //echo $m2,"\n";
+                    $Res_IfNDef=$i;
+                  }
+                  else
+                  {
+                  //echo $S,"\n";
+                    $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define);
+                  }
+                }
+                $If_Level++;
+                break;
+              case 'if'      :
+              case 'ifdef'   :
+                if($If_Level==0)
+                  $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define);
+                $If_Level++;
+                break;
+              case 'define'  :
+                if($If_Level===1)
+                {
+                /*
+                  if($IfNDef_First!==''  &&
+                     $Res_Fail === false &&
+                     $IfNDef_First===$m2 &&
+                     $Res_IfNDef!==false &&
+                     $Res_Define===false)
+                  echo $S,"\n";
+                */
+                  if($IfNDef_First!==''  &&
+                     $Res_Fail === false &&
+                     $IfNDef_First===$m2 &&
+                     $Res_IfNDef!==false &&
+                     $Res_Define===false)
+                  {
+                  //echo $S,"\n";
+                    $Res_Define=$i;
+                  }
+                }
+                break;
+              case 'endif'   :
+                $If_Level--;
+                if($If_Level===0 &&
+                   $Res_Fail   ===false &&
+                   $Res_IfNDef !==false &&
+                   $Res_Define !==false &&
+                   $Res_EndIf  ===false)
+                {
+                  $Res_EndIf=$i;
+                  $Res_Check=$Line_Counter;
+                //$IfNDef_First
+                }
+                break;
+              case 'else'    :
+              case 'elif'    :
+                if($If_Level==1)
+                  $IfNDef_First=' ';
+                break;
+              case 'pragma'  :
+              //echo GetType($m3),$m3,".\n";
+                if(StrLen($m3)!==0) break;
+                if($m2==='once')
+                {
+                  $Line_Counter--;
+                  if($Line_Counter>0)
+                    $this->Warning($i, 'Wrong place for #pragma once');
+                  $Res_PragmaOnce=$i;
+                  break;
+                }
+                break;
+              case 'include' :
+                if($m3!=="")
+                  $this->Warning($i, 'Internal error');
+                $this->AddInclude($m2);
+              break;
+              case 'undef'   : break;
+              case 'error'   :
+                break;
+              default:
+                $this->Warning($i, 'Unknown preprocessor "'.$Sub.'"');
+              }
+              if(StrLen(Trim($m1))===0)
+                $this->Warning($i, 'Unknown error "'.$Sub.'"');
+              //echo $m1,"\n";
+            }
+          }
+          break;
+        case 1: // IsBlockComment
+        //echo $S,"\n";
+          $ice=strpos($S,'*/');
+          if($ice===false)
+            break;
+          $Mode=0;
+          $S=Trim(SubStr($S, $ice+2));
+        //echo $S, "\n";
+          $R=$this->Check_Comments($i, $S);
+          $S  =$R[0];
+          if($R[2]!==false)
+            $Mode=1;
+          
+          if(StrLen($S)===0)
+            continue;
+          $Line_Counter++;
+          break;
+        case 2:
+           $Mode=0;
+           $S=Trim($S);
+           if($this->Check_InlineCR($S))
+             $Mode=2;
+          break;
+        }
+      }
+      if($If_Level!==0)
+        $this->Warning($i, 'Error level #if #endif');
+  
+      if($Res_IfNDef ===true )
+      if($Res_Define ===true )
+      if($Res_EndIf  ===false)
+      {
+        $this->Warning($Res_EndIf, 'abC');
+      }
+        
+      if(!$Res_Fail)
+      {
+         if($Res_IfNDef ===false) $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define); else
+         if($Res_Define ===false) $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define); else
+         if($Res_EndIf  ===false) $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define); else
+         {
+           if($Res_Check!==$Line_Counter)
+           {
+             $this->Warning($Res_EndIf, 'More data after #endif // _h');
+             $Res_Fail=true;
+           }
+         }
+      }
+      if($Res_Fail)
+      {
+        $Res_IfNDef =false;
+        $Res_Define =false;
+        $Res_EndIf  =false;
+      }
+      return Array(
+        $Res_PragmaOnce , // #pragma once
+        $Res_IfNDef     , // #ifndef _h
+        $Res_Define     , // #define _h
+        $Res_EndIf      , // #endif // _h
+      );
+    }
+    
+    function _Process_Arr($C)
+    {
+      if($this->Detect_Header)
+      {
+        $R=$this->Detect_Pragma_Once($C);
+        $Pos_PragmaOnce = $R[0];
+        $Pos_IfNDef     = $R[1];
+        $Pos_Define     = $R[2];
+        $Pos_EndIf      = $R[3];
+        
+        $Is_PragmaOnce   =$Pos_PragmaOnce !==false;
+        $Is_IncludeGuard =$Pos_IfNDef     !==false;
+                        
+        if($Is_PragmaOnce || $Is_IncludeGuard)
+        {
+          $IGR=$this->Include_Guard_Remove && $Is_IncludeGuard ;
+          $POR=$this->Pragma_Once_Remove   && $Is_PragmaOnce   ;
+          $IGA=$this->Include_Guard_Add    && $this->Include_Guard_Remove ;
+          $POA=$this->Pragma_Once_Add      && $this->Pragma_Once_Remove   ;
+        /*
+          if(!$IGA || !$POA || !$IGR ||!$POR)
+          {
+            $IGR=$IGR && ($IGA || $POA);
+            $POR=false;
+          }
+        */  
+          if($IGR)
+          {
+            Array_Splice($C, $Pos_EndIf  , 1);
+            Array_Splice($C, $Pos_Define , 1);
+            Array_Splice($C, $Pos_IfNDef , 1);
+          }
+          if($POR)
+          {
+            Array_Splice($C, $Pos_PragmaOnce, 1);
+          }
+          if($IGA)
+          {
+            $Key=$this->File->Path();
+            $Key='_'.Str_Replace('/', '_', $Key);
+            Array_UnShift($C, '#ifndef '.$Key);
+            Array_UnShift($C, '#define '.$Key);
+            Array_Push   ($C, '#endif // _h');
+          }
+          if( $POA)
+          {
+            Array_UnShift($C, '#pragma once');
+          }
+        }
+      }
+      $C=parent::_Process_Arr($C);
+      return $C;
+    }
+    
+    Function Process_Text($Content)
+    {
+      $this->Includes=[];
+      if(false)
+      {
+        Static $DebugListFiles=[];
+        $FN=$this->FilePath;
+        if(!IsSet($DebugListFiles[$FN]))
+          $DebugListFiles[$FN]=true;
+        else
+          $this->Log('Error', 'The file ', $FB,' already was analyzed');
+      }
+      
+      $C=Parent::Process_Text($Content);
+      if($this->Include_Replace)
+        $C=Preg_Replace_CallBack('/(#\s*include\s*)("[^"]*"|<[^>]*>)/', Array($this, '_Include_Replacer'), $C);
+      return $C;
+    }
+  }
+?>

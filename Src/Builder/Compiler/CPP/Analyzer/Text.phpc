@@ -1,0 +1,184 @@
+<?
+  $Loader->Parent_Class('/Object');
+
+  Class C_Builder_Compiler_CPP_Analyzer_Text Extends C_Object
+  {
+    Var $Analyzer =null; ///<TODO: Remove
+    Var $FilePath =null;
+    Var $Write_FilePath =null;
+    
+    Var $Allow_Write           = false ; ///< Allow write changes to file
+    Var $Replace_New_Line      = false ; ///< String or false
+    Var $Remove_Space_At_End   = false ;
+    Var $Empty_Lines_First     = 0;
+    Var $Empty_Lines_Last      = 1;
+    
+    Var $Warnings=[];
+  
+    Var $Path_Replace= Array(
+      'Default'=>Array(
+        'Abs'=>Array( // "a/b/c.h"
+          '<' =>'Abs'  , // "a/b/c.h"
+          '>' =>'Abs'  , // "b/c.h", "c.h"
+        ),
+        'Rel'=>Array( // "../b/c.h"
+          '<' =>'Rel'  , // "a/b/c.h"
+          '>' =>'Rel'  , // "b/c.h", "c.h"
+        ),
+      ),
+    );
+    
+    function Init($Analyzer) { $this->Analyzer=$Analyzer; }
+    
+    function _PathReplace($Path, $Type='Default')
+    {
+      $Types=$this->Path_Replace[$Type];
+      //echo $Path,"!\n";
+      $P=Explode('/', $Path);
+      $C=count($P);
+      
+      $Dir=$this->File->Parent;
+  
+      $N=null;
+      $Type1='None';
+      if(IsSet($Types['Rel']) &&($Dir->Parent || !IsSet($Types['Abs'])))
+      {
+        //echo $Dir->Path(),' -> ', $Path, ' -> ', $N->Path(), "\n";
+        $N=$Dir->FindNode($P);
+        if($N)
+          $Type1='Rel';
+      }
+      
+      if(!$N && IsSet($Types['Abs']))
+      {
+        $N=$Dir->Lib->FindNode($P);
+        if(!$N)
+          $N=$this->Analyzer->FindNode($P);
+        if($N)
+          $Type1='Abs';
+      }
+      if(!$N)
+        return $Path; // Not founded
+  
+      $Type2=$Dir->IsParentOf($N)? '>':'<';
+  
+      $To=$Types[$Type1][$Type2];
+      switch($To)
+      {
+      case 'AsIs': break;
+      case 'Abs': 
+        $Path=$N->Path();
+        break;
+      case 'Rel': 
+      //echo $Dir->Path(),' -> ', $Path, ' -> ', $N->Path(), "\n";
+        $P1=$N   ->PathA();
+        $P2=$Dir ->PathA();
+        while(count($P1) && count($P2) && $P1[0]==$P2[0])
+        {
+          Array_Shift($P1);
+          Array_Shift($P2);
+        }
+        while(count($P2))
+        {
+          Array_UnShift($P1, '..');
+          Array_Shift($P2);
+        }
+        $Path=Implode('/', $P1);
+        
+        break;
+      }
+      return $Path;
+    }
+    
+    function _Process_Arr($C)
+    {
+      if($this->Remove_Space_At_End)
+      {
+        foreach($C as $k=>$v)
+          $C[$k]=RTrim($v);
+      }
+      if($this->Empty_Lines_First!==false)
+      {
+      //echo 'u';
+        while(IsSet($C[0]) && StrLen(Trim($C[0]))===0)
+          Array_Shift($C);
+        $i=$this->Empty_Lines_First;
+        while($i>0)
+        {
+          Array_UnShift($C, '');
+          $i--;
+        }
+      }
+      if($this->Empty_Lines_Last!==false)
+      {
+        while(Count($C)>0 && StrLen(Trim($C[Count($C)-1]))===0)
+          Array_Pop($C);
+        $i=$this->Empty_Lines_Last;
+        while($i>0)
+        {
+          Array_Push($C, '');
+          $i--;
+        }
+      }
+      return $C;
+    }
+    
+    Function Process_Text($Content)
+    {
+      $this->Warnings=[];
+      $Match_Cr="/([^\r\n]*)(\r\n?|\n\r?)?/";
+  
+      Preg_Match_All($Match_Cr, $Content, $Matches);
+      $Lines  =$Matches[1];
+      $CrList =$Matches[2];
+      $Cr=$CrList[0];
+      if(Array_Pop($CrList)!=='')
+        $this->Log('Fatal', 'Unreachable');
+      ForEach($CrList As $LineNumber=>$CurrentCr)
+        If($CurrentCr!=$Cr)
+        {
+          $this->Warning($LineNumber+1, 'NewLine has different format');
+          break;
+        }
+      If($this->Replace_New_Line)
+        $Cr=$this->Replace_New_Line;
+
+    //$this->Debug($Lines);
+      $Res=$this->_Process_Arr($Lines);
+      // TODO: If changed
+      return $Res!=$Lines? Implode($Cr, $Res):False;
+    }
+    
+    Function Process_FilePath($FilePath)
+    {
+      $this->FilePath=$FilePath;
+      $zSave=false;
+      $Contents=File_Get_Contents($FilePath);
+      $C=$Contents;
+      $C=$this->Process_Text($Contents);
+      If($this->Allow_Write && $C!==False && $C!==$Contents)
+      {
+        if($this->Write_FilePath)
+          $FilePath=$this->Write_FilePath;
+        $this->Log('Debug', 'write ', $FilePath);
+        File_Put_Contents($FilePath, $C);
+      }
+      $this->FilePath=null;
+    }
+
+    Function Warning($Line, ...$Message)
+    {
+      $Log=$this->Log('Warning', ...$Message);
+      $this->Warnings[]=[$Line, $Message];
+      If($this->FilePath)
+      {
+        If($Line!==false)
+          $Log(' ', $this->FilePath ,':', $Line);
+        Else
+          $Log(' ', $this->FilePath);
+      }
+      ElseIf($Line!==false)
+        $Log(' at line ', $Line);
+    }
+  }
+?>
