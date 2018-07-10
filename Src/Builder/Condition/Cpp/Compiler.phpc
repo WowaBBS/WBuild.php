@@ -1,0 +1,104 @@
+<?
+  $Loader->Parent_Class('/Builder/Condition/Base');
+  
+  class C_Builder_Condition_Cpp_Compiler extends C_Builder_Condition_Base
+  {
+    Var $List=[];
+    
+    Static Function Split($Name)
+    {
+      if(Is_Array($Name))
+        return $Name;
+      $C=$Name[0];
+      if($C==='<' || $C==='>' || $C==='=')
+      {
+        $C2=$Name[1];
+        if($C2==='=')
+        {
+          $C.=$C2;
+          $Name=SubStr($Name, 2);
+        }
+        else
+          $Name=SubStr($Name, 1);
+      }
+      else
+        $C='';
+      return [$C, $Name];
+    }
+    
+    function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      $List=$Args['Param'];
+      $Res=[];
+      $R=[];
+      ForEach($List As $Name)
+      {
+        [$C, $Name]=Static::Split($Name);
+        if($C==='')
+        {
+          if($R)
+          {
+            $Res[]=$R;
+            $R=[];
+          }
+          $R['Compiler']=$Name;
+        }
+        else
+        {
+          if(!$R)
+            $R[]='';
+          $R[]=[$C, $Name];
+        }
+      }
+      if($R)
+        $Res[]=$R;
+      ForEach($Res As &$Item)
+      {
+        $Compiler=$Item['Compiler'];
+        UnSet($Item['Compiler']);
+        $Item=[
+          'Compiler'  =>$Compiler ,
+          'Condition' =>$Item     ,
+        ];
+      }
+      $this->List=$Res;
+    }
+     
+    function CheckAsset($Asset, $Args)
+    {
+      $Compiler=$Asset->RequireAsset('Cpp/Compiler')->Instance;
+      ForEach($this->List As $Info)
+      {
+        $_Compiler =$Info['Compiler'  ];
+        $Condition =$Info['Condition' ];
+        if($Compiler->IsCompiler($_Compiler))
+        {
+          $b=true;
+          ForEach($Condition As $C)
+          {
+            $Cmp=$Compiler->CompareVersion($C[1]);
+            switch($C[0])
+            {
+            case '<'  : $b=$Cmp <   0; break;
+            case '<=' : $b=$Cmp <=  0; break;
+            case '>'  : $b=$Cmp >   0; break;
+            case '>=' : $b=$Cmp >=  0; break;
+            case '='  : $b=$Cmp === 0; break;
+            case '==' : $b=$Cmp === 0; break;
+            default:
+              $b=false;
+              $this->Log('Fatal', 'Unknown comparation ',$C[0]);
+            }
+          }
+        //$this->Debug([$Cmp, $C, $b]);
+        
+          if($b)
+            return true;
+        }
+        
+      }
+      return false;
+    }
+  }
+?>
