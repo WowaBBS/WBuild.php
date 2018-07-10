@@ -160,6 +160,24 @@
       }
       return true;
     }
+
+  //****************************************************************
+    
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      Parent::_Debug_Info($Res);
+      
+      $L=[]; ForEach($this->CheckHash   As $R) $L[]=$R->ToDebugInfo(); $Res['CheckHash'   ]=$L;
+      $L=[]; ForEach($this->CheckInput  As $R) $L[]=$R->ToDebugInfo(); $Res['CheckInput'  ]=$L;
+      $L=[]; ForEach($this->CheckResult As $R) $L[]=$R->ToDebugInfo(); $Res['CheckResult' ]=$L;
+      
+      if($this->Outer) unset($Res['Outer']);
+      UnSet($Res['Depends']); // TODO: ???
+      $Res['Info']=$Res['Info']->Name;
+    //UnSet($Res['Depends']); // TODO: ???
+    }
+    
+  //****************************************************************
   };
 
   $DebM=$Loader->Get_Singleton('/Debug/Manager');

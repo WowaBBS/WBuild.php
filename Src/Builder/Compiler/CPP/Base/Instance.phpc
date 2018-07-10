@@ -458,5 +458,17 @@
     }
 
     Function CreateParams() { return $this->Create_Object('/Builder/Task/Params'); }
+  //****************************************************************
+  // Debug
+    
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      Parent::_Debug_Info($Res);
+      UnSet($Res['Manager' ]);
+    }
+      
+    Function _ToDebugInfo() { return $this->CMake_GetGenerator(); }
+  
+  //****************************************************************
   }
 ?>
