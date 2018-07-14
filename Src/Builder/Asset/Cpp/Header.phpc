@@ -1,7 +1,7 @@
 <?
-  $Loader->Parent_Class('/Builder/Asset/FS/File');
+  $Loader->Parent_Class('/Builder/Asset/Cpp/SrcBase');
 
-  class C_Builder_Asset_Cpp_Header extends C_Builder_Asset_FS_File
+  class C_Builder_Asset_Cpp_Header extends C_Builder_Asset_Cpp_SrcBase
   {
     Protected Function _GetSearchPathClass()
     {

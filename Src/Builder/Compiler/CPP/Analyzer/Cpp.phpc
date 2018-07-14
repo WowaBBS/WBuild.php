@@ -3,6 +3,8 @@
   
   Class C_Builder_Compiler_CPP_Analyzer_Cpp Extends C_Builder_Compiler_CPP_Analyzer_Text
   {
+    Static $Version=1;
+  
     var $Include_Replace       = !true ;
     
     var $Detect_Header         = true  ;

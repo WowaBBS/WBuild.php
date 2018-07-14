@@ -54,6 +54,18 @@
     Abstract Protected Function _BuildRc     (Array $Args); // {}
     Abstract Protected Function _BuildResX   (Array $Args); // {}
     
+    Private Function Call_Compile     (Array $Args)
+    {
+      $Includes     =$Args['Includes'     ];
+      $Items        =$Args['Items'        ];
+      $ForceInclude =$Args['ForceInclude' ]??[];
+
+      ForEach($Items As $Item) // TODO: Move
+        $Item['SrcAsset']->GetHeaders($Includes, $ForceInclude, $this);
+      
+      $this->_Compile($Args);
+    }
+    
     Function PrepareExec($Exec){ }
     
     Final Function Compile(Array $Args)
@@ -118,10 +130,11 @@
 
           if($Pch->IsForce())
           { // TODO: AssetArray
-            $ForceInclude=[$Pch->GetHeaderPath()];
+            $PchHeader=$Pch->GetHeaderAsset();
+            $ForceInclude=[$PchHeader->GetKey()=>$PchHeader];
             if(IsSet($Args['ForceInclude']))
-              ForEach($Args['ForceInclude'] As $FI)
-                $ForceInclude[]=$FI;
+              ForEach($Args['ForceInclude'] As $k=>$FI)
+                $ForceInclude[$k]=$FI;
             $Args['ForceInclude']=$ForceInclude;
           }
         }
@@ -216,7 +229,7 @@
         $_Args['Items'  ]=[$Item];
         $_Args['Exec'   ]=$Item['Exec'];
         $_Args['Dir'    ]=False;
-        $this->_Compile($_Args);
+        $this->Call_Compile($_Args);
         $Exec->CheckResultFile($ObjAsset);
         $Exec->SaveCallTo();
         $Exec->Finish();
@@ -265,7 +278,7 @@
         UnSet($SrcAsset );
       } 
     
-      $this->_Compile($Args);
+      $this->Call_Compile($Args);
 
       ForEach($Items As $Item)
       {
@@ -312,7 +325,7 @@
       $Includes  =$Args['Includes' ];
 
       $Exec->Descr('Build ',$ResAsset->GetLocalPathNick());
-      $Exec->CheckInputs($Includes);
+      $Exec->CheckInputs($Includes); // TODO: Check depends for resources
       $Exec->CheckFile  ($RcAsset );
       $Exec->MkDir($ResAsset);
       

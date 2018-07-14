@@ -3,13 +3,15 @@
 
   class C_Builder_Asset_Cpp_Pch extends C_Builder_Asset_Base
   {
-    Var $bInited  = false;
-    Var $Force    = false;
-    Var $Name     = false;
+    Var $bInited     = false ;
+    Var $Force       = false ;
+    Var $Name        = false ;
     
-    Var $DataFile = false; //'Debug\Project.pch' ;
-    Var $Header   = false; //'StdAfx.h'   ;
-    Var $Cpp      = false; //'StdAfx.cpp' ;
+    Var $DataFile    = false ; //'Debug\Project.pch' ;
+    Var $HeaderName  = false ; //'StdAfx.h'   ;
+    Var $CppName     = false ; //'StdAfx.cpp' ;
+    Var $HeaderAsset = Null  ;
+  //Var $CppAsset    = false ;
   
   //Function GetKey() { return $this->Key; }
     
@@ -22,11 +24,11 @@
     {
       parent::_InitParam($Param);
       
-      $this->Force    =$Param['Force'  ]??false              ; UnSet($Param['Force'  ]);
-      $this->Name     =$Param['Name'   ]??'StdAfx'           ; UnSet($Param['Name'   ]);
-    //$this->DataFile =$Param['File '  ]??false              ; UnSet($Param['File'   ]);
-      $this->Header   =$Param['Header' ]??$this->Name.'.h'   ; UnSet($Param['Header' ]);
-      $this->Cpp      =$Param['Cpp'    ]??$this->Name.'.cpp' ; UnSet($Param['Cpp'    ]);
+      $this->Force      =$Param['Force'  ]??false              ; UnSet($Param['Force'  ]);
+      $this->Name       =$Param['Name'   ]??'StdAfx'           ; UnSet($Param['Name'   ]);
+    //$this->DataFile   =$Param['File '  ]??false              ; UnSet($Param['File'   ]);
+      $this->HeaderName =$Param['Header' ]??$this->Name.'.h'   ; UnSet($Param['Header' ]);
+      $this->CppName    =$Param['Cpp'    ]??$this->Name.'.cpp' ; UnSet($Param['Cpp'    ]);
     }
 
     Function IsForce():bool
@@ -42,12 +44,12 @@
       $EnumCache =$Args['EnumCache' ];
       $OutPath   =$Args['OutPath'   ];
       
-      $Header=$this->Header;
+      $HeaderName=$this->HeaderName;
       ForEach(Array_Reverse($Includes) As $Include)
-        If($Res=$Include->Search($Header))
+        If($HeaderAsset=$Include->SearchAsset($HeaderName, 'Cpp/Header'))
         {
-          $this->Header=$Res;
-          $PchFile=$OutPath.'PCH/'.$Compiler->GetPchFile($EnumCache->AllocNum($Res, 'Pch', ['Pad'=>1]));
+          $this->HeaderAsset=$HeaderAsset;
+          $PchFile=$OutPath.'PCH/'.$Compiler->GetPchFile($EnumCache->AllocNum($HeaderAsset->GetFullPath(), 'Pch', ['Pad'=>1]));
           CreatePath(DirName($PchFile)); // TODO: Automatic using asset
           $this->DataFile=$PchFile;
           $this->bInited=true;
@@ -62,7 +64,7 @@
         if(!$this->Prepare($Args))
           return [];
       // TODO: Init by $Args
-      $FileName=$this->Cpp;
+      $FileName=$this->CppName;
     //$this->Log('Debug', 'Orig: ', $FileName);
       $Res=[];
       $Remove=[];
@@ -75,7 +77,7 @@
         {
          #$this->Log('Debug', 'Ok');
           if($SrcName!==$FileName)
-            $this->Log('Error', 'Name ',$SrcName,' Is not same ',$FileName);
+            $this->Log('Warning', 'Name ',$SrcName,' Is not same ',$FileName);
         //UnSet($List[$k]);
           $Remove[]=$k;
           $Res[]=$Item;
@@ -107,16 +109,23 @@
     
     Function GetHeaderName()
     {
-      if(!$this->bInited)
-        $this->Log('Fatal', 'PCH Asset is not inited');
-      return BaseName($this->Header);
+    //if(!$this->bInited)
+    //  $this->Log('Fatal', 'PCH Asset is not inited');
+      return $this->HeaderName;
     }
     
-    Function GetHeaderPath()
+    Function GetHeaderPath() // TODO: Remove
     {
       if(!$this->bInited)
         $this->Log('Fatal', 'PCH Asset is not inited');
-      return $this->Header;
+      return $this->HeaderAsset->GetFullPath();
+    }
+    
+    Function GetHeaderAsset()
+    {
+      if(!$this->bInited)
+        $this->Log('Fatal', 'PCH Asset is not inited');
+      return $this->HeaderAsset;
     }
     
     Function GetDataFile()

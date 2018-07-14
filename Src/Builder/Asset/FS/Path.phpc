@@ -1,5 +1,6 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/PathBase');
+  $Loader->Load_Lib('/FS/IOFS');
 
   class C_Builder_Asset_FS_Path extends C_Builder_Asset_FS_PathBase
   {
@@ -68,15 +69,58 @@
     Function Search($Path, $bIsFile=true)
     {
     //$this->Log('Debug', 'Search:',$Path,' ',$this->GetFullPath());
-      $Path=$this->GetSubPath($Path);
+      $Res=$this->GetSubPath($Path);
+      $Res=NormPath($Res);
     //$this->Log('Debug', '  ',$Path);
-      if(!$bIsFile && Is_Dir($Path) || $bIsFile && Is_File($Path))
-        return $Path;
+      if(!$bIsFile && Is_Dir($Res) || $bIsFile && Is_File($Res))
+      {
+        $Real=StrTr(RealPath($Res), '\\', '/');
+        if(StrLen($Real)!==StrLen($Res))
+          $this->Log('Fatal', 'Different paths:', "\n",
+            '   Used=',$Res  ,"\n",
+            '   Real=',$Real ,"\n"
+          );
+        elseif($Real!==$Res)
+          $this->Log('Error', 'Different paths:', "\n",
+            '   Used=',SubStr($Real, -StrLen($Path))  ,"\n",
+            '   Real=',$Path ,"\n"
+          );
+          
+        return $Real;
+      }
       return '';
     }
     
-    Function SearchDir  ($Path) { return Search($Path, false ); }
-    Function SearchFile ($Path) { return Search($Path, true  ); }
+    Var $SubAssets=[];
+    
+    Function _CreateSubAsset($Path, $Type, $Param=[], Array $Args=[])
+    {
+      if(IsSet($this->SubAssets[$Path][$Type]))
+        return $this->SubAssets[$Path][$Type];
+      $Param['>Parent']=$this;
+      $Param[]=$Path;
+      $Res=$this->CreateAsset($Type, $Param, $Args);
+      $this->SubAssets[$Path][$Type]=$Res;
+      return $Res;
+    }
+    
+    Function _SearchAsset($Path, $Type, $bIsFile=true, $Param=[], Array $Args=[])
+    {
+      $Res=$this->Search($Path, $bIsFile);
+      if($Res!=='')
+        return $this->_CreateSubAsset($Res, $Type, $Param, $Args);
+      return null;
+    }
+    
+  //Function GetDefaultAssetItemInfo() { return False; }
+    
+    Function SearchAsset($Path, $Type, $bIsFile=true)
+    {
+      return $this->SubAssets[$Path][$Type] ?? $this->_SearchAsset($Path, $Type, $bIsFile);
+    }
+    
+  //Function SearchDir  ($Path) { return Search($Path, false ); }
+  //Function SearchFile ($Path) { return Search($Path, true  ); }
     
     Protected Function _IsFile() { return false; }
     
