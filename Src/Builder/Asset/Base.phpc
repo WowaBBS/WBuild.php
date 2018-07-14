@@ -7,17 +7,17 @@
   {
   //Var $AssetClass=''; // TODO: Move into class object;
   //Function GetAssetClass() { return $this->AssetClass; }
-    Var $Info  =null;
-    Var $Outer =false;
+    Var $Asset_Info =null;
+    Var $Outer      =false;
     
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
     //$this->AssetClass=$Args['Type'];
-      if(!IsSet($Args['Info']))
+      if(!IsSet($Args['Asset_Info']))
         $this->Log('Fatal', 'Unreachable place');
     
-      $this->Info=$Args['Info'];
+      $this->Asset_Info=$Args['Asset_Info'];
       if(!IsSet($Args['Outer'])) // TODO: InstanceOf
         $this->Log('Fatal', 'Unreachable place');
       $this->Outer=$Args['Outer'];
@@ -44,10 +44,10 @@
     //****************************************************************
     // NameSpaces
     
-    Function UpdateNS($Info)
+    Function UpdateNS($Asset_Info)
     {
-      $Info=self::GetTypeInfo($Info);
-      return $Info->Merge($this->Info);
+      $Asset_Info=self::GetTypeInfo($Asset_Info);
+      return $Asset_Info->Merge($this->Asset_Info);
     }
     
     Static Function GetTypeInfo($TypeName)
@@ -76,7 +76,7 @@
       if(IsSet($Param[$ParamName ])) return $Param[$ParamName ];
       if(IsSet($Param[$ParamName2])) return $Param[$ParamName2];
       if(!Is_Null($Default)) return $Default;
-      if($this->Info->Has_NS && !$this->Info->Has_NS) return $this->Info['Str'];
+      if($this->Asset_Info->Has_NS && !$this->Asset_Info->Has_NS) return $this->Asset_Info['Str'];
       return '';
     }
   
@@ -160,7 +160,7 @@
       Parent::_Debug_Info($Res);
       if($this->Outer) unset($Res['Outer']);
       UnSet($Res['Depends']); // TODO: ???
-      $Res['Info']=$Res['Info']->Name;
+      $Res['Asset_Info']=$Res['Asset_Info']->Name;
     //UnSet($Res['Depends']); // TODO: ???
     }
     

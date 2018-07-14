@@ -100,12 +100,12 @@
     
     Private Function _Create(Array &$Res, Array $Args)
     {
-      $List=$Args['Info']->ParseParams($Args);
+      $List=$Args['Asset_Info']->ParseParams($Args);
       ForEach($List As $Item)
       {
-        if(!IsSet($Item['Info']))
+        if(!IsSet($Item['Asset_Info']))
           if(IsSet($Item['Type']))
-            $Item['Info']=Self::GetSubInfo($Item['Type'], $Args['Info']);
+            $Item['Asset_Info']=Self::GetSubInfo($Item['Type'], $Args['Asset_Info']);
           else
           {
             $this->Debug($List);
@@ -114,9 +114,9 @@
             $this->Debug($Args);
             UnSupported();
           }
-        $Info=$Item['Info'];
-        $Obj=$this->Create_Object($Info->Class, $Item);
-        ForEach($Info->List As $Key)
+        $Asset_Info=$Item['Asset_Info'];
+        $Obj=$this->Create_Object($Asset_Info->Class, $Item);
+        ForEach($Asset_Info->List As $Key)
           $this->__AddAsset($Key, $Obj);
         $Res[]=$Obj;
         $this->DoEvent('Created', $Obj);
@@ -133,7 +133,7 @@
       return $z;
     }
       
-    Function _CreateAssets($Info, $Param, Array $Args)
+    Function _CreateAssets($Asset_Info, $Param, Array $Args)
     {
       if(!Is_Array($Param))
         $Param=[$Param];
@@ -141,21 +141,21 @@
       {
         $Sub=$Param['>Sub'];
         UnSet($Param['>Sub']);
-        Array_UnShift($Param, $Info);
+        Array_UnShift($Param, $Asset_Info);
         $Sub[]=$Param;
         $Param=$Sub;
-        $Info=Self::GetTypeInfo('Sub'); // TODO: Static var
+        $Asset_Info=Self::GetTypeInfo('Sub'); // TODO: Static var
 
        #$Deb=$this->Get_Singleton('/Debug/Manager')->Get('Asset_Sub.log');
        #$Deb->Debug($Param);
       }
-      $Args['Outer' ]=$this  ; // Only for static methods
-      $Args['Info'  ]=$Info  ;
-    //$Args['Type'  ]=$Type  ;
+      $Args['Outer'      ]=$this       ; // Only for static methods
+      $Args['Asset_Info' ]=$Asset_Info ;
+    //$Args['Type'       ]=$Type       ;
 
       if(IsSet($Param['>If']))
       {
-       #$this->Log('Debug', '>If ', $Info->Name,' ',Serialize($Param['>If']));
+       #$this->Log('Debug', '>If ', $Asset_Info->Name,' ',Serialize($Param['>If']));
         if(!$this->CheckCondition($Param['>If'], $Args))
           return [];
        #$this->Log('Debug', 'IsDebug   =',$this->IsDebug   ());
@@ -184,9 +184,9 @@
       return $Res;
     }
     
-    Function _CreateAsset($Info, $Param, Array $Args)
+    Function _CreateAsset($Asset_Info, $Param, Array $Args)
     {
-      $Res=$this->_CreateAssets($Info, $Param, $Args);
+      $Res=$this->_CreateAssets($Asset_Info, $Param, $Args);
       switch(Count($Res))
       {
       case 0: return null;
@@ -195,22 +195,22 @@
       }
     }
 
-    Function _GetAssets($Info)
+    Function _GetAssets($Asset_Info)
     {
       $Res=[];
       $A=$this->List;
-      ForEach($Info->List As $KeyType)
+      ForEach($Asset_Info->List As $KeyType)
         if(IsSet($A[$KeyType]))
           $Res+=$A[$KeyType]; //+++
       return $Res;
     }
     
-    Function _ExtractAssets($Info)
+    Function _ExtractAssets($Asset_Info)
     {
       $A=&$this->List;
       $P=&$this->Public;
       $Res=[];
-      ForEach($Info->List As $KeyType)
+      ForEach($Asset_Info->List As $KeyType)
         if(IsSet($A[$KeyType]))
         {
           $R=$A[$KeyType];
@@ -219,7 +219,7 @@
           {
             Self::__Remove($P  ,$KeyType, $Key, $Asset);
             $Res[$Key]=$Asset;
-           #$this->Log('Debug', $Asset->Info->Name);
+           #$this->Log('Debug', $Asset->Asset_Info->Name);
           }
         //$Res+=$R; //+++
         }
@@ -246,17 +246,17 @@
       return true;
     }
     
-    Function _RemoveAsset($Info, $Asset)
+    Function _RemoveAsset($Asset_Info, $Asset)
     {
-      $this->_RemoveAssets($Info, [$Asset]);
+      $this->_RemoveAssets($Asset_Info, [$Asset]);
     }
     
-    Function _RemoveAssets($Info, $Assets)
+    Function _RemoveAssets($Asset_Info, $Assets)
     {
       $A=&$this->List;
       $P=&$this->Public;
       $Res=[];
-      ForEach($Info->List As $KeyType)
+      ForEach($Asset_Info->List As $KeyType)
         if(IsSet($A[$KeyType]))
         {
           ForEach($Assets As $Asset)
@@ -276,7 +276,7 @@
     {
       $Key=$Asset->GetKey();
       $Res=false;
-      ForEach($Asset->Info->List As $KeyType) // TODO:
+      ForEach($Asset->Asset_Info->List As $KeyType) // TODO:
         if($this->__RemoveAsset($KeyType, $Asset))
           $Res=true;
       if(!$Res)

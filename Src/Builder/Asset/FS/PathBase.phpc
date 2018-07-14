@@ -1,6 +1,7 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/Base');
   $Loader->Load_Lib('/FS/Utils');
+  $Loader->Load_Lib('/FS/IOFS');
   $Loader->Using_Module('/Array');
 
   class C_Builder_Asset_FS_PathBase extends C_Builder_Asset_Base
@@ -42,7 +43,7 @@
         }
         $this->Parent=$Parent;
         $this->LocalPath=$Args['Path'];
-        $this->FullPath=Self::NormPath($Parent->GetSubPath($this->LocalPath));
+        $this->FullPath=NormPath($Parent->GetSubPath($this->LocalPath));
       }
       else
     //if(IsSet($Args['Path']))
@@ -130,7 +131,7 @@
         Static::_ParseItemForKeys($Res, $Args, $Path);
       }
       self::CheckEmptyParam($Param);
-      $Type=$Args['Info']->Name; // $Args['Type']??
+      $Type=$Args['Asset_Info']->Name; // $Args['Type']??
       $z=false;
       ForEach($Res As &$Item)
         if(($Res['Type']??$Type)==$Type)
@@ -162,7 +163,7 @@
       ];
       [$p, $v]=Static::GlobalSearch($v, $this, $Cfg);
       $this->Parent=$p;
-      $v=Self::NormPath($v);
+      $v=NormPath($v);
       $this->FullPath=$v;
     }
     
@@ -292,36 +293,6 @@
         $this->Parent->InvalidateCache();
     }
 
-    // Нормализует путь $Path, удаляя ненужное
-    Static Function NormPath($Path)
-    {
-    //$Path=Str_Replace('\\','/', $Path);
-      $Path=Explode('/', $Path);
-      $Beg=count($Path)-1;
-      $End=count($Path)-1;
-      $Res=[];
-      ForEach($Path As $k=>$v)
-      {
-        $v=Trim($v);
-        If($v=='')
-        {
-          if($k!==$Beg && $k!==$End)
-            Continue;
-          ++$Beg;
-        }
-        If($v=='.')
-          $Res=['.']; // TODO: Root
-        ElseIf($v=='..')
-        {
-          If(Count($Res)>1)
-            Array_Pop($Res);
-        }
-        Else
-          $Res[]=$v;
-      }
-      Return Implode('/', $Res);
-    }
-
   // Depends
   
     Static Function _Filter($List, $Filter=false)
@@ -330,8 +301,8 @@
       $Res=[];
       ForEach($List As $k=>$v)
       {
-      //$this->Log('Debug', $Filter,'===',$v->Info->Type);
-        if($v->Info->Type===$Filter)
+      //$this->Log('Debug', $Filter,'===',$v->Asset_Info->Type);
+        if($v->Asset_Info->Type===$Filter)
           $Res[$v->Object_Id]=$v;
       }
       return $Res;

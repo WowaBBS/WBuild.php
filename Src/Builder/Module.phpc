@@ -85,12 +85,12 @@
       );
       $Info=T_Builder_Asset_Info::Get('Module/Instance');
       $Args=[
-        'Info'    =>$Info    ,
-        'Param'   =>$Assets  ,
-        'Context' =>$Context ,
-        'Module'  =>$this    ,
-        'Modules' =>$this->Modules,
-        'Key'     =>$Key,
+        'Asset_Info' =>$Info    ,
+        'Param'      =>$Assets  ,
+        'Context'    =>$Context ,
+        'Module'     =>$this    ,
+        'Modules'    =>$this->Modules,
+        'Key'        =>$Key,
       ];
       $Res=$this->Create_Object($Info->Class, $Args);
       $this->Instances[$Key]=$Res;
