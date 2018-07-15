@@ -110,110 +110,11 @@
     Function DefineDLLImport () { return '__declspec(dllimport)'; }
   //Function DefineDLLProxy  () { return '__declspec(dllimport dllexport)'; }
 
-    Protected Function _CompileParams(Array $Args)
+    Protected Function CreateTaskCompile(Array $Args)
     {
-      if(false)
-      {
-        $L=[];
-        ForEach($Args['Items'] As $Item)
-          $L[]=$Item['SrcAsset']->ToDebugInfo();
-        $this->Debug($L);
-        if(!$Args['Outer'])
-          $this->Debug($Args);
-      }
-      $Defines   = $Args['Defines'   ];
-      $Includes  = $Args['Includes'  ];
-      $Using     = $Args['Using'     ];
-      $UsingPath = $Args['UsingPath' ];
-      $EnumCache = $Args['EnumCache' ];
-      $OutPath   = $Args['OutPath'   ];
-      $Outer     = $Args['Outer'     ];
-      
-      $Params=$this->CreateParams();
-      $Params->Add('/nologo');
-      
-      $Params->Preload($Outer, 'cl');
-      
-      ForEach($Defines As $Define)
-        if(!$Define->IsRemoving())
-          $Params->Add('-D "',$Define->GetKeyValue(),'"');
- 
-      ForEach($Includes As $Include)
-        $Params->Add('-I "',$Include->GetFullPath(),'"');
-        
-      $Hash=$this->GetCompilerIdHash();
-      $PdbPath=$OutPath.'PDB';
-      $PdbName=$this->Info['PDB'];
-      CreatePath($PdbPath);
-    //"Debug\vc100.pdb"
-    //$this->Debug($this->Info['PDB']);
-      $PdbFile=$PdbPath.'/'.$PdbName.$EnumCache->AllocNum($Hash, $PdbName, ['Pad'=>1, 'NoZero'=>true, 'Split'=>'_']).'.pdb';
-
-      $Params->Add('/Fd"',$PdbFile,'"');
-      
-      if($Using || $UsingPath)
-      {
-        // /AI"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0"
-        ForEach($UsingPath As $Use)
-          $Params->Add('-AI"',$Use->GetFullPath(),'"');
-        ForEach($Using As $Use)
-          $Params->Add('-FU"',$Use->GetFullPath(),'"');
-        if($Params->RemoveAny('/EHsc', '/EHs'))
-          $Params->Add('/EHa');
-        if($Params->RemoveAny('/Gm'))
-          $Params->Add('/Gm-');
-        $Params->RemoveAny('/arch:SSE2', '/arch:SSE');
-        $Params->Override('/clr:nostdlib', '/clr');
-      }
-
-      return $Params;
+      $Args['Compiler']=$this;
+      return $Args['Outer']->Create_Object('/Builder/Compiler/CPP/VC/Task/Compile', $Args);
     }
-    
-    Protected Function _Compile(Array $Args)
-    {
-      $Items        =$Args['Items'        ];
-      $Exec         =$Args['Exec'         ];
-      $Dir          =$Args['Dir'          ]??False; //$ObjAsset->GetDirFullPath()
-      $PchType      =$Args['PchType'      ]??'NoUse';
-      $Pch          =$Args['Pch'          ]??False;
-      $ForceInclude =$Args['ForceInclude' ]??[];
-
-      $Params=$this->_CompileParams($Args);
-      
-      ForEach($ForceInclude As $ForceIncludeItem)
-        $Params->Add('/FI', $ForceIncludeItem->GetFullPath());
-
-      Switch($PchType)
-      {
-      Case 'NoUse'  : Break;
-      Case 'Create' :
-        $Params->Add('/Fp"', $Pch->GetDataFile(),'"');
-        $Params->Add('/Yc"', $Pch->GetHeaderName(),'"');
-        Break;
-      Case 'Use'    :
-        $Params->Add('/Fp"', $Pch->GetDataFile(),'"');
-        $Params->Add('/Yu"', $Pch->GetHeaderName(),'"');
-        Break;
-      Default: $this->Log('Fatal', 'Unreachable');
-      }
-      
-      $Params->Add('-c');
-      ForEach($Items As $Item)
-        $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
-      
-      if($Dir!==False)
-        $Params->Add('/Fo"',$Dir.'/"');
-      ElseIf(Count($Items)==1)
-        $Params->Add('/Fo"' ,End($Items)['ObjAsset']->GetFullPath(),'"');
-      Else
-        $this->Log('Fatal', 'Unreachable');
-      $FileParams=$Exec->CachePath.'.Opt';
-      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
-      
-      $this->Exec_Cl($Exec, $Params);
-    }
-    
-    Protected Function Compile_CanGroupByDir(Array $Args) { return true; }
     
     Final Function _BuildRc(Array $Args)
     {

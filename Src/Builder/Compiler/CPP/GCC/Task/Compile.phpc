@@ -1,0 +1,41 @@
+<?
+  $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Task/Compile');
+
+  class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Compiler_CPP_Base_Task_Compile
+  {
+    Function _Compile()
+    {
+      //TODO: Support Cpp/Pch
+      
+      $Params=$this->CreateParams();
+    //$Params->Add('/nologo');
+      
+      ForEach($this->Defines As $Define)
+        if(!$Define->IsRemoving())
+          $Params->Add('-D ',$Define->GetKeyValue());
+ 
+      ForEach($this->Includes As $Include)
+        $Params->Add('-I ',$Include->GetFullPath());
+      
+      $BaseParams=$Params;
+  
+      ForEach($this->Items As $Item)
+      {
+        $SrcAsset =$Item['SrcASset' ];
+        $ObjAsset =$Item['ObjAsset' ];
+        $Exec     =$Item['Exec'     ];
+
+        $Params=$BaseParams->Clone();
+      //$Params->Add($ObjAsset->GetFullPath());
+        $Params->Add('-c ', $SrcAsset->GetFullPath());
+        $Params->Add('-o ', $ObjAsset->GetFullPath());
+        
+        $this->Instance->Exec_GPP($Exec, $Params);
+      }
+    }
+  };
+?>
+
+
+
+

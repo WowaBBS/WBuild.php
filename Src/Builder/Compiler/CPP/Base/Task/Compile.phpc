@@ -1,0 +1,202 @@
+<?
+//$Loader->Parent_Class('/Builder/Task/Base');
+  $Loader->Parent_Class('/Builder/Task/Depends');
+
+//Abstract Class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Task_Base
+  Abstract Class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Task_Depends
+  {
+    Var $Compiler     = Null    ;
+  //Var $Args         = []      ;
+    Var $Defines      = []      ;
+    Var $Includes     = []      ;
+    Var $Using        = []      ;
+    Var $UsingPath    = []      ;
+    Var $EnumCache    = Null    ;
+    Var $OutPath      = False   ;
+    Var $Outer        = Null    ;
+    Var $Items        = []      ;
+    Var $Dir          = False   ; //$ObjAsset->GetDirFullPath()
+    Var $PchType      = 'NoUse' ;
+    Var $Pch          = False   ;
+    Var $PchAsset     = Null    ;
+    Var $ForceInclude = []      ;
+    Var $Libs         = []      ;  // TODO: Remove
+
+    Var $Exec         = Null    ;
+  
+    Protected Function _Cloneable() { return true; }
+    
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      
+      $this->Compiler     =$Args['Compiler'     ];
+      $this->Defines      =$Args['Defines'      ];
+      $this->Includes     =$Args['Includes'     ];
+      $this->Using        =$Args['Using'        ];
+      $this->UsingPath    =$Args['UsingPath'    ];
+      $this->DepUsing     =$Args['DepUsing'     ]?? False;
+      $this->EnumCache    =$Args['EnumCache'    ];
+      $this->OutPath      =$Args['OutPath'      ];
+      $this->Outer        =$Args['Outer'        ];
+      $this->Items        =$Args['Items'        ];
+    //$this->Exec         =$Args['Exec'         ];
+      $this->Dir          =$Args['Dir'          ]?? False ; //$ObjAsset->GetDirFullPath()
+      $this->PchType      =$Args['PchType'      ]??'NoUse';
+      $this->Pch          =$Args['Pch'          ]?? False ;
+      $this->PchAsset     =$Args['PchAsset'     ]?? Null;
+      $this->ForceInclude =$Args['ForceInclude' ]?? [];
+      $this->Libs         =$Args['Libs'         ]?? []; // TODO: Remove?
+    }
+
+    Abstract Protected Function _Compile     (); // {}
+    Abstract Protected Function CanGroupByDir();
+
+    Private Function Call_Compile()
+    {
+      if(false)
+        $this->Log('Debug', 'Call_Compile')->Call(
+          Function($Log) //use ($this)
+          {
+            $Log('>>>>>>>>>');
+            $Log('Dir: ',$this->Dir);
+          //$Item=$this->GetFirst();
+          //$Log($this->Exec->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath());
+            ForEach($this->Items As $Item) // TODO: Remove exec
+              $Log($Item['TaskPath'],'     -> ',$Item['ObjAsset']->GetLocalPath());
+            $Log('<<<<<<<<<');
+          }
+        );
+        
+      $First=Reset($this->Items);
+      if(!$First['ObjAsset'])
+        $this->Debug($this->Items);
+      $Exec=$First['ObjAsset']->CreateExec($First['TaskPath']);
+      $this->Exec=$Exec;
+
+      $this->Compiler->PrepareExec($Exec);
+      $Exec->CheckInputs($this->Includes);
+     #$Exec->CheckInputs($this->UsingPath); // TODO:
+      $Exec->CheckInputs($this->Using);
+      $Exec->MkDir($First['ObjAsset']);
+        
+      ForEach($this->Items As $Item)
+      {
+        $SrcAsset =$Item['SrcAsset' ];
+
+        $Exec->Descr('Compile ',$SrcAsset->GetLocalPathNick());
+        
+        $Exec->CheckFile($SrcAsset);
+        
+        UnSet($SrcAsset );
+      } 
+    
+      if($this->PchAsset)
+        $Exec->CheckFile($this->PchAsset);
+
+    //UnSet($Item);
+      ForEach($this->Items As $Item) // TODO: Move
+        $Item['SrcAsset']->GetHeaders(
+          $this->Includes     ,
+          $this->ForceInclude ,
+          $this->Compiler
+        );
+      
+      $this->_Compile();
+
+      ForEach($this->Items As $Item)
+        $Exec->CheckResultFile($Item['ObjAsset']);
+      
+      $Exec->SaveCallTo();
+      $Exec->Finish();
+    }
+    
+    Final Function Compile()
+    {
+      $FileDepends=[];
+     #ForEach($this->Objects As $Item)
+     #  $FileDepends[$Item->Object_Id]=$Item;
+      ForEach($this->Libs As $Item)
+        $FileDepends[$Item->Object_Id]=$Item;
+      if($this->DepUsing)
+        ForEach($this->Using As $Item)
+          $Item->UseForObj($FileDepends);
+      if($FileDepends)
+        ForEach($this->Items As $Item)
+        {
+          $Item['ObjAsset']->AddFileDepends($FileDepends);
+  //TODO: $Item['ObjAsset']->AddFileDepends($Item['SrcAsset']->GetFileDepends()); // Dll and Libs
+        }
+      
+      ForEach($this->Split() As $Item)
+        $Item->Compile_();
+    }
+    
+    Protected Function Split(Array $Res=[])
+    {
+      if($Pch=$this->Outer->GetLastAsset('Cpp/Pch'))
+        if($StdAfx=$Pch->Extract($this->Items, $this))
+        {
+          $this->Pch=$Pch;
+          $Task=$this->Clone();
+          $Task->Items    =$StdAfx;
+          $Task->PchType  ='Create';
+          $this->PchType  ='Use';
+          $this->PchAsset =$StdAfx[0]['ObjAsset'];
+          
+          $Res[]=$Task;
+          
+          if($Pch->IsForce())
+            $this->ForceInclude=
+              [$PchHeader->GetKey()=>$Pch->GetHeaderAsset()]+
+              $this->ForceInclude;
+        }
+    //***
+      $c=count($this->Items);
+      if(!$c) return;
+      if($c>2 && $this->CanGroupByDir())
+      {
+        $Groups=[];
+        ForEach($this->Items As $Item)
+        {
+          $GPath=$Item['ObjAsset']->GetDirFullPath();
+          if(!IsSet($Groups[$GPath]))
+            $Groups[$GPath]=[$Item];
+          else
+            $Groups[$GPath][]=$Item;
+        }
+        ForEach($Groups As $GPath=>$GItems)
+        {
+          $Task=$this->Clone();
+        //UnSet($Task->Items); // Fix of big bug
+          $Task->Dir     =$GPath; //$ObjAsset->GetDirFullPath();
+          $Task->Items   =$GItems;
+          $Res[]=$Task;
+          UnSet($GItems); // Fix of big bug
+        }
+      }
+      else
+      {
+        $Res[]=$this;
+      }
+      Return $Res;
+    }
+    
+    Function Compile_()
+    {          
+      if(IsSet($this->Dir))
+        $this->Call_Compile();
+      else
+        ForEach($this->Items As $k=>$Item)
+        {
+          $Task=$this->Clone();
+          $Task->Items=[$Item];
+          $Task->Call_Compile();
+        }
+    }
+  };
+?>
+
+
+
+

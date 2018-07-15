@@ -1,0 +1,96 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  class C_Builder_Asset_Cpp_SrcBase extends C_Builder_Asset_FS_File
+  {
+    Var $Info=null;
+  
+    Function GetInfo()
+    {
+      $Hash=$this->GetMD5();
+      if($this->Info && $this->Info['Hash']===$Hash)
+        return $this->Info;
+      $Src=$this->Loader->Load_Class('/Builder/Compiler/CPP/Analyzer/Cpp');
+      $Version=C_Builder_Compiler_CPP_Analyzer_Cpp::$Version;
+
+      if($this->Parent)
+      {
+        $Key=$this->Parent->GetFullPath();                        
+        $Cache=$this->GetModule()->EnumCache->AllocEnumDir($Key, 'Cpp', ['NoZero'=>true, 'Pad'=>1]);
+        $Storage=$Cache->GetStorage($this->GetLocalPath().'.Info');
+      }
+      else
+      {
+        $Parent=$this->GetLocalPath();
+        $Cache=$this->GetModule()->EnumCache->AllocEnumDir($Key, 'CppO/', ['NoZero'=>true, 'Pad'=>1]);
+        $Storage=$Cache->GetStorage('.Info');
+      }
+      
+      $Vars=$Storage->GetVars();
+      if($Vars &&
+         $Vars['Version' ]===$Version &&
+         $Vars['Hash'    ]===$Hash    )
+      {
+        $this->Info=$Vars;
+        ForEach($Vars['Warnings'] As $Warning)
+          $this->Log('Warning', ...$Warning);
+        return $this->Info;
+      }
+      
+      $Src=$this->Create_Object('/Builder/Compiler/CPP/Analyzer/Cpp');
+      $Src->Process_FilePath($this->GetFullPath());
+    //$Src->Debug([
+    //  'Warnings'=>$Src->Warnings,
+    //  'Includes'=>$Src->Includes,
+    //]);
+      $Vars=[
+        'Version'  =>$Version ,
+        'Hash'     =>$Hash    ,
+        'Warnings' =>$Src->Warnings,
+        'Includes' =>$Src->Includes,
+      ];
+      $this->Info=$Vars;
+      $Storage->SetVars($Vars);
+      $Storage->Done();
+      return $Vars;
+    }
+    
+    Function GetIncludes()
+    {
+      return $this->GetInfo()['Includes'];
+    }
+  
+    Function _GetHeaders($Res, $Includes, $Force=[])
+    {
+      ForEach($Force As $Item)
+        $Res=$Item->_GetHeaders($Res, $Includes);
+      $Dir=DirName($this->GetLocalPath());
+      $Dir=$Dir==='.'? '':$Dir.'/';
+      $Parent=$this->Parent;
+      ForEach($this->GetIncludes() As $I=>$Tmp)
+      {
+        $Asset=null;
+        If($Parent)
+          $Asset=$Parent->SearchAsset($Dir.$I, 'Cpp/Header');
+        If(!$Asset)
+          ForEach($Includes As $Path)
+            If($Asset=$Path->SearchAsset($I, 'Cpp/Header'))
+              Break;
+        If($Asset)
+        {
+          $Res[$Asset->GetKey()]=$Asset;
+          $Res=$Asset->_GetHeaders($Res, $Includes);
+        }
+        else
+          $this->Log('Warning', 'Include ',$I, ' not found');
+      }
+    }
+    
+    Function GetHeaders($Includes, $Force, $Compiler)
+    {
+      $Res=[];
+      // TODO: $Compiler
+      return $this->_GetHeaders($Res, $Includes, $Force);
+    }
+  };
+?>

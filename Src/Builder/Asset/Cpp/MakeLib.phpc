@@ -58,7 +58,7 @@
       if($IsObj)
       {
         $_Param=$Param;
-        $_Param['_DS']=!$IsDll && !$IsLib;
+        $_Param['DepUsing']=!$IsDll && !$IsLib;
         Static::Compile($Outer, $Compiler, $_Param);
       }
       

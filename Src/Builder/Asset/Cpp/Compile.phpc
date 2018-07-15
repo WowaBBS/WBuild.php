@@ -20,8 +20,8 @@
       $ITypeCppObj       = 'Cpp/Obj'       ;
       $ITypeCppLib       = 'Cpp/Lib'       ;
       
-      $_DS=$Param['_DS']??false;
-      if(!$_DS)
+      $DepUsing=$Param['DepUsing']??false;
+      if(!$DepUsing)
       {
         $ITypeCppObj='';
         $ITypeCppLib='';
@@ -40,12 +40,11 @@
         $ObjAsset=$Outer->CreateAsset('Cpp/Obj', ['Path'=>$Compiler->GetObjFile($ObjNick), '>Create'=>1]);
        #$Outer->Log('Debug', '  ObjNick: ',$ObjNick);
        #$Outer->Log('Debug', '  ObjAsset: ',$ObjAsset->GetFullPath());
-        $Exec=$ObjAsset->CreateExec($OutPath.'Task/Obj/'.$ObjNick);
         
         $Items[]=[
-          'Exec'     =>$Exec     ,
-          'SrcAsset' =>$SrcAsset ,
-          'ObjAsset' =>$ObjAsset ,
+          'TaskPath'  =>$OutPath.'Task/Obj/'.$ObjNick,
+          'SrcAsset' =>$SrcAsset,
+          'ObjAsset' =>$ObjAsset,
         ];
       }
 
@@ -56,7 +55,7 @@
         'Includes'  =>$Outer->GetAssetsR ('Cpp/Include'   ),
         'Using'     =>$Outer->GetAssets  ('Cpp/Using'     ),
         'UsingPath' =>$Outer->GetAssets  ('Cpp/UsingPath' ),
-        'DepUsing'  =>$_DS       ,
+        'DepUsing'  =>$DepUsing  ,
         'Items'     =>$Items     ,
         'Outer'     =>$Outer     ,
         'Compiler'  =>$Compiler  ,

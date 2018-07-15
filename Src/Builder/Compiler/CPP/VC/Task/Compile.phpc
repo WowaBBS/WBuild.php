@@ -1,0 +1,94 @@
+<?
+  $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Task/Compile');
+
+  class C_Builder_Compiler_CPP_VC_Task_Compile extends C_Builder_Compiler_CPP_Base_Task_Compile
+  {
+    Protected Function CanGroupByDir() { return true; }
+    
+    Protected Function _Compile()
+    {
+      if(false)
+      {
+        $L=[];
+        ForEach($this->Items As $Item)
+          $L[]=$Item['SrcAsset']->ToDebugInfo();
+        $this->Debug($L);
+        if(!$this->Outer)
+          $this->Debug($this);
+      }
+      
+      $Params=$this->Compiler->CreateParams();
+      $Params->Add('/nologo');
+      
+      $Params->Preload($this->Outer, 'cl');
+      
+      ForEach($this->Defines As $Define)
+        if(!$Define->IsRemoving())
+          $Params->Add('-D "',$Define->GetKeyValue(),'"');
+ 
+      ForEach($this->Includes As $Include)
+        $Params->Add('-I "',$Include->GetFullPath(),'"');
+        
+      $Hash=$this->Compiler->GetCompilerIdHash();
+      $PdbPath=$this->OutPath.'PDB';
+      $PdbName=$this->Compiler->Info['PDB'];
+      CreatePath($PdbPath);
+    //"Debug\vc100.pdb"
+    //$this->Debug($this->Info['PDB']);
+      $PdbFile=$PdbPath.'/'.$PdbName.$this->EnumCache->AllocNum($Hash, $PdbName, ['Pad'=>1, 'NoZero'=>true, 'Split'=>'_']).'.pdb';
+
+      $Params->Add('/Fd"',$PdbFile,'"');
+      
+      if($this->Using || $this->UsingPath)
+      {
+        // /AI"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0"
+        ForEach($this->UsingPath As $Use)
+          $Params->Add('-AI"',$Use->GetFullPath(),'"');
+        ForEach($this->Using As $Use)
+          $Params->Add('-FU"',$Use->GetFullPath(),'"');
+        if($Params->RemoveAny('/EHsc', '/EHs'))
+          $Params->Add('/EHa');
+        if($Params->RemoveAny('/Gm'))
+          $Params->Add('/Gm-');
+        $Params->RemoveAny('/arch:SSE2', '/arch:SSE');
+        $Params->Override('/clr:nostdlib', '/clr');
+      }
+
+      ForEach($this->ForceInclude As $ForceIncludeItem)
+        $Params->Add('/FI', $ForceIncludeItem->GetFullPath());
+
+      Switch($this->PchType)
+      {
+      Case 'NoUse'  : Break;
+      Case 'Create' :
+        $Params->Add('/Fp"', $this->Pch->GetDataFile(),'"');
+        $Params->Add('/Yc"', $this->Pch->GetHeaderName(),'"');
+        Break;
+      Case 'Use'    :
+        $Params->Add('/Fp"', $this->Pch->GetDataFile(),'"');
+        $Params->Add('/Yu"', $this->Pch->GetHeaderName(),'"');
+        Break;
+      Default: $this->Log('Fatal', 'Unreachable');
+      }
+      
+      $Params->Add('-c');
+      ForEach($this->Items As $Item)
+        $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
+      
+      if($this->Dir!==False)
+        $Params->Add('/Fo"',$this->Dir.'/"');
+      ElseIf(Count($this->Items)==1)
+        $Params->Add('/Fo"' ,End($this->Items)['ObjAsset']->GetFullPath(),'"');
+      Else
+        $this->Log('Fatal', 'Unreachable');
+      $FileParams=$this->Exec->CachePath.'.Opt';
+      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
+      
+      $this->Compiler->Exec_Cl($this->Exec, $Params);
+    }
+  };
+?>
+
+
+
+

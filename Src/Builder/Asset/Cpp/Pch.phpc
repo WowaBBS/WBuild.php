@@ -36,13 +36,13 @@
       return $this->Force;
     }
     
-    Function Prepare($Args)
+    Function Prepare($Task)
     {
-      $Outer     =$Args['Outer'     ];
-      $Compiler  =$Args['Compiler'  ];
-      $Includes  =$Args['Includes'  ]; // For search StdAfx.h
-      $EnumCache =$Args['EnumCache' ];
-      $OutPath   =$Args['OutPath'   ];
+      $Outer     =$Task->Outer     ;
+      $Compiler  =$Task->Compiler  ;
+      $Includes  =$Task->Includes  ; // For search StdAfx.h
+      $EnumCache =$Task->EnumCache ;
+      $OutPath   =$Task->OutPath   ;
       
       $HeaderName=$this->HeaderName;
       ForEach(Array_Reverse($Includes) As $Include)
@@ -58,12 +58,12 @@
       return false;
     }
     
-    Function Extract(&$List, $Args)
+    Function Extract(&$List, $Task)
     {
       if(!$this->bInited)
-        if(!$this->Prepare($Args))
+        if(!$this->Prepare($Task))
           return [];
-      // TODO: Init by $Args
+      // TODO: Init by $Task
       $FileName=$this->CppName;
     //$this->Log('Debug', 'Orig: ', $FileName);
       $Res=[];

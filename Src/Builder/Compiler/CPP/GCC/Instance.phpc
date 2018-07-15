@@ -29,41 +29,11 @@
     Function Exec_GPP ($Exec, $Params) { $Exec->Exec($this->Path.'/bin/g++',$Params); }
     Function Exec_Ar  ($Exec, $Params) { $Exec->Exec($this->Path.'/bin/ar' ,$Params); }
    
-    Function _Compile($Args)
+    Protected Function CreateTaskCompile(Array $Args)
     {
-      $Defines  =$Args['Defines'  ];
-      $Includes =$Args['Includes' ];
-      $Items    =$Args['Items'    ];
-      
-      //TODO: Support Cpp/Pch
-      
-      $Params=$this->CreateParams();
-    //$Params->Add('/nologo');
-      
-      ForEach($Defines As $Define)
-        if(!$Define->IsRemoving())
-          $Params->Add('-D ',$Define->GetKeyValue());
- 
-      ForEach($Includes As $Include)
-        $Params->Add('-I ',$Include->GetFullPath());
-      
-      $BaseParams=$Params;
-  
-      ForEach($Items As $Item)
-      {
-        $SrcAsset =$Item['SrcASset' ];
-        $ObjAsset =$Item['ObjAsset' ];
-        $Exec     =$Item['Exec'     ];
-
-        $Params=$BaseParams->Clone();
-      //$Params->Add($ObjAsset->GetFullPath());
-        $Params->Add('-c ', $SrcAsset->GetFullPath());
-        $Params->Add('-o ', $ObjAsset->GetFullPath());
-        
-        $this->Exec_GPP($Exec, $Params);
-      }
+      return $this->Create_Object('/Builder/Compiler/CPP/GCC/Task/Compile', $Args);
     }
-
+    
   //$Args['Exec'    ]=$this->Create_Exec();
   //$Args['Objects' ]=$this->ExtractAssets  ('Cpp/Obj');
   //$Args['Libs'    ]=$this->ExtractAssetsR ('Cpp/Lib');
