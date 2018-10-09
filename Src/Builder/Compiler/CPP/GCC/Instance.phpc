@@ -39,11 +39,17 @@
   //$Args['Libs'    ]=$this->ExtractAssetsR ('Cpp/Lib');
     Protected Function _Build(Array $Args, $Params, $OutAsset)
     {
-      $Exec     =$Args['Exec'     ];
-    //$OutAsset =$Args['OutAsset' ];
-    //$Params   =$Args['Params'   ];
-      $Objects  =$Args['Objects'  ];
-      $Libs     =$Args['Libs'     ];
+      $Exec         =$Args['Exec'         ];
+    //$OutAsset     =$Args['OutAsset'     ];
+    //$Params       =$Args['Params'       ];
+      $Objects      =$Args['Objects'      ];
+      $Libs         =$Args['Libs'         ];
+      $NoEntry      =$Args['NoEntry'      ]??false;
+      $NoDefaultLib =$Args['NoDefaultLib' ]??false;
+      $Proxy        =$Args['Proxy'        ]??[];
+      
+      if($Proxy)
+        $this->Log('Fatal', 'TODO');
       
     //$Params->Add('/nologo');
       ForEach($Objects As $Obj) // TODO: Reverce

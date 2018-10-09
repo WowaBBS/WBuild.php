@@ -173,25 +173,62 @@
   //$Args['LibAsset' ]=$this->CreateAsset('Bin/Lib', ['Path'=>$Compiler->GetDllLibFile ($Name)]);
     Final Function BuildDll(Array $Args)
     {
-      $Exec      =$Args['Exec'      ];
-      $Objects   =$Args['Objects'   ];
-      $Libs      =$Args['Libs'      ];
-      $Using     =$Args['Using'     ];
-      $DllAsset  =$Args['DllAsset'  ];
-      $LibAsset  =$Args['LibAsset'  ]??false;
-      $ResAsset  =$Args['ResAsset'  ]??[];
-      $Resources =$Args['Resources' ]??[];
-      $Manifests =$Args['Manifests' ]??[];
+      $Exec         =$Args['Exec'         ];
+      $Objects      =$Args['Objects'      ]??[];
+      $Libs         =$Args['Libs'         ];
+      $Using        =$Args['Using'        ];
+      $DllAsset     =$Args['DllAsset'     ];
+      $LibAsset     =$Args['LibAsset'     ]??false;
+      $ResAsset     =$Args['ResAsset'     ]??[];
+      $Resources    =$Args['Resources'    ]??[];
+      $Manifests    =$Args['Manifests'    ]??[];
+      $Proxy        =$Args['Proxy'        ]??[];
+      $NoEntry      =$Args['NoEntry'      ]??null;
+      $NoDefaultLib =$Args['NoDefaultLib' ]??null;
+
+      if($Proxy)
+      {
+        $Res=[];
+        ForEach($Proxy As $ProxyDll=>$ProxyInfo)
+        {
+          if(Is_Array($ProxyInfo))
+          {
+            switch($ProxyType=Array_Shift($ProxyInfo))
+            {
+            case 'List':
+              ForEach($ProxyInfo As $k=>$v)
+              {
+                if(!Is_String($k))
+                  $k=$v;
+                $Res[$k]=[$ProxyDll, $v];
+              }
+              Break;
+            Default:
+              $this->Log('Fatal', 'Unsupported');
+            }
+          }
+          else
+            $this->Log('Fatal', 'Unsupported');
+        }
+        $Proxy=$Res;
+        $Args['Proxy']=$Proxy;
+      }
       
+      if(Is_Null($NoEntry))
+        $Args['NoEntry']=$NoDefaultLib=Count($Objects)==0; // && Count($Libs)==0
+
+      if(Is_Null($NoDefaultLib))
+        $Args['NoDefaultLib']=$NoDefaultLib=Count($Objects)==0 && Count($Libs)==0;
+
       $Libs=Static::AgregateLibs($Libs); $Args['Libs']=$Libs;
-      
+
       ForEach($Objects As $Item) $DllAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
       ForEach($Libs    As $Item) $DllAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
       if($LibAsset)              $LibAsset->AddFileDepends($DllAsset);
       ForEach($Using   As $Item) $Item->UseForDll($DllAsset);
-      
+
       $this->PrepareExec($Exec);
-      
+
       $Exec->Descr('Build ',$DllAsset->GetLocalPathNick());
       $Exec->CheckFiles($Objects   );
       $Exec->CheckFiles($Libs      );
@@ -202,13 +239,13 @@
       $Exec->MkDir($DllAsset);
       if($LibAsset)
         $Exec->MkDir($LibAsset);
-      
+
       $this->_BuildDll($Args);
-      
+
       $Exec->CheckResultFile($DllAsset);
       if($LibAsset)
         $Exec->CheckResultFile($LibAsset);
-      
+
       $Exec->SaveCallTo();
       $Exec->Finish();
     }

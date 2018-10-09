@@ -34,6 +34,17 @@
                                                return 'Unsupported' ; 
     }
     
+    Function VC_GetMachine($Asset)
+    {
+      if(!$Asset) return '';
+      $Config=$Asset->GetConfig();
+      if($Config->InlineCheck(['Win32'     ])) return 'X86'         ;
+      if($Config->InlineCheck(['Win64'     ])) return 'X64'         ;
+      if($Config->InlineCheck(['Win', 'arm'])) return 'ARM'         ;
+                                               return 'Unsupported' ; 
+                                               // TODO: EBC
+    }
+    
     Function CMake_GetGenerator($Asset=null)
     {
       $Platform=$this->CMake_GetPlatform($Asset);
@@ -161,23 +172,34 @@
   //$Args['Libs'    ]=$this->ExtractAssetsR ('Cpp/Lib');
     Protected Function _Build(Array $Args, $Params, $OutAsset, bool $IsExe)
     {
-      if(!IsSet($Args['Name'      ])) UnSupported(); // TODO: Remove
-      $Outer     =$Args['Outer'     ];
-      $Name      =$Args['Name'      ];
-      $Exec      =$Args['Exec'      ];
-    //$OutAsset  =$Args['OutAsset'  ];
-    //$Params    =$Args['Params'    ];
-      $Objects   =$Args['Objects'   ];
-      $Libs      =$Args['Libs'      ];
-      $ResAsset  =$Args['ResAsset'  ]??[];
-      $Resources =$Args['Resources' ]??[];
-      $Manifests =$Args['Manifests' ]??[];
+      if(!IsSet($Args['Name'      ])) $this->Log('Fatal', 'UnSupported'); // TODO: Remove
+      $Outer        =$Args['Outer'        ];
+      $Name         =$Args['Name'         ];
+      $Exec         =$Args['Exec'         ];
+    //$OutAsset     =$Args['OutAsset'     ];
+    //$Params       =$Args['Params'       ];
+      $Objects      =$Args['Objects'      ];
+      $Libs         =$Args['Libs'         ];
+      $ResAsset     =$Args['ResAsset'     ]??[];
+      $Resources    =$Args['Resources'    ]??[];
+      $Manifests    =$Args['Manifests'    ]??[];
+      $NoEntry      =$Args['NoEntry'      ]??false;
+      $NoDefaultLib =$Args['NoDefaultLib' ]??false;
+      $Proxy        =$Args['Proxy'        ]??[];
 
       $IsIncremental=$Params->HasAny('/INCREMENTAL', '-INCREMENTAL');
       
       $Params->Add('/nologo');
+      if($NoEntry)
+        $Params->Add('/noentry');
+      if($NoDefaultLib)
+        $Params->Add('/nodefaultlib');
+      ForEach($Proxy As $Symbol=>[$RealLib, $Symbol])
+        $Params->Add('/export:',$Symbol,'=',FileName_GetFileNick($RealLib),'.',$Symbol);
       ForEach($Objects As $Item)
         $Params->Add('"',$Item->GetFullPath(),'"');
+        
+      $Params->Add('/MACHINE:', $this->VC_GetMachine($Outer));
  
       ForEach($Libs As $Item)
         $Params->Add('"',$Item->GetFullPath(),'"');
@@ -191,6 +213,10 @@
       
       ForEach($ResAsset As $Item)
         $Params->Add('"',$Item->GetFullPath(),'"');
+      
+      if($this->Ver>=1910)
+        ForEach($Outer->GetAssets('Cpp/NatVis') As $Item)
+          $Params->Add('/NATVIS:"', $Item->GetFullPath(),'"');
         
     //Var_Dump($Params);
       $Params->Add('/OUT:"', $OutAsset->GetFullPath(),'"');

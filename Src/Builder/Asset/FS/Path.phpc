@@ -78,13 +78,22 @@
         if(StrLen($Real)!==StrLen($Res))
           $this->Log('Fatal', 'Different paths:', "\n",
             '   Used=',$Res  ,"\n",
-            '   Real=',$Real ,"\n"
+            '   Real=',$Real
           );
         elseif($Real!==$Res)
-          $this->Log('Error', 'Different paths:', "\n",
-            '   Used=',SubStr($Real, -StrLen($Path))  ,"\n",
-            '   Real=',$Path ,"\n"
-          );
+        {
+          $RealPath=SubStr($Real, -StrLen($Path));
+          if($RealPath===$Path)
+            $this->Log('Warning', '??? Different paths:', "\n",
+              '   Used=',$Res  ,"\n",
+              '   Real=',$Real
+            );
+          else
+            $this->Log('Error', 'Different paths:', "\n",
+              '   Used=',$Path,"\n",
+              '   Real=',$RealPath
+            );
+        }
           
         return $Real;
       }
@@ -107,9 +116,19 @@
     Function _SearchAsset($Path, $Type, $bIsFile=true, $Param=[], Array $Args=[])
     {
       $Res=$this->Search($Path, $bIsFile);
-      if($Res!=='')
-        return $this->_CreateSubAsset($Res, $Type, $Param, $Args);
-      return null;
+      if($Res==='') return null;
+      $Base=$this->GetFullPath();
+      $base=SubStr($Res, 0, StrLen($Base));
+      if($base!=$Base)
+        $this->Log('Fatal', 'Different base path',"\n",
+          'Actual: ', $base, "\n",
+          'Excepted: ', $Base
+        );
+      if(SubStr($Res, StrLen($Base), 1)!=='/')
+        $this->Log('Fatal', 'Unreachable');
+      $Res=SubStr($Res, StrLen($Base)+1);
+    //$this->Log('Debug', 'Res=', $Res);
+      return $this->_CreateSubAsset($Res, $Type, $Param, $Args);
     }
     
   //Function GetDefaultAssetItemInfo() { return False; }
@@ -124,12 +143,12 @@
     
     Protected Function _IsFile() { return false; }
     
-    Var $md5='';
+    Var $Cached_Hash='';
     
     Function InvalidateCache()
     {
       Parent::InvalidateCache();
-      $this->md5='';
+      $this->Cached_Hash='';
     }
     
     Function GetFiles()
@@ -137,10 +156,24 @@
       return $this->GetSearch()->GetListArray($this->GetFullPath());
     }
     
-    Function GetMD5()
+    Function GetSubAssets($AssetType)
     {
-      if($this->md5)
-        return $this->md5;
+      $Files=$this->GetFiles();
+      $Res=[];
+      $Param=[];
+      $Args=[];
+      ForEach($Files As $File)
+      {
+        $Asset=$this->_CreateSubAsset($File->GetLocalPath (), $AssetType, $Param, $Args);
+        $Res[$Asset->GetKey()]=$Asset;
+      }
+      return $Res;
+    }
+    
+    Function GetHash()
+    {
+      if($this->Cached_Hash)
+        return $this->Cached_Hash;
       $Cache=$this->GetMD5Cache();
       $Res=[];
       ForEach($this->GetFiles() As $Item)
@@ -150,7 +183,7 @@
       $Res=Implode(':', Array_Keys($Res)).'='.
         Implode(';', Array_Values($Res));
       $Res=md5($Res);
-      $this->md5=$Res;
+      $this->Cached_Hash=$Res;
       return $Res;
     }
   };

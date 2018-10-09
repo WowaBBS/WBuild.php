@@ -133,14 +133,15 @@
     
     Function _GetTaskHash(Array &$Res)
     {
-      $Res[]=Static::Class;
-      $Res[]=$this->Name;
+      $Res['Task.Class' ]=Static::Class;
+      $Res['Task.Name'  ]=$this->Name;
     }
 
     Function GetTaskHash()
     {
       $Res=[];
-      $this->_GetTaskHash(Res);
+      $this->_GetTaskHash($Res);
+      return $Res;
     }
     
     Protected Function _Debug_Info(Array &$Res)

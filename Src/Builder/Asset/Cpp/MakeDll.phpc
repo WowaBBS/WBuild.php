@@ -8,6 +8,10 @@
       $OutPath      =$Param['OutPath'      ];
       $bManaged     =$Param['Managed'      ]??false;
       $DebugPostfix =$Param['DebugPostfix' ]??$bManaged;
+      $Proxy        =$Param['Proxy'        ]??[];
+      $NoEntry      =$Param['NoEntry'      ]??null;
+      $NoDefaultLib =$Param['NoDefaultLib' ]??null;
+      
       $bDebug=$DebugPostfix && $Outer->IsDebug();
       $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
       
@@ -26,16 +30,19 @@
       ]);
       
       $Compiler->BuildDll([
-        'Outer'     =>$Outer,
-        'Name'      =>$LibName,
-        'Exec'      =>$Outer->CreateExec($OutPath.'Task/Dll/'.$LibName),
-        'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'       ),
-        'Using'     =>$Outer->GetAssets     ('Cpp/Using'     ),
-        'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
-        'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
-        'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
-        'Libs'      =>$Libs,
-        'DllAsset'  =>$DllAsset,
+        'Outer'        =>$Outer,
+        'Name'         =>$LibName,
+        'Exec'         =>$Outer->CreateExec($OutPath.'Task/Dll/'.$LibName),
+        'Objects'      =>$Outer->ExtractAssets ('Cpp/Obj'       ),
+        'Using'        =>$Outer->GetAssets     ('Cpp/Using'     ),
+        'ResAsset'     =>$Outer->ExtractAssets ('Cpp/Res'       ),
+        'Resources'    =>$Outer->ExtractAssets ('Cpp/Resources' ),
+        'Manifests'    =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
+        'Libs'         =>$Libs         ,
+        'DllAsset'     =>$DllAsset     ,
+        'NoEntry'      =>$NoEntry      ,
+        'NoDefaultLib' =>$NoDefaultLib ,
+        'Proxy'        =>$Proxy        ,
       ]);
 
       $PathDllAsset->RemoveFromOuter();

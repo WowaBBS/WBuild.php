@@ -25,7 +25,7 @@
       parent::_InitParam($Param);
       
       $this->Force      =$Param['Force'  ]??false              ; UnSet($Param['Force'  ]);
-      $this->Name       =$Param['Name'   ]??'StdAfx'           ; UnSet($Param['Name'   ]);
+      $this->Name       =$Param['Name'   ]??'stdafx'           ; UnSet($Param['Name'   ]);
     //$this->DataFile   =$Param['File '  ]??false              ; UnSet($Param['File'   ]);
       $this->HeaderName =$Param['Header' ]??$this->Name.'.h'   ; UnSet($Param['Header' ]);
       $this->CppName    =$Param['Cpp'    ]??$this->Name.'.cpp' ; UnSet($Param['Cpp'    ]);
@@ -58,7 +58,7 @@
       return false;
     }
     
-    Function Extract(&$List, $Task)
+    Function ExtractPch($Task)
     {
       if(!$this->bInited)
         if(!$this->Prepare($Task))
@@ -68,7 +68,7 @@
     //$this->Log('Debug', 'Orig: ', $FileName);
       $Res=[];
       $Remove=[];
-      ForEach($List As $k=>$Item)
+      ForEach($Task->Items As $k=>$Item)
       {
         $SrcAsset=$Item['SrcAsset'];
         $SrcName=$SrcAsset->GetFileName();
@@ -84,9 +84,9 @@
         }
       }
       ForEach($Remove As $k)
-        UnSet($List[$k]);
+        UnSet($Task->Items[$k]);
       
-     #ForEach($List As $k=>$Item)
+     #ForEach($Task->Items As $k=>$Item)
      #{
      #  $SrcAsset=$Item['SrcAsset'];
      #  $SrcName=$SrcAsset->GetFileName();

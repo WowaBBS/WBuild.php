@@ -6,7 +6,8 @@
     Var $Descr=[];
     Var $List=[];
     Var $ContentHash=[];
-    static $LabelIdx=0;
+  //static $LabelIdx=0;
+    Var $LabelIdx=0;
     
     function _Init(Array $Args)
     {
@@ -16,7 +17,8 @@
       $this->List[]='@echo off';
     }
     
-    Function AllocLabelIdx() { return Self::$LabelIdx++; }
+  //Function AllocLabelIdx() { return Self::$LabelIdx++; }
+    Function AllocLabelIdx() { return $this->LabelIdx++; }
     
     Function Descr(...$Args)
     {
@@ -76,9 +78,9 @@
         $this->_MkDir($v);
     }
     
-    Function CheckFile($v)
+    Function CheckFile($v, bool $CheckHash=true)
     {
-      if(Parent::CheckFile($v))
+      if(Parent::CheckFile($v, $CheckHash))
         $this->_CheckFile($v->GetFullPath(), $v->GetLocalPath());
     }
     
@@ -91,8 +93,8 @@
     Function _GetTaskHash(Array &$Res)
     {
       Parent::_GetTaskHash($Res);
-      $Res[]=$this->List;
-      $Res[]=$this->ContentHash;
+      $Res['Task.Exec'   ]=$this->List        ;
+      $Res['ContentHash' ]=$this->ContentHash ;
     }
     
     Function SaveCallTo($File=false)
@@ -123,6 +125,8 @@
     Function Finish()
     {
     }
+    
+    Protected Function Prepare_Depends() {}
     
     Protected Function DoExecute()
     {

@@ -92,6 +92,7 @@
         {
           if($Name==='.'  ) continue;
           if($Name==='..' ) continue;
+          if($Name[0]==='.') continue;
    
           $DirName=$Dir.'/'.$Name;
           

@@ -88,7 +88,7 @@
     {
       if(!IsSet($this->Tasks))
         $this->Tasks=[];
-      $this->Tasks[]=$Task;
+      $this->Tasks[$Task->Object_Id]=$Task;
     }
     
     Static Function CheckEmptyParam($Param)
@@ -161,6 +161,13 @@
       if($this->Outer) unset($Res['Outer']);
       UnSet($Res['Depends']); // TODO: ???
       $Res['Asset_Info']=$Res['Asset_Info']->Name;
+      if(IsSet($this->Tasks))
+      {
+        $Tasks=[];
+        ForEach($this->Tasks As $Task)
+          $Tasks[]=$Task->Object_Id;
+        $Res['Tasks']=$Tasks;
+      }
     //UnSet($Res['Depends']); // TODO: ???
     }
     

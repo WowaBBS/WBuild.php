@@ -1,7 +1,7 @@
 <?
   $Loader->Parent_Class('/Builder/Task/Base');
   
-  class C_Builder_Task_Depends extends C_Builder_Task_Base
+  Abstract Class C_Builder_Task_Depends extends C_Builder_Task_Base
   {
     Private $CheckHash   =[];
     Private $CheckInput  =[];
@@ -33,7 +33,7 @@
       return $v;
     }
     
-    Function CheckInput($v)
+    Function CheckInput($v, bool $CheckHash=true)
     {  // TODO: It't disabled for late binding in GetMakeTasks
     //if(IsSet($v->Tasks))
     //  ForEach($v->Tasks As $Task)
@@ -41,25 +41,26 @@
       $Res=!$v->IsNoSearch();
       if($Res)
         $this->CheckInput[]=$v;
-      $this->CheckHash[]=$v;
+      if($CheckHash)
+        $this->CheckHash[]=$v;
       return $Res;
     }
     
-    Function CheckInputs(Array $l)
+    Function CheckInputs(Array $l, bool $CheckHash=true)
     {
       ForEach($l As $i)
-        $this->CheckInput($i);
+        $this->CheckInput($i, $CheckHash);
     }
 
-    Function CheckFile($v)
+    Function CheckFile($v, bool $CheckHash=true)
     {
-      return $this->CheckInput($v);
+      return $this->CheckInput($v, $CheckHash);
     }
     
-    Function CheckFiles(Array $l)
+    Function CheckFiles(Array $l, bool $CheckHash=true)
     {
       ForEach($l As $i)
-        $this->CheckFile($i);
+        $this->CheckFile($i, $CheckHash);
     }
 
     Function CheckResultFile($v, $bAddTask=true)
@@ -80,7 +81,7 @@
       $this->MkDir       =[];
     }
     
-    Protected Function CheckInfo($z=false)
+    Protected Function AgregateCheckVars($z=false)
     {
       $Res=0;
       ForEach($this->CheckInput As $i)
@@ -98,12 +99,14 @@
             $this->Log('Error', 'File not found ',$i->GetFullPath());
           $Res=2;
         }
-      if($Res)
+      if($Res===1)
         return $Res;
-      $Res=[];
+      $Res=[
+        'Task.Check'=>$Res,
+      ];
       $this->_GetTaskHash($Res);
       ForEach($this->CheckHash As $i)
-        $Res[$i->GetFullPath()]=$i->GetMD5();
+        $Res[$i->GetKey()]=$i->GetHash();
       return $Res;
     }
     
@@ -120,24 +123,43 @@
         $i->InvalidateCache(); // TODO: On finih task
     }
 
-    Protected Function DoExecute() {}
+    Abstract Protected Function Prepare_Depends();
+    Abstract Protected Function DoExecute();
+    
+    Protected $CheckVars=[];
+    
+    Function Cache_CheckFile($File)
+    {
+      if(!$File->Exists())
+        return False;
+      $Hash=$this->CheckVars[$File->GetKey()]??False;
+      if($Hash==False)
+        return False;
+      if($Hash!==$File->GetHash())
+        return False;
+      return True;
+    }
     
     Final Protected Function _Execute()
     {
+      $this->Prepare_Depends();
       $Cache=$this->Asset->GetManager()->Cache;
+      if(!$this->CachePath)
+        $this->Log('Fatal', 'No cache path');
       $Storage=$Cache->GetStorage($this->CachePath.'.check');
       $CheckVars=$Storage->GetVars();
+      $this->CheckVars=$CheckVars;
       if($CheckVars)
       {
-        $CheckInfo=$this->CheckInfo();
-        if($CheckInfo===1)
+        $_CheckVars=$this->AgregateCheckVars();
+        if($_CheckVars===1)
         {
           $this->Log('Error', 'Haven`t required files');
           if(true) // TODO: CleanOnFailed
             $this->CleanResult();
           return true; // TODO: Skip, haven`t required files
         }
-        if(Is_Array($CheckInfo) && $CheckVars===$CheckInfo)
+        if(Is_Array($_CheckVars) && $CheckVars==$_CheckVars && $CheckVars['Task.Check']!==2)
           return true;
       }
       $this->CleanResult();
@@ -147,13 +169,14 @@
       $this->DoExecute();
       
       $this->UpdateResult();
-      $CheckInfo=$this->CheckInfo(true);
-    //$this->Debug($CheckInfo);
-      $Storage->SetVars($CheckInfo);
+      $CheckVars=$this->AgregateCheckVars(true);
+    //$this->Debug($CheckVars);
+      $Storage->SetVars($CheckVars);
     //$this->Debug($Storage->FullPath);
       $Storage->Done();
+      $this->CheckVars=[];
     
-      if($CheckInfo===2)
+      if($CheckVars['Task.Check']===2)
       {
         $this->Log('Error', 'Task is failed');
         return true; // TODO: Task is failed

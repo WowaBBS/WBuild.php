@@ -5,7 +5,7 @@
   {
     Protected Function CanGroupByDir() { return true; }
     
-    Protected Function _Compile()
+    Protected Function MakeCompile()
     {
       if(false)
       {
@@ -72,6 +72,8 @@
       }
       
       $Params->Add('-c');
+      if(!Is_Array($this->Items))
+        $this->Log('Fatal', 'Items is not array');
       ForEach($this->Items As $Item)
         $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
       
@@ -79,8 +81,15 @@
         $Params->Add('/Fo"',$this->Dir.'/"');
       ElseIf(Count($this->Items)==1)
         $Params->Add('/Fo"' ,End($this->Items)['ObjAsset']->GetFullPath(),'"');
-      Else
+      ElseIf(Count($this->Items)==0)
+      {
+        //TODO: Empty task
+      }
+      else
+      {
+      //$this->Debug([$this->Object_Id, $this->Dir, 'Fatal', $this->Remove, $this->Items]);
         $this->Log('Fatal', 'Unreachable');
+      }
       $FileParams=$this->Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
       

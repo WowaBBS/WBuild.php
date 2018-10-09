@@ -4,10 +4,11 @@
   class C_Builder_Asset_Cpp_SrcBase extends C_Builder_Asset_FS_File
   {
     Var $Info=null;
+    Var $NotFound=[];
   
     Function GetInfo()
     {
-      $Hash=$this->GetMD5();
+      $Hash=$this->GetHash();
       if($this->Info && $this->Info['Hash']===$Hash)
         return $this->Info;
       $Src=$this->Loader->Load_Class('/Builder/Compiler/CPP/Analyzer/Cpp');
@@ -27,13 +28,14 @@
       }
       
       $Vars=$Storage->GetVars();
+    //$this->Log('Debug', 'Header: ', $this->GetLocalPath(), ' => ', $Storage->RelPath, ' :', Count($Vars));
       if($Vars &&
          $Vars['Version' ]===$Version &&
          $Vars['Hash'    ]===$Hash    )
       {
         $this->Info=$Vars;
         ForEach($Vars['Warnings'] As $Warning)
-          $this->Log('Warning', ...$Warning);
+          $this->Log('Warning', ...$Warning[1])('   in ', $this->GetLocalPath(), ':', $Warning[0]);
         return $this->Info;
       }
       
@@ -44,10 +46,11 @@
     //  'Includes'=>$Src->Includes,
     //]);
       $Vars=[
-        'Version'  =>$Version ,
-        'Hash'     =>$Hash    ,
-        'Warnings' =>$Src->Warnings,
-        'Includes' =>$Src->Includes,
+        'Version'  =>$Version       ,
+        'Hash'     =>$Hash          ,
+        'Warnings' =>$Src->Warnings ,
+        'Includes' =>$Src->Includes ,
+        'HasForm'  =>$Src->HasForm  ,
       ];
       $this->Info=$Vars;
       $Storage->SetVars($Vars);
@@ -55,15 +58,25 @@
       return $Vars;
     }
     
-    Function GetIncludes()
-    {
-      return $this->GetInfo()['Includes'];
-    }
+    Function HasForm() { return $this->GetInfo()['HasForm']; }
+    Function GetIncludes() { return $this->GetInfo()['Includes']; }
+    
+    Var $CacheHeader=[];
+    Var $RecursiveIncluding=false;
   
-    Function _GetHeaders($Res, $Includes, $Force=[])
+    Function _GetHeaders(Int $Id, $Includes):Array
     {
-      ForEach($Force As $Item)
-        $Res=$Item->_GetHeaders($Res, $Includes);
+      if($this->RecurseIncluding)
+      {
+        $this->Log('Error', 'Recursive including header ', $this->GetLocalPath());
+        return [];
+      }
+      if(IsSet($this->CacheHeader[$Id]))
+        return $this->CacheHeader[$Id];
+      $this->RecurseIncluding=true;
+      $Res=[];
+     #ForEach($Force As $Item)
+     #  $Res+=$Item->_GetHeaders($Id, $Includes);
       $Dir=DirName($this->GetLocalPath());
       $Dir=$Dir==='.'? '':$Dir.'/';
       $Parent=$this->Parent;
@@ -78,19 +91,38 @@
               Break;
         If($Asset)
         {
-          $Res[$Asset->GetKey()]=$Asset;
-          $Res=$Asset->_GetHeaders($Res, $Includes);
+          If(!IsSet($Res[$Asset->GetKey()]))
+          {
+            $Res[$Asset->GetKey()]=$Asset;
+            $Res+=$Asset->_GetHeaders($Id, $Includes);
+          }
+        //Else
+        //  $this->Log('Error', 'Recur')
         }
-        else
-          $this->Log('Warning', 'Include ',$I, ' not found');
+        ElseIf(IsSet($this->NotFound[$I]))
+        {
+          $this->NotFound[$I]=true;
+          $this->Log('Warning', 'Include ',$I, ' not found from ', $this->GetLocalPath());
+        }
       }
+      $this->CacheHeader[$Id]=$Res;
+      $this->RecurseIncluding=False;
+      return $Res;
     }
     
-    Function GetHeaders($Includes, $Force, $Compiler)
+    Function GetHeaders($Id, $Includes)
     {
-      $Res=[];
-      // TODO: $Compiler
-      return $this->_GetHeaders($Res, $Includes, $Force);
+      return $this->_GetHeaders($Id, $Includes);
     }
+  //****************************************************************
+  // Debug
+
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      Parent::_Debug_Info($Res);
+      UnSet($Res['CacheHeader']);
+    }
+    
+  //****************************************************************
   };
 ?>

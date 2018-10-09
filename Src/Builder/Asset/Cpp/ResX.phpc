@@ -3,14 +3,52 @@
 
   class C_Builder_Asset_Cpp_ResX extends C_Builder_Asset_FS_File
   {
-    Var $ResPrivate =false;
+    Var $ResPrivate        =false;
+    Var $DependentUponName =False;
+    Var $DependentUpon     =null;
+    Var $SubType           ='Designer';
+    
+    Function GetDependentUpon (){ return $this->DependentUpon ; }
+    Function GetSubType       (){ return $this->SubType       ; }
+    
+    Function SearchDependentUpon($DependentUponName)
+    {
+      if($Include=$this->GetLastAsset('Cpp/Include'))
+      {
+        $this->Log('Debug', 'Search DependentUpon ', $DependentUponName, ' in ', $Include->GetFullPath());
+        If($Res=$Include->SearchAsset($DependentUponName, 'Cpp/Header'))
+        {
+          $this->DependentUponName =$Res->GetLocalPath();
+          $this->DependentUpon     =$Res;
+          return True;
+        }
+      }
+      /// TODO: Search *.cs;
+      return False;
+    }
 
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
       $this->ResPrivate=$this->Outer->IsPrivate;
+      
+      if($this->DependentUponName!==false) $this->SearchDependentUpon($this->DependentUponName);
+      elseif($this->SearchDependentUpon($this->GetLocalPathNick().'.h')) {}
+      elseif($this->SearchDependentUpon($this->GetLocalPathNick().'.hpp')) {}
+      elseif($this->SearchDependentUpon($this->GetLocalPathNick().'.cs')) {}
+      else $this->Log('Fatal', 'DependentUpon not found for ', $this->GetFullPath());
+     
       Static::MakeResX($this->Outer, $this);
     }
+    
+    Function _InitParam(Array &$Param)
+    {
+      parent::_InitParam($Param);
+      
+      $this->DependentUponName =$Param['DependentUpon'  ]??false      ; UnSet($Param['DependentUpon' ]);
+      $this->SubType           =$Param['SubType'        ]??'Designer' ; UnSet($Param['SubType'       ]);
+    }
+    
     
     Protected Function _GetSearchPathClass()
     {

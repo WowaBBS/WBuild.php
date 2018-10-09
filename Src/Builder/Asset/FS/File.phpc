@@ -54,7 +54,7 @@
 
     Protected Function _IsFile() { return true; }
     
-    Function GetMD5()
+    Function GetHash()
     {
       $Cache=$this->GetMD5Cache();
       return $Cache->CalcMD5($this->GetFullPath());

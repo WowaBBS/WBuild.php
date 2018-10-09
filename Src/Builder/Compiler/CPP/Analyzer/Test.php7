@@ -6,8 +6,9 @@
   $Src->Write_FilePath='Test.Out.h';
   $Src->Process_FilePath('Test.h');
   $Src->Debug([
-    'Warnings'=>$Src->Warnings,
-    'Includes'=>$Src->Includes,
+    'Warnings' =>$Src->Warnings ,
+    'Includes' =>$Src->Includes ,
+    'HasForm'  =>$Src->HasForm  ,
   ]);
  #$Src=$Loader->Create_Object('/Builder/Compiler/CPP/Analyzer/Src');
  #$Src->Process_Text(File_Get_Contents('Test.h'));
