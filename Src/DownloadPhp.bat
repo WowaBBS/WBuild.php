@@ -12,7 +12,7 @@ goto :SkipDownloading
 :DownloadPhp
 
 set PhpZip=%~dp0php.zip
-set UrlPhp=https://windows.php.net/downloads/releases/php-7.2.4-Win32-VC15-x64.zip
+set UrlPhp=https://windows.php.net/downloads/releases/archives/php-7.2.4-Win32-VC15-x64.zip
 
 del "%PhpZip%" 2>nul
 echo Loading PHP...
