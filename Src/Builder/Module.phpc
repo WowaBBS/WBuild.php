@@ -8,6 +8,7 @@
   {
     Var $CacheDir ;
     Var $Modules  ;
+    Var $Type     ='Module'; // 'Module', 'Redirect/Module', 'Redirect/Path'
     Var $Parent   ='';
     Var $Name     ='';
     Var $FullName ='';
@@ -67,8 +68,19 @@
       
       if($this->FullName ==='' && IsSet($Cfg['FullName' ])) $this->FullName =$Cfg['FullName' ];
       if($this->Name     ==='' && IsSet($Cfg['Name'     ])) $this->Name     =$Cfg['Name'     ];
-      if(IsSet($Cfg['Assets'     ])) $this->Assets_Php=$Cfg['Assets'     ];
-      if(IsSet($Cfg['SubModules' ])) $this->SubModules=$Cfg['SubModules' ];
+      if(IsSet($Cfg['Assets'     ])) $this->Assets_Php =$Cfg['Assets'     ];
+      if(IsSet($Cfg['SubModules' ])) $this->SubModules =$Cfg['SubModules' ];
+      if(IsSet($Cfg[0            ])) $this->Type       =$Cfg[0            ];
+      switch($this->Type)
+      {
+      case 'Module': break;
+      case 'Redirect/Module':
+        $this->Assets_Php=[
+          ['Public'],
+          ['Module/Depends', $Cfg[1]],
+        ];
+        break;
+      }
     }
     
     Protected $Instances=[];
