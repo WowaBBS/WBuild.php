@@ -107,6 +107,7 @@
       $this->ContentHash[]=md5($Content);
       File_Put_Contents($File, $Content);
       $this->List=[];
+      $this->Log('Log', 'call "',$File,'"');
       $this->Exec('call "'.$File.'"');
       return $File;
     }

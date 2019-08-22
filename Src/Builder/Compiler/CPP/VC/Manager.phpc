@@ -191,18 +191,20 @@
       if((bool)$Cfg['Win']!=(bool)$Item['Win']) return false;
       switch($Item['CPU'])
       {
-      case 'amd64':
-        if(!$Cfg['x86'] || !$Cfg['64b']) return false;
-        break;
-      case 'x86':
-        if(!$Cfg['x86'] || !$Cfg['32b']) return false;
-        break;
-      case 'arm':
-        if(!$Cfg['arm']) return false;
-        break;
+      case 'amd64' : if(!$Cfg['x86'] || !$Cfg['64b']) return false; break;
+      case 'x86'   : if(!$Cfg['x86'] || !$Cfg['32b']) return false; break;
+      case 'arm'   : if(!$Cfg['arm']                ) return false; break;
       default: $this->Log('Fatal', 'Unreachable place');
       }
       return true;
+    }
+    
+    Function GetInstances()
+    {
+      $Res=[];
+      ForEach($this->List As $Item)
+        $Res[]=$this->_Get($Item);
+      return $Res;
     }
 
     Function Find($Config)

@@ -76,6 +76,28 @@
       $this->Ver        =$Info['VcVer'      ];
     }
     
+    Function GetPaths()
+    {
+      //TODO: Workaround
+      $Res=[];
+      ForEach($this->Info['Path']??[] As $Paths)
+        ForEach(Explode(';', $Paths) As $Path)
+          if(StrLen($Path))
+            $Res[StrToLower($Path)]=$Path;
+      return Array_Values($Res);
+    }
+    
+    Function GetMSBuildPath()
+    {
+      ForEach($this->GetPaths() As $Path)
+      {
+        $Path.='/msbuild.exe';
+        if(file_exists($Path))
+          return $Path;
+      }
+      return false;
+    }
+    
     Function CheckConfig($Config)
     {
       $Cfg=$this->Manager->ParseConfig($Config);

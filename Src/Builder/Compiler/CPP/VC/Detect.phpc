@@ -36,7 +36,7 @@
     //['Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat'    ,'?'     ,'?'     ,],
     ];
     
-    Function GetVersion() { return 6; }
+    Function GetVersion() { return 7; }
   
     function Detect($Vars)
     {
@@ -185,6 +185,7 @@
             'Includes'    =>$ItemEnv->INCLUDE ->ToArray(),
             'Lib'         =>$ItemEnv->LIB     ->ToArray(),
             'LibPath'     =>$ItemEnv->LIBPATH ->ToArray(),
+            'Path'        =>$ItemEnv->PATH    ->ToArray(),
             'Tools'       =>$Tools,
           ];
         //break; // TODO: Remove
