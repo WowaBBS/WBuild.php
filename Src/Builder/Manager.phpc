@@ -55,7 +55,7 @@
         return $this->Paths;
       
       $this->LoadPathEnv();
-      $this->LoadPathInstaled();
+      $this->LoadPathInstalled();
       
       $this->Paths_Inited=true;
       return $this->Paths;
@@ -88,10 +88,10 @@
         $this->Log('Error', 'File not found: ', $FileName);
     }
     
-    Function LoadPathInstaled()
+    Function LoadPathInstalled()
     {
-      $Res=$this->LoadInstaledPrograms();
-      $this->AddPath(Array_Keys($Res));
+      $Res=$this->GetInstalledPrograms();
+      $this->AddPath($Res->GetPaths());
     }
     
     //****************************************************************
@@ -112,7 +112,6 @@
     //****************************************************************
     // Programs
     Var $Programs=[];
-    Protected $Installed=[];
     
     Function GetProgram($Name, Array $Args=[])
     {
@@ -125,37 +124,9 @@
     }
 
     
-    Function LoadInstaledPrograms()
+    Function GetInstalledPrograms()
     {
-      if($this->Installed)
-        return $this->Installed;
-      $Reg=$this->Create_Object('/System/Reg');
-      $this->Log('Log', 'Search installed Programs');
-      $List=$Reg->SearchParam(
-        [
-          'HKLM\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall',
-          'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
-          'HKCU\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall',
-          'HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall',
-        ],
-        ['InstallLocation', 'DisplayName'], // 'InstallSource'
-        ['Recursive'=>true]
-      );
-      $Res=[];
-      ForEach($List As $Item)
-      {
-        $InstallLocation =$Item['InstallLocation' ]??false;
-        $DisplayName     =$Item['DisplayName'     ]??false;
-        if(!$InstallLocation)
-          continue;
-        $Key=Path_Key($InstallLocation);
-        if(!IsSet($Res[$Key]))
-          $Res[$Key]=['Path'=>Path_Simplify($InstallLocation)];
-        if($DisplayName!==false) $Res[$Key]['Title']=$DisplayName;
-      }
-      $Reg->Done();
-      $this->Installed=$Res;
-      return $this->Installed;
+      return $this->Get_Singleton('/Builder/Program/Installed')->GetList();
     }
    
   //****************************************************************

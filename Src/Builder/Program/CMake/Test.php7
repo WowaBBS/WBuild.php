@@ -1,0 +1,9 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  
+  $ResGen=$Loader->Create_Object('/Builder/Program/CMake/Manager');
+//$List=$ResGen::_Search();
+ //Var_Dump($List);
+  echo $ResGen->Get();
+  $ResGen->Done();
+?>

@@ -1,0 +1,41 @@
+<?
+  $Loader->Parent_Class('/Object');
+  $Loader->Load_Lib('/FS/Utils');
+ 
+  // Token from https://github.com/emgucv/emgutf/blob/master/cmake/modules/FindCSharp.cmake
+  class C_Builder_Program_CMake_Manager extends C_Object
+  {
+    Var $FoundPath=null;
+  //Var $FoundList=[]; //<TODO
+  
+    Function Find()
+    {
+      if($this->FoundPath!==null)
+        return $this->FoundPath;
+      $Res=false;
+      ForEach($this->Get_Singleton('/Builder/Program/Installed')->GetList() as $Path=>$Name)
+        if($Name['Title']==='CMake')
+          $Res=$Name['Path'];
+          
+      // TODO: Find in paths
+      // TODO: Find in VS
+      
+      if(!$Res)
+        $this->Log('Error', 'CMake not found');
+      else
+        $this->Log('Log', 'CMake found at ', $Res);
+        
+      return $this->FoundPath=$Res;
+    }
+  
+    Function GetPath()
+    {
+      return $this->Find();
+    }
+    Function GetBinPath()
+    {
+      $Res=$this->Find();
+      return $Res!==false? $Res.'/bin':false;
+    }
+  }
+?>
