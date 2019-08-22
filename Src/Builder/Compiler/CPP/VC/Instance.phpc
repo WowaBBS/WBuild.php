@@ -203,6 +203,7 @@
       $Objects      =$Args['Objects'      ];
       $Libs         =$Args['Libs'         ];
       $ResAsset     =$Args['ResAsset'     ]??[];
+      $DefAsset     =$Args['DefAsset'     ]??[];
       $Resources    =$Args['Resources'    ]??[];
       $Manifests    =$Args['Manifests'    ]??[];
       $NoEntry      =$Args['NoEntry'      ]??false;
@@ -235,6 +236,9 @@
       
       ForEach($ResAsset As $Item)
         $Params->Add('"',$Item->GetFullPath(),'"');
+
+      ForEach($DefAsset As $Item)
+        $Params->Add('/DEF:"',$Item->GetFullPath(),'"');
       
       if($this->Ver>=1910)
         ForEach($Outer->GetAssets('Cpp/NatVis') As $Item)

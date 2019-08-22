@@ -24,6 +24,7 @@
         'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'       ),
         'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'       ),
         'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
+        'DefAsset'  =>$Outer->ExtractAssets ('Cpp/Def'       ),
         'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
         'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
         'ExeAsset'  =>$Outer->CreateAsset   ('Bin/Exe', [

@@ -136,6 +136,7 @@
       $Using     =$Args['Using'     ];
       $ExeAsset  =$Args['ExeAsset'  ];
       $ResAsset  =$Args['ResAsset'  ]??[];
+      $DefAsset  =$Args['DefAsset'  ]??[];
       $Resources =$Args['Resources' ]??[];
       $Manifests =$Args['Manifests' ]??[];
       
@@ -154,6 +155,7 @@
       $Exec->CheckFiles($Libs      );
       $Exec->CheckFiles($Using     );
       $Exec->CheckFiles($ResAsset  );
+      $Exec->CheckFiles($DefAsset  );
       $Exec->CheckFiles($Resources );
       $Exec->CheckFiles($Manifests );
       $Exec->MkDir($ExeAsset);
@@ -180,6 +182,7 @@
       $DllAsset     =$Args['DllAsset'     ];
       $LibAsset     =$Args['LibAsset'     ]??false;
       $ResAsset     =$Args['ResAsset'     ]??[];
+      $DefAsset     =$Args['DefAsset'     ]??[];
       $Resources    =$Args['Resources'    ]??[];
       $Manifests    =$Args['Manifests'    ]??[];
       $Proxy        =$Args['Proxy'        ]??[];
@@ -234,6 +237,7 @@
       $Exec->CheckFiles($Libs      );
       $Exec->CheckFiles($Using     );
       $Exec->CheckFiles($ResAsset  );
+      $Exec->CheckFiles($DefAsset  );
       $Exec->CheckFiles($Resources );
       $Exec->CheckFiles($Manifests );
       $Exec->MkDir($DllAsset);

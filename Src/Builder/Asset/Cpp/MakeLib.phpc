@@ -18,7 +18,10 @@
       $OutPath=$Param['OutPath'];
       
       $DLL=IsSet($Param['DLL'])? $Param['DLL']:''; // TODOL "??" ?
-      $IsDll = $Mode>=3 && $DLL!=='';
+      $Def=IsSet($Param['Def'])? $Param['Def']:[];
+      if(!Is_Array($Def))
+        $Def=[$Def];
+      $IsDll = $Mode>=3 &&($DLL!==''||Count($Def)>0);
       $IsLib = $Mode>=2 && !$IsDll;
       $IsObj = $Mode>=1;
       $LibName=Static::_GetName($Param, $Outer);
@@ -55,16 +58,17 @@
             break;
           default:
             // TODO: static 
-            $DefTypes=[            // Zero  ,TODO:   
-              //             Export ,Import ,Lib   ,Include 
-            //'Define'   =  > [true   ,false  ,false ,false   ], //< TODO: Deprecated
-            //'Liberary'   => [false  ,true   ,true  ,true    ],
-              'IsStatic'   => [false  ,false  ,true  ,true    ],
-              'IsDll'      => [true   ,true   ,false ,false   ],
-              'IsBuild'    => [true   ,false  ,true  ,false   ],
-              'IsBuildDll' => [true   ,false  ,false ,false   ],
-              'IsUseDll'   => [false  ,true   ,false ,false   ],
-              'IsHeader'   => [false  ,true   ,false ,true    ],
+            $DefTypes=[                        // Zero  ,TODO:   
+              //                  Export ,Import ,Lib   ,Include 
+            //'Define'        => [true   ,false  ,false ,false   ], //< TODO: Deprecated
+            //'Liberary'      => [false  ,true   ,true  ,true    ],
+              'IsStatic'      => [false  ,false  ,true  ,true    ],
+              'IsDll'         => [true   ,true   ,false ,false   ],
+              'IsBuild'       => [true   ,false  ,true  ,false   ],
+              'IsBuildStatic' => [false  ,false  ,true  ,false   ],
+              'IsBuildDll'    => [true   ,false  ,false ,false   ],
+              'IsUseDll'      => [false  ,true   ,false ,false   ],
+              'IsHeader'      => [false  ,true   ,false ,true    ],
             ];
             if(IsSet($DefTypes[$DllType]))
             {
@@ -96,7 +100,10 @@
         
         if($IsDll)
         {
-          $PathDllAsset=$Outer->CreateAsset('Bin/Path', $OutPath.'Bin');
+          $PathDllAsset =$Outer->CreateAsset('Bin/Path', $OutPath.'Bin');
+          $DefAssets=[];
+          ForEach($Def As $DefItem)
+            $DefAssets[]  =$Outer->CreateAsset('Cpp/Def', $DefItem);
           
           $Compiler->BuildDll([
             'Outer'     =>$Outer,
@@ -110,12 +117,15 @@
               '>FileDepends'=>$Param['>FileDepends']??[],
             ]),
             'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
+            'DefAsset'  =>$Outer->ExtractAssets ('Cpp/Def'       ),
             'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
             'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
           ]);
           $Outer->CreateAsset('Cpp/Define', $DLL_Import);
   
           $PathDllAsset->RemoveFromOuter();
+          ForEach($DefAssets As $DefAsset)
+            $DefAsset->RemoveFromOuter();
         //TODO: $DllAsset->RemoveFromOuter();
         }
         if($IsLib)

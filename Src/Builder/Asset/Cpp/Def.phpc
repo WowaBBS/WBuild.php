@@ -1,0 +1,14 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+  class C_Builder_Asset_Cpp_Def extends C_Builder_Asset_FS_File
+  {
+    Var $FileDepends=[];
+
+  //Var $Name=''; // TODO:
+    Protected Function _GetSearchPathClass()
+    {
+      return ['Cpp/DefPath'];
+    }
+  };
+?>
