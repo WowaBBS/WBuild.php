@@ -23,10 +23,12 @@
       $IsObj = $Mode>=1;
       $LibName=Static::_GetName($Param, $Outer);
       
+      $DefineAssets=[];
+      
       if($DLL!=='')
       {
         if(Is_String($DLL))
-          $DLL=[$DLL];
+          $DLL=[$DLL=>'Extern'];
       //if(IsSet($DLL['>Proxy']))
       //{
       //  $DLL_Proxy=$DLL['>Proxy'];
@@ -37,22 +39,45 @@
         $DLL_Export =[];
         $DLL_Import =[];
         $DLL_Zero   =[];
-        ForEach($DLL As $DLLi)
+        ForEach($DLL As $DLLi=>$DllType)
         {
-          $DLL_Export [$DLLi]=$Compiler->DefineDLLExport();
-          $DLL_Import [$DLLi]=$Compiler->DefineDLLImport();
-          $DLL_Zero   [$DLLi]='';
+          if(Is_Integer($DLLi))
+          {
+            $DLLi    =$DllType;
+            $DllType ='Extern';
+          }
+          switch($DllType)
+          {
+          case 'Extern':
+            $DLL_Export [$DLLi]=$Compiler->DefineDLLExport();
+            $DLL_Import [$DLLi]=$Compiler->DefineDLLImport();
+            $DLL_Zero   [$DLLi]='';
+            break;
+          default:
+            // TODO: static 
+            $DefTypes=[            // Zero  ,TODO:   
+              //             Export ,Import ,Lib   ,Include 
+            //'Define'   =  > [true   ,false  ,false ,false   ], //< TODO: Deprecated
+            //'Liberary'   => [false  ,true   ,true  ,true    ],
+              'IsStatic'   => [false  ,false  ,true  ,true    ],
+              'IsDll'      => [true   ,true   ,false ,false   ],
+              'IsBuild'    => [true   ,false  ,true  ,false   ],
+              'IsBuildDll' => [true   ,false  ,false ,false   ],
+              'IsUseDll'   => [false  ,true   ,false ,false   ],
+              'IsHeader'   => [false  ,true   ,false ,true    ],
+            ];
+            if(IsSet($DefTypes[$DllType]))
+            {
+              $DT=$DefTypes[$DllType];
+              if($DT[0]) $DLL_Export [$DLLi]='';
+              if($DT[1]) $DLL_Import [$DLLi]='';
+              if($DT[2]) $DLL_Zero   [$DLLi]='';
+            }
+            else
+              $this->Fatal('Unknown DllType ',$DllType);
+          }
         }
-      //ForEach($DLL_Proxy As $DLLi)
-      //{
-      //  $DLL_Export [$DLLi]=$Compiler->DefineDLLProxy ();
-      //  $DLL_Import [$DLLi]=$Compiler->DefineDLLImport();
-      //  $DLL_Zero   [$DLLi]='';
-      //}
-        if($IsDll)
-          $Outer->CreateAsset('Cpp/Define', $DLL_Export);
-        else
-          $Outer->CreateAsset('Cpp/Define', $DLL_Zero);
+        $DefineAssets+=$Outer->CreateAssets('Cpp/Define', $IsDll? $DLL_Export:$DLL_Zero);
       }
       
       if($IsObj)
@@ -61,6 +86,9 @@
         $_Param['DepUsing']=!$IsDll && !$IsLib;
         Static::Compile($Outer, $Compiler, $_Param);
       }
+      
+      ForEach($DefineAssets As $DefineAsset)
+        $DefineAsset->RemoveFromOuter();
       
       if($IsDll || $IsLib)
       {
