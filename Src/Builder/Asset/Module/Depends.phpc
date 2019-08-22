@@ -16,24 +16,9 @@
       $I=$this->GetModuleInstance();
       $Context=$Context? $this->GetManager()->Create_Context($Context):$I->Context;
       
-      $Modules=$I->GetModules();
-      ForEach($I->GetModule()->Prefixes As $Prefix)
-        if($Module=$Modules->Get($Prefix.$this->Name))
-          break;
-      if($Module)
+      if($Module=$I->GetModule()->GetSubModule($this->Name))
         $this->Instance=$Module->CreateInstance($Context);
-      else
-      {
-        $this->Log('Error', 'Module ',$this->Name,' not found')->Call(
-          Function($Log) Use ($Modules)
-          {
-            $Log('  Modules:');
-            ForEach($Modules->GetModules() As $i)
-              $Log('    ', $i->GetName());
-          }
-        );
-      }
-      
+
       if($this->Instance)
         $this->Outer->AddFrom($this->Instance, null, IsSet($Args['Debug']['AddFrom']));
     }

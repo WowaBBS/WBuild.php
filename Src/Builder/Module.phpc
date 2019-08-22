@@ -15,6 +15,7 @@
     Var $MD5_Storage ;
     Var $EnumCache   ;
     Var $Prefixes =[];
+    Var $SubModules = false;
     
     Var $Assets_Init =[];
     Var $Assets_Php  =[];
@@ -45,9 +46,10 @@
       $FullNameL=Explode('/', $this->FullName);
       while(count($FullNameL))
       {
-        Array_Pop($FullNameL);
         $Prefixes[]=Implode('/', $FullNameL).($FullNameL? '/':'');
+        Array_Pop($FullNameL);
       }
+      $Prefixes[]='';
       $this->Prefixes=$Prefixes;
       
       $this->LoadPhp();
@@ -65,7 +67,8 @@
       
       if($this->FullName ==='' && IsSet($Cfg['FullName' ])) $this->FullName =$Cfg['FullName' ];
       if($this->Name     ==='' && IsSet($Cfg['Name'     ])) $this->Name     =$Cfg['Name'     ];
-      if(IsSet($Cfg['Assets'])) $this->Assets_Php=$Cfg['Assets'];
+      if(IsSet($Cfg['Assets'     ])) $this->Assets_Php=$Cfg['Assets'     ];
+      if(IsSet($Cfg['SubModules' ])) $this->SubModules=$Cfg['SubModules' ];
     }
     
     Protected $Instances=[];
@@ -74,7 +77,13 @@
     {
       $Key=Serialize($Context->GetContextId());
       if(IsSet($this->Instances[$Key]))
-        return $this->Instances[$Key];
+      {
+        if($this->Instances[$Key])
+          return $this->Instances[$Key];
+        $this->Log('Fatal', 'Recursive creating instance of ', $this->Name);
+        return null;
+      }
+      $this->Instances[$Key]=false;
       $Assets=Array_Merge(
         $Context->Assets  ,
         $this->Assets_Init 
@@ -95,6 +104,28 @@
       $Res=$this->Create_Object($Info->Class, $Args);
       $this->Instances[$Key]=$Res;
       return $Res;
+    }
+    
+    Function GetModules() { return $this->Modules; }
+    
+    Function GetSubModule($Name)
+    {
+      $Modules=$this->GetModules();
+      ForEach($this->Prefixes As $Prefix)
+        If($Module=$Modules->Get($Prefix.$Name))
+          return $Module;
+      $this->Log('Error', 'Module ',$Name,' not found')->Call(
+        Function($Log) Use ($Modules) // , $Prefixes=$this->Prefixes
+        {
+          $Log('  Modules:');
+          ForEach($Modules->GetModules() As $i)
+            $Log('    ', $i->GetName());
+          $Log('  Prefixes:');
+          ForEach($this->Prefixes As $i)
+            $Log('    ', $i);
+        }
+      );
+      return null;
     }
   /*
     Function Prepare($Context)

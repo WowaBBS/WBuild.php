@@ -31,7 +31,12 @@
       ForEach($List As $Depends)
         if($Depends->Name===$Name)
           return $Depends->Instance;
-      $this->Log('Fatal', 'Module "', $Name, '" not found');
+      
+      $Allowed=[];
+      ForEach($List As $Depends)
+        $Allowed[]=$Depends->Name;
+      
+      $this->Log('Fatal', 'Module "', $Name, '" not found in [', implode(', ', $Allowed),'] from ',$this->Module->FullName);
       return null;
     }
     
@@ -45,6 +50,17 @@
         ForEach($List As $Item)
           $Item->GetMakeTasks($Res, $Depends);
       return $Res;
+    }
+    
+    Function Build()
+    {
+      $Tasks=$this->Make();
+      $Manager=$this->Create_Object('/Builder/Task/Manager');
+      ForEach($Tasks As $k=>$v)
+        $Manager->_Add($v);
+      ForEach($Tasks As $k=>$v)
+        $v->Execute();
+      $Manager->Done();
     }
 
     Function GetModuleInstance()

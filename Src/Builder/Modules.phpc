@@ -82,7 +82,8 @@
           $this->Modules[$Module->FullName]=$Module;
           if(false)
             $this->Modules[$Module->Name]=$Module;
-          Continue;
+          if(!$Module->SubModules)
+            Continue;
         }
         
         If(!($Handle=OpenDir($Dir)))
