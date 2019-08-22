@@ -1,0 +1,47 @@
+<?
+  $Loader->Parent_Class('/Builder/Condition/Base');
+  $Loader->Using_Class('/Builder/Config/Defines');
+ 
+  class C_Builder_Condition_Cpp_Defined extends C_Builder_Condition_Base
+  {
+    Var $Defined=[];
+  
+    Function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      $this->Defined=$Args['Param'];
+    }
+    
+    Function CheckAsset($Asset, $Args)
+    {
+      $Defines=$Asset->GetAssets('Cpp/Define');
+      ForEach($this->Defined As $Key=>$Value)
+      {
+        if(Is_Array($Value)) // TODO: Contains?
+        {
+          $Key   =$Value[0];
+          $Value =$Value[1];
+        }
+        elseif(!Is_String($Key))
+        {
+          $Key   =$Value;
+          $Value =true;
+        }
+        if($Value===false)
+        {
+          if(IsSet($Defines[$Key]))
+            return false;
+        }
+        else
+        {
+          if(!IsSet($Defines[$Key]))
+            return false;
+          if($Value!==true)
+            if($Defines[$Key]->Value!==$Value)
+              return false;
+        }
+      }
+      return true;
+    }
+  }
+?>
