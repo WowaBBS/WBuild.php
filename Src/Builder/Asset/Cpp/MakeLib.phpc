@@ -124,8 +124,8 @@
           $Outer->CreateAsset('Cpp/Define', $DLL_Import);
   
           $PathDllAsset->RemoveFromOuter();
-          ForEach($DefAssets As $DefAsset)
-            $DefAsset->RemoveFromOuter();
+        //ForEach($DefAssets As $DefAsset) //<Removed by Compiler
+        //  $DefAsset->RemoveFromOuter();
         //TODO: $DllAsset->RemoveFromOuter();
         }
         if($IsLib)

@@ -36,7 +36,7 @@
     //['Common7/Tools/vsdevcmd/ext/vcvars/vcvars140.bat'    ,'?'     ,'?'     ,],
     ];
     
-    Function GetVersion() { return 7; }
+    Function GetVersion() { return 8; }
   
     function Detect($Vars)
     {
@@ -182,16 +182,28 @@
             'VcVer'       =>(Int)$PreDef['_MSC_VER'],
             'VcFullVer'   =>(Int)$PreDef['_MSC_FULL_VER'],
             'Win'         =>($PreDef['_WIN32']??0)==='1',
-            'Includes'    =>$ItemEnv->INCLUDE ->ToArray(),
-            'Lib'         =>$ItemEnv->LIB     ->ToArray(),
-            'LibPath'     =>$ItemEnv->LIBPATH ->ToArray(),
-            'Path'        =>$ItemEnv->PATH    ->ToArray(),
+            'Includes'    =>$this->NormPaths($ItemEnv->INCLUDE ->ToArray()),
+            'Lib'         =>$this->NormPaths($ItemEnv->LIB     ->ToArray()),
+            'LibPath'     =>$this->NormPaths($ItemEnv->LIBPATH ->ToArray()),
+            'Path'        =>$this->NormPaths($ItemEnv->PATH    ->ToArray()),
             'Tools'       =>$Tools,
           ];
         //break; // TODO: Remove
         }
       }
       return $Res;
+    }
+    
+    Static Function NormPaths($Paths)
+    {
+      ForEach($Paths As $k=>$Path)
+        if(Is_Dir($Path))
+        {
+          $Path=RealPath($Path);
+          if($Path!==false)
+            $Paths[$k]=$Path;
+        }
+      return $Paths;
     }
   };
 

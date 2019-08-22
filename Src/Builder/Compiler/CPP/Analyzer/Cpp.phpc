@@ -296,10 +296,11 @@
                 break;
               case 'include' :
                 if($m3!=='')
-                  $this->Warning($i, 'Internal error');
+                  $this->Warning($i, 'Stange include');
                 $this->AddInclude($m2);
               break;
               case 'undef'   : break;
+              case 'warning' :
               case 'error'   :
                 break;
               default:

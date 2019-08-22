@@ -168,17 +168,8 @@
 
     Function Warning($Line, ...$Message)
     {
-      $Log=$this->Log('Warning', ...$Message);
+      $Log=$this->Log('Warning', ...$Message)->File($this->FilePath, $Line);
       $this->Warnings[]=[$Line, $Message];
-      If($this->FilePath)
-      {
-        If($Line!==false)
-          $Log(' ', $this->FilePath ,':', $Line);
-        Else
-          $Log(' ', $this->FilePath);
-      }
-      ElseIf($Line!==false)
-        $Log(' at line ', $Line);
     }
   }
 ?>

@@ -280,7 +280,7 @@
         if($this->__RemoveAsset($KeyType, $Asset))
           $Res=true;
       if(!$Res)
-        $this->Log('Error', 'Asset not found for remove');
+        $this->Log('Error', 'Asset ',$Asset->Asset_Info->Name,' not found for remove in module ', $this->GetModule()->Name);
       $this->_OnRemove($Asset);
       return $Res;
     }
