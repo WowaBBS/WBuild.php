@@ -135,7 +135,7 @@
       if(Array_Pop($CrList)!=='')
         $this->Log('Fatal', 'Unreachable');
       ForEach($CrList As $LineNumber=>$CurrentCr)
-        If($CurrentCr!=$Cr)
+        If($CurrentCr!=$Cr && $CurrentCr!='')
         {
           $this->Warning($LineNumber+1, 'NewLine has different format');
           break;
