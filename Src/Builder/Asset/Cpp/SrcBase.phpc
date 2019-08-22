@@ -23,6 +23,7 @@
       else
       {
         $Parent=$this->GetLocalPath();
+        $Key=$Parent;
         $Cache=$this->GetModule()->EnumCache->AllocEnumDir($Key, 'CppO/', ['NoZero'=>true, 'Pad'=>1]);
         $Storage=$Cache->GetStorage('.Info');
       }

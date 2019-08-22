@@ -106,7 +106,8 @@
     {
       if(IsSet($this->SubAssets[$Path][$Type]))
         return $this->SubAssets[$Path][$Type];
-      $Param['>Parent']=$this;
+      if(!Static::IsAbsolute($Path))
+        $Param['>Parent']=$this;
       $Param[]=$Path;
       $Res=$this->CreateAsset($Type, $Param, $Args);
       $this->SubAssets[$Path][$Type]=$Res;
@@ -118,15 +119,30 @@
       $Res=$this->Search($Path, $bIsFile);
       if($Res==='') return null;
       $Base=$this->GetFullPath();
+      if(false)
+        $this->Log('Log', '_SearchAsset',"\n",
+          'Current: ', $Base, "\n",
+          'Search: ', $Path, "\n",
+          'Res: ', $Res
+        );
       $base=SubStr($Res, 0, StrLen($Base));
       if($base!=$Base)
-        $this->Log('Fatal', 'Different base path',"\n",
+      {
+        $Path=NormPath($Path);
+      //$this->Log('Fatal', 'Different base path',"\n",
+        $this->Log('Error', 'Different base path',"\n",
+          'For file: ', $Path, "\n",
           'Actual: ', $base, "\n",
           'Excepted: ', $Base
         );
-      if(SubStr($Res, StrLen($Base), 1)!=='/')
-        $this->Log('Fatal', 'Unreachable');
-      $Res=SubStr($Res, StrLen($Base)+1);
+      //$Res=$Path; //??
+      }
+      else
+      {
+        if(SubStr($Res, StrLen($Base), 1)!=='/')
+          $this->Log('Fatal', 'Unreachable');
+        $Res=SubStr($Res, StrLen($Base)+1);
+      }
     //$this->Log('Debug', 'Res=', $Res);
       return $this->_CreateSubAsset($Res, $Type, $Param, $Args);
     }
