@@ -8,6 +8,7 @@
       return [];
     }
 
-    Function ShouldBePublic($v) { return false; }
+  //Function ShouldBePublic($v, $List) { return false; }
+    Function IsCopyable($From, $To) { return false; }
   };
 ?>

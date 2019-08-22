@@ -234,6 +234,7 @@
   
     Function ShouldBePrivate ($v) { return $v; }
     Function ShouldBePublic  ($v) { return $v; }
+    Function IsCopyable      ($From, $To) { return true; }
 
     Function CreateExec(String $CachePath)
     {

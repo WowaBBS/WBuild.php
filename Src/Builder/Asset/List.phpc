@@ -38,7 +38,7 @@
       }
     }
     
-    Function IsInstance() { return false; }
+    Function IsModuleInstance() { return false; }
     
     Private Function _OnRemove($Asset)
     {
@@ -287,6 +287,7 @@
 
     Function AddFrom(C_Builder_Asset_List $Asset, $bPublic=null, $bDebug=false)
     {
+      // if $bPublic
       if(Is_Null($bPublic))
         $bPublic=$Asset->IsPublic;
     //$this->Log('Debug', 'Public: ',$bPublic);
@@ -297,8 +298,8 @@
         $Added=[];
         ForEach($List As $KeyType=>$l)
           ForEach($l As $K=>$v)
-          //if(!$this->__ExistsAsset($KeyType, $v, $this->IsPublic))
-            self::__Add($Added, $KeyType, $K, $v);
+            if($v->IsCopyable($Asset, $this))
+              self::__Add($Added, $KeyType, $K, $v);
               
         ForEach($Added As $k=>$l)
           $Added[$k]=Array_Values($l);
@@ -309,8 +310,8 @@
       }
       ForEach($List As $KeyType=>$l)
         ForEach($l As $v)
-        //if(!$this->__ExistsAsset($KeyType, $v, $this->IsPublic))
-          $this->__AddAsset($KeyType, $v);
+          if($v->IsCopyable($Asset, $this))
+            $this->__AddAsset($KeyType, $v);
     }
   //****************************************************************
     

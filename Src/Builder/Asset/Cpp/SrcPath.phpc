@@ -9,7 +9,5 @@
     }
 
     Static Function GetDefMask() { return '*.cpp;*.c'; }
-    
-  //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
   };
 ?>

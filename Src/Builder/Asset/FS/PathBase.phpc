@@ -250,10 +250,10 @@
       
       if(!$bNoError)
       {
-        $Log=$Outer->Log('Fatal', ($bIsFile? 'File':'Dir'), ' not found: \'',$Path,'\'');
+        $Log=$Outer->Log('Fatal', ($bIsFile? 'File':'Dir'), ' not found: \'',$Path,'\' in module ', $Outer->GetModule()->FullName);
         $Log('  Search:');
         ForEach($Searches As $Search)
-          $Log('    '.$Search->GetFullPath());
+          $Log('    ', $Search->GetFullPath(), ' from ', $Search->GetModule()->FullName, ' type ', $Search->Asset_Info->Name);
         $Cfg['Path'   ]=$Path   ;
         $Log->Debug($Cfg);
         $Log->Done();

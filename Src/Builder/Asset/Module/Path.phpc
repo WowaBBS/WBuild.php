@@ -3,7 +3,8 @@
 
   class C_Builder_Asset_Module_Path extends C_Builder_Asset_FS_Path
   {
-    Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
+  //Function ShouldBePublic($v, $List) { return $v && !$List->IsModuleInstance(); }
+    Function IsCopyable($From, $To) { return !$From->IsModuleInstance(); }
     
     Protected Function _GetSearchPathClass()
     {

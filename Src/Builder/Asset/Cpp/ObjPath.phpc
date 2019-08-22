@@ -9,6 +9,5 @@
     }
 
     Static Function GetDefMask() { return '*.obj;*.o'; }
-  //Function ShouldBePublic($v) { return $v && !$this->Outer->IsInstance(); }
   };
 ?>

@@ -32,15 +32,16 @@
         if($Depends->Name===$Name)
           return $Depends->Instance;
       
-      $Allowed=[];
+      $Log=$this->Log('Fatal', 'Module "', $Name, '" not found in');
+      $Log('  list');
       ForEach($List As $Depends)
-        $Allowed[]=$Depends->Name;
-      
-      $this->Log('Fatal', 'Module "', $Name, '" not found in [', implode(', ', $Allowed),'] from ',$this->Module->FullName);
+        $Log('    ', $Depends->Name);
+      $Log('  from ',$this->Module->FullName);
+      $Log->Done();
       return null;
     }
     
-    Function IsInstance() { return true; }
+    Function IsModuleInstance() { return true; }
     
     Function Make()
     {
