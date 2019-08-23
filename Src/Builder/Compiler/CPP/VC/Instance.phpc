@@ -65,6 +65,11 @@
       return $this->Info['Lib'];
     }
     
+    Function GetIncludes()
+    {
+      return $this->Info['Includes'];
+    }
+    
     Function _Init(Array $Args)
     {
       Parent::_Init($Args);

@@ -4,6 +4,18 @@
   class C_Builder_Asset_Cpp_Include extends C_Builder_Asset_FS_Path
   {
     Var $Safe=true;
+    
+    Static Function _AddItem(Array &$Res, Array $Args, String $Path)
+    {
+      if($Path==='>Compiler')
+      {
+        $Paths=$Args['Outer']->RequireAsset('Cpp/Compiler')->Instance->GetIncludes();
+        self::_AddItems($Res, $Args, $Paths);
+        return;
+      }
+      Parent::_AddItem($Res, $Args, $Path);
+    }
+
   
     Protected Function _Init(Array $Args)
     {
