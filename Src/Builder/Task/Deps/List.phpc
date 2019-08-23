@@ -20,7 +20,9 @@
       if(IsSet($this->List[$Key]))
       {
         if(!($Args['SkipDups']??false))
-          $this->Log($Asset->IsNoSearch()? 'Warning':'Error', 'Asset ', $Key, ' already exists in Task Depens List');
+          $this->Log($Asset->IsNoSearch()? 'Warning':'Error', 'Asset ', $Key, ' already exists in Task Depens List')
+            ('  Exists ', $this->List[$Key]->Asset->GetModule()->FullName)
+            ('  Added ', $Asset->GetModule()->FullName);
         return $this->List[$Key];
       }
       $Args['Asset']=$Asset;

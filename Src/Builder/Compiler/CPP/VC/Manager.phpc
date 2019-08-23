@@ -165,7 +165,7 @@
     Function ParseConfig($Config)
     {
       if(!Is_Object($Config))
-        $this->Log('Fatal', 'UnReachable');
+        $this->Log('Fatal', 'UnReachable C_Builder_Compiler_CPP_VC_Manager::NormalizeVersion()');
       $VC  =$Config->Value['VC'      ];
       $Res=[
         'VC_Min' =>$VC>0? $this->MsVer( $VC)[0]:0,

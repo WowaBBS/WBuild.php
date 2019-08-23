@@ -15,11 +15,11 @@
       Parent::_Init($Args);
     //$this->AssetClass=$Args['Type'];
       if(!IsSet($Args['Asset_Info']))
-        $this->Log('Fatal', 'Unreachable place');
+        $this->Log('Fatal', 'Unreachable place C_Builder_Asset_Base::_Init(1)');
     
       $this->Asset_Info=$Args['Asset_Info'];
       if(!IsSet($Args['Outer'])) // TODO: InstanceOf
-        $this->Log('Fatal', 'Unreachable place');
+        $this->Log('Fatal', 'Unreachable place C_Builder_Asset_Base::_Init(2)');
       $this->Outer=$Args['Outer'];
       
       if(IsSet($Args['Param']))

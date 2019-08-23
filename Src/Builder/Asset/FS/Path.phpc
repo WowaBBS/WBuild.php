@@ -92,10 +92,18 @@
               '   Real=',$Real
             )->File($InFile);
           else
-            $Logger->Log('Error', 'Different paths:', "\n",
-              '   Used=',$Path,"\n",
-              '   Real=',$RealPath
-            )->File($InFile);
+          {
+            while(SubStr($Path, 0, 3)==='../')
+            {
+              $Path     =SubStr($Path     ,3);
+              $RealPath =SubStr($RealPath ,3);
+            }
+            if($RealPath!==$Path)
+              $Logger->Log('Error', 'Different paths:', "\n",
+                '   Used=',$Path,"\n",
+                '   Real=',$RealPath
+              )->File($InFile);
+          }
         }
           
         return $Real;
@@ -147,7 +155,7 @@
       else
       {
         if(SubStr($Res, StrLen($Base), 1)!=='/')
-          $Logger->Log('Fatal', 'Unreachable')->File($InFile);
+          $Logger->Log('Fatal', 'Unreachable C_Builder_Asset_FS_Path')->File($InFile);
         $Res=SubStr($Res, StrLen($Base)+1);
       }
     //$this->Log('Debug', 'Res=', $Res);

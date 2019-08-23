@@ -134,7 +134,7 @@
       $CrList =$Matches[2];
       $Cr=$CrList[0];
       if(Array_Pop($CrList)!=='')
-        $this->Log('Fatal', 'Unreachable');
+        $this->Log('Fatal', 'Unreachable C_Builder_Compiler_CPP_Analyzer_Text::Process_Text');
       ForEach($CrList As $LineNumber=>$CurrentCr)
         If($CurrentCr!=$Cr && $CurrentCr!='')
         {

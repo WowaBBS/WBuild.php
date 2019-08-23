@@ -227,10 +227,10 @@
     {
       $StateInfo=$this->Task_GetStateInfo();
       if($StateInfo['Done'])
-        return $this->Log('Error', 'UnReachable');
+        return $this->Log('Error', 'UnReachable C_Builder_Task_Base::Task_EventFromTask(1) from ', $Task->Task_Name, ' for task ', $this->Task_Name);
 
       if(!IsSet($this->Tasks_WaitFor[$Task->Object_Id]))
-        return $this->Log('Error', 'UnReachable');
+        return $this->Log('Error', 'UnReachable C_Builder_Task_Base::Task_EventFromTask(2)');
         
       UnSet($this->Tasks_WaitFor[$Task->Object_Id]);
       
@@ -479,6 +479,19 @@
       return $this->CheckResults($this->Task_GetLogger());
     }
     
+    Function NeedShowLog($Type)
+    {
+      switch($this->Task_State)
+      {
+      case 'Failed'   : return true  ;
+      case 'Rejected' : return false ;
+      case 'Finished' : return $this->OutIsFinished || $Type==='Error';
+      case 'Skipped'  : return $this->OutIsFinished || $Type==='Error'; //?$this->OutIsSkiped
+      }
+      $this->Log('Fatal', 'ShowLog: Unsupported Task State ', $this->Task_State);
+      return false;
+    }
+    
     Protected Function Task_OnDone()
     {
       if($this->Performance)
@@ -500,8 +513,7 @@
       }
       if($this->Task_Logger)
       {
-        $z=($this->Task_State==='Finished' || $this->Task_State==='Skipped')&& !$this->OutIsFinished;
-        $this->Task_Logger->Task_Magic($z? null:$this->GetLogger());
+        $this->Task_Logger->Task_Magic($this->NeedShowLog('Log')? $this->GetLogger():null);
         $this->Task_Logger->Done();
         $this->Task_Logger=null;
       }

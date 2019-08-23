@@ -5,6 +5,18 @@
   {
     Protected Function CanGroupByDir() { return true; }
     
+    Function FilterLog($Res, $Type)
+    {
+      $L=[];
+      ForEach($this->Items As $Item)
+        $L[$Item['SrcAsset']->GetFileName()]='';
+      $S=Implode("\n", Array_Keys($L));
+      if(StrLen($S)!=StrLen($Res))
+        return $Res;
+      $Res=Trim(StrTr($Res, $L));
+      return $Res;
+    }
+    
     Protected Function MakeCompile()
     {
       if(false)
@@ -68,7 +80,7 @@
         $Params->Add('/Fp"', $this->Pch->GetDataFile(),'"');
         $Params->Add('/Yu"', $this->Pch->GetHeaderName(),'"');
         Break;
-      Default: $this->Log('Fatal', 'Unreachable');
+      Default: $this->Log('Fatal', 'Unreachable C_Builder_Compiler_CPP_VC_Task_Compile::MakeCompile(1)');
       }
       
       $Params->Add('/FS'); // force to use MSPDBSRV.EXE
@@ -89,12 +101,12 @@
       ElseIf(Count($this->Items)==0)
       {
         //TODO: Empty task
-        $this->Log('Fatal', 'Unreachable');
+        $this->Log('Fatal', 'Unreachable C_Builder_Compiler_CPP_VC_Task_Compile::MakeCompile(2)');
       }
       else
       {
       //$this->Debug([$this->Object_Id, $this->Dir, 'Fatal', $this->Remove, $this->Items]);
-        $this->Log('Fatal', 'Unreachable');
+        $this->Log('Fatal', 'Unreachable C_Builder_Compiler_CPP_VC_Task_Compile::MakeCompile(3)');
       }
         
       $this->Compiler->Exec_Cl($this, $Params);

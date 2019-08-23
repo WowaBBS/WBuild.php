@@ -15,7 +15,7 @@
     {
       if($Include=$this->GetLastAsset('Cpp/Include'))
       {
-        $this->Log('Debug', 'Search DependentUpon ', $DependentUponName, ' in ', $Include->GetFullPath());
+      //$this->Log('Debug', 'Search DependentUpon ', $DependentUponName, ' in ', $Include->GetFullPath());
         If($Res=$Include->SearchAsset($DependentUponName, 'Cpp/Header'))
         {
           $this->DependentUponName =$Res->GetLocalPath();

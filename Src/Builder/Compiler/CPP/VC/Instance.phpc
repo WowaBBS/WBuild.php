@@ -116,13 +116,14 @@
       $bLocal=false;
       $Idx=$Exec->AllocLabelIdx();
       $Ver=$this->Ver;
+      // TODO: Remove
     //$Exec->Exec('call "'.$this->VCVars.'"');
       $Exec->Exec('if not defined _VS_VER_ goto m'.$Idx);
       $Exec->Exec('if "%_VS_VER_%"=="'.$Ver.'" goto l'.$Idx);
       if($bLocal)
         $Exec->Exec('EndLocal');
       $Exec->Exec(':m'.$Idx);
-      $Exec->Exec('echo Change VS');
+    //$Exec->Exec('echo Change VS');
       if($bLocal)
         $Exec->Exec('SetLocal');
       $Exec->Exec('SET _VS_VER_='.$Ver);
