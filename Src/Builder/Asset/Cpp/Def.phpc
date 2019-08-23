@@ -4,11 +4,59 @@
   class C_Builder_Asset_Cpp_Def extends C_Builder_Asset_FS_File
   {
     Var $FileDepends=[];
+    Var $FullPathFixed=false;
+    Var $First=true;
 
   //Var $Name=''; // TODO:
     Protected Function _GetSearchPathClass()
     {
       return ['Cpp/DefPath'];
+    }
+    
+    Function _GetFullPathFixed()
+    {
+      if($this->FullPathFixed!==False)
+        return $this->FullPathFixed;
+      $EnumCache=$this->Outer->GetModuleInstance()->EnumCache;
+      [$Dir, $Name]=$this->GetDirAndNick();
+      $Num=$EnumCache->AllocNum($Dir, 'Rc', ['Pad'=>1]);
+      $ResNick=$Num.'/'.$Name;
+      $Compiler=$this->Outer->RequireAsset('Cpp/Compiler')->Instance;
+      $OutPath=$Compiler->CreateOutPath($this->Outer);
+      $Dir=$OutPath.'/Def/';
+      CreatePath($Dir.$Num);
+      return $this->FullPathFixed=$Dir.$ResNick.'.def';
+    }
+    
+    Function GetFullPathFixed()
+    {
+      $Res=$this->_GetFullPathFixed();
+      $Res2=$this->GetFullPath();
+      if(!$this->First && Is_File($Res))
+        return FileSize($Res)===0? $Res2:$Res;
+      $this->First=false;
+      $C=File_Get_Contents($Res2);
+      $C=Explode("\n", $C);
+      ForEach($C As $k=>$S)
+      {
+        $S=Trim($S);
+        if(StrLen($S)===0) continue;
+        if($S[0]===';') continue;
+        static $P='LIBRARY ';
+        if(SubStr($S, 0, StrLen($P))==$P)
+          $C[$k]=$P;
+        else
+          $C=[];
+        break;
+      }
+      $C=Implode("\n", $C);
+      if(Is_File($Res))
+        $C2=File_Get_Contents($Res);
+      else
+        $C2=';';
+      if($C!==$C2)
+        File_Put_Contents($Res, $C);
+      return StrLen($C)>0? $Res:$Res2;
     }
   };
 ?>

@@ -243,7 +243,7 @@
         $Params->Add('"',$Item->GetFullPath(),'"');
 
       ForEach($DefAsset As $Item)
-        $Params->Add('/DEF:"',$Item->GetFullPath(),'"');
+        $Params->Add('/DEF:"',$Item->GetFullPathFixed(),'"');
       
       if($this->Ver>=1910)
         ForEach($Outer->GetAssets('Cpp/NatVis') As $Item)
