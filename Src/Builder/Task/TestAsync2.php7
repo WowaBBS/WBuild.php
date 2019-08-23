@@ -1,0 +1,39 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  
+  $Loader->GetLogger()->Add('TestAsync2.log');
+  $Manager=$Loader->Create_Object('/Builder/Task/Manager');
+  $Manager->Cache=$Loader->Create_Object('/Cache/Manager', ['.Build/']);
+  
+  Function Create($Manager, $Task_Name, $DependsTasks=[], $NumThreads=1)
+  {
+    $Task=$Manager->Create('Exec', [
+      'Cache'      =>$Manager->Cache,
+      'Task_Name' =>$Task_Name,
+      'CachePath'  =>$Task_Name,
+    ]);
+    $Task->DependsTasks(... $DependsTasks);
+    $Task->Exec('AsyncTask.bat');
+    $Task->SaveCallTo('.Build/'.$Task_Name);
+    $Task->AddOutFile('.Build/'.$Task_Name);
+    $Task->AddErrFile('.Build/'.$Task_Name);
+    $Task->NumThreads=$NumThreads;
+   #$Task->NumThreads=0;
+    $Task->Env['Task_Id']=$Task_Name;
+   #$Task->Exec('D:\EP\main\Builder\WBuild\Builder\Task\AsyncTask.bat');
+    return $Task;
+  }
+
+  $TestTimeOut=Create($Manager ,'TestTimeOut'  ,[], 1);
+  $TestTimeOut->Task_TimeOut=1;
+  $TestWaitLock1=Create($Manager ,'TestWaitLock1'  ,[], 1);
+  $TestWaitLock2=Create($Manager ,'TestWaitLock2'  ,[], 1);
+  $TestWaitLock1->CachePath='TestWaitLock';
+  $TestWaitLock2->CachePath='TestWaitLock';
+  $TestWaitLock1->GetDependsAssets()->NoEmpty=true;
+  $TestWaitLock2->GetDependsAssets()->NoEmpty=true;
+
+  $Manager->Execute();
+  
+  echo 'All tasks were done',"\n";
+?>

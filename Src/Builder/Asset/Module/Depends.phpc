@@ -3,16 +3,19 @@
 
   class C_Builder_Asset_Module_Depends extends C_Builder_Asset_Base
   {
-    Var $Name     ='';
-    Var $Instance =null;
+    Var $Name       = ''    ;
+    Var $Instance   = null  ;
+    Var $IsExternal = null  ;
 
     Function GetKey() { return $this->Name; }
   
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
-      $this->Name =$Args['Name'    ];
-      $Context    =$Args['Context' ]??[];
+      $this->Name =$Args['Name'      ];
+      $Context    =$Args['Context'   ]??[];
+      $IsExternal =$Args['>External' ]?? ($this->IsExternalModule()? true:null);
+      $this->IsExternal=$IsExternal;
       $I=$this->GetModuleInstance();
       $Context=$Context? $this->GetManager()->Create_Context($Context):$I->Context;
       
@@ -20,20 +23,36 @@
         $this->Instance=$Module->CreateInstance($Context);
 
       if($this->Instance)
+      {
+        $this->Instance->SetExternalModule($IsExternal);
+        // TODO: Check Debug Developing
         $this->Outer->AddFrom($this->Instance, null, IsSet($Args['Debug']['AddFrom']));
+      }
     }
     
     Static Function _ParseParams($Args)
     {
+      $IsExternal=null;
       $Outer=$Args['Outer'];
       $Param=$Args['Param'];
       UnSet($Args['Param']);
       $Res=[];
       ForEach($Param As $k=>$v)
       {
+        if($k==='>External')
+        {
+          $IsExternal=$v;
+          continue;
+        }
+        if($v==='>External')
+        {
+          $IsExternal=true;
+          continue;
+        }
         $_Args=$Args;
         $HasContext=Is_Array($v);
-        $_Args['Name'    ]=$HasContext? $k:$v;
+        $_Args['Name'      ]=$HasContext? $k:$v;
+        $_Args['>External' ]=$IsExternal;
         if($HasContext)
           $_Args['Context' ]=$v;
         $Res[]=$_Args;

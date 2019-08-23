@@ -1,0 +1,37 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  
+  Function Create($Manager, $Task_Name, $DependsTasks=[], $Processes=1)
+  {
+    $Task=$Manager->Create();
+    $Task->Task_Name=$Task_Name;
+    $Task->DependsTasks(... $DependsTasks);
+    return $Task;
+  }
+
+  $Manager=$Loader->Create_Object('/Builder/Task/Manager');
+  $T1 =Create($Manager ,'T1'  ,[], 4); 
+
+  $C11=Create($Manager ,'C11' ,[$T1]);
+  $C12=Create($Manager ,'C12' ,[$T1]);
+  $C13=Create($Manager ,'C13' ,[$T1]);
+  $C14=Create($Manager ,'C14' ,[   ]);
+  $C15=Create($Manager ,'C15' ,[   ]);
+  $C16=Create($Manager ,'C16' ,[   ]);
+  $B1 =Create($Manager ,'B1'  ,[$C11, $C12, $C13, $C14, $C15, $C16], 4);
+
+  $C21=Create($Manager ,'C21' ,[   ]);
+  $C22=Create($Manager ,'C22' ,[$B1]);
+  $C23=Create($Manager ,'C23' ,[$B1]);
+  $C24=Create($Manager ,'C24' ,[$B1]);
+  $C25=Create($Manager ,'C25' ,[$B1]);
+  $C26=Create($Manager ,'C26' ,[   ]);
+  $B2 =Create($Manager ,'B2'  ,[$C21, $C22, $C23, $C24, $C25, $C26], 4);
+  
+ #$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('debug.log');
+ #$Deb->Debug($Manager);
+  
+  $Manager->Execute();
+  
+  echo 'All tasks were done',"\n";
+?>

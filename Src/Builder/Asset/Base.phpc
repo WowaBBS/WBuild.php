@@ -152,6 +152,12 @@
     
   //****************************************************************
   // Debug
+  
+    Function Performance($Args)
+    {
+      if(!IsSet($Args['Logger'])) $Args['Logger']=$this;
+      return $this->GetManager()->Performance->Start($Args);
+    }
    
     Function _ToDebugInfo() { return $this->GetKey(); }
 
@@ -192,6 +198,7 @@
   // Context
     
     Function GetModuleInstance() { return $this->Outer->GetModuleInstance(); }
+    Function IsExternalModule() { return $this->GetModuleInstance()->IsExternalModule(); }
     Function GetManager() { return $this->GetModuleInstance()->Manager; }
     Function GetModule() { return $this->GetModuleInstance()->GetModule(); }
     Function GetContext() { return $this->GetModuleInstance()->Context; }
@@ -236,35 +243,18 @@
     Function ShouldBePublic  ($v) { return $v; }
     Function IsCopyable      ($From, $To) { return true; }
 
-    Function CreateExec(String $CachePath)
-    {
-      $Res=$this->Create_Object('/Builder/Task/Exec', ['Asset'=>$this]);
-    //$Res->Cache=new TCachePath($CachePath);
-      $Res->CachePath=$CachePath;
-      return $Res;
-    }
+  # Function MakeTaskName($Add) { return $this->GetModule()->FullName.'/'.'Unknown'; }
+  # Function CreateExec(Array $Args)
     
-    Function GetMakeTasks(Array &$Res, Array &$Depends)
+    Function GetTasks(Array &$Res)
     {
-      if(IsSet($Depends[$this->Object_Id]))
-      {
-        if($Depends[$this->Object_Id]==1)
-          $this->Log('Error', 'Circular dependencies');
-        return;
-      }
-     #$Depends[$this->Object_Id]=1;
-     #ForEach($this->Depends As $Item)
-     #  $Item->GetMakeTasks($Res, $Depends);
-     #$Depends[$this->Object_Id]=2;
       if(IsSet($this->Tasks))
         ForEach($this->Tasks As $Task)
           if(!IsSet($Res[$Task->Object_Id]))
           {
-            $Task->GetMakeTasks($Res);
+            $Task->GetDependsTasks($Res); // TODO: Dynamic?
             $Res[$Task->Object_Id]=$Task;
           }
-         #else
-         #  $this->Log('Error', 'Task already exists:', $Task->ToString());
     }
     
     Function RemoveFromOuter()

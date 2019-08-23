@@ -49,18 +49,20 @@
       }
 
       $Compiler->Compile([
-        'Objects'   =>$Outer->GetAssets  ($ITypeCppObj    ),
-        'Libs'      =>$Outer->GetAssets  ($ITypeCppLib    ),
-        'Defines'   =>$Outer->GetAssets  ('Cpp/Define'    ),
-        'Includes'  =>$Outer->GetAssetsR ('Cpp/Include'   ),
-        'Using'     =>$Outer->GetAssets  ('Cpp/Using'     ),
-        'UsingPath' =>$Outer->GetAssets  ('Cpp/UsingPath' ),
-        'DepUsing'  =>$DepUsing  ,
-        'Items'     =>$Items     ,
-        'Outer'     =>$Outer     ,
-        'Compiler'  =>$Compiler  ,
-        'EnumCache' =>$EnumCache ,
-        'OutPath'   =>$OutPath   ,
+        'Objects'      =>$Outer->GetAssets  ($ITypeCppObj    ),
+        'Libs'         =>[], //$Outer->GetAssets  ($ITypeCppLib    ),
+        'Defines'      =>$Outer->GetAssets  ('Cpp/Define'       ),
+        'ForceInclude' =>$Outer->GetAssets  ('Cpp/ForceInclude' ),
+        'Includes'     =>$Outer->GetAssetsR ('Cpp/Include'      ),
+        'Using'        =>$Outer->GetAssets  ('Cpp/Using'        ),
+        'UsingPath'    =>$Outer->GetAssets  ('Cpp/UsingPath'    ),
+        'DepUsing'     =>$DepUsing  ,
+        'Items'        =>$Items     ,
+        'Outer'        =>$Outer     ,
+        'Compiler'     =>$Compiler  ,
+        'EnumCache'    =>$EnumCache ,
+        'OutPath'      =>$OutPath   ,
+        'LazyDepsId'   =>$PathObjAsset->Object_Id,
       ]);
 
       $PathObjAsset->RemoveFromOuter();

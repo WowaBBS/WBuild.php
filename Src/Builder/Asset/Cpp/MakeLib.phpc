@@ -105,14 +105,15 @@
           ForEach($Def As $DefItem)
             $DefAssets[]  =$Outer->CreateAsset('Cpp/Def', $DefItem);
           
+          $DllAsset=$Outer->CreateAsset   ('Bin/Dll'   ,['Path'=>$Compiler->GetDllFile    ($LibName.$_d), '>Create'=>1]);
           $Compiler->BuildDll([
             'Outer'     =>$Outer,
             'Name'      =>$LibName,
-            'Exec'      =>$Outer->CreateExec($OutPath.'Task/Dll/'.$LibName),
+            'Exec'      =>$DllAsset->CreateExec(['CachePath'=>$OutPath.'Task/Dll/'.$LibName, 'Performance'=>'Build']),
             'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'   ),
             'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'   ),
             'Using'     =>$Outer->GetAssets     ('Cpp/Using' ),
-            'DllAsset'  =>$Outer->CreateAsset   ('Bin/Dll'   ,['Path'=>$Compiler->GetDllFile    ($LibName.$_d), '>Create'=>1]),
+            'DllAsset'  =>$DllAsset,
             'LibAsset'  =>$Outer->CreateAsset   ('Cpp/Lib'   ,['Path'=>$Compiler->GetDllLibFile ($LibName.$_d), '>Create'=>1,
               '>FileDepends'=>$Param['>FileDepends']??[],
             ]),
@@ -130,16 +131,17 @@
         }
         if($IsLib)
         {
+          $LibAsset= $Outer->CreateAsset   ('Cpp/Lib'  ,[
+            'Path'     =>$Compiler->GetLibFile ($LibName.$_d),
+            '>Create'=>1,
+          ]);
           $Compiler->BuildLib([
             'Outer'    =>$Outer,
-            'Exec'     =>$Outer->CreateExec($OutPath.'Task/Lib/'.$LibName),
+            'Exec'     =>$LibAsset->CreateExec(['CachePath'=>$OutPath.'Task/Lib/'.$LibName, 'Performance'=>'LinkLib']),
             'Objects'  =>$Outer->ExtractAssets ('Cpp/Obj'   ),
             'Using'    =>$Outer->GetAssets     ('Cpp/Using' ),
             'Libs'     =>$Outer->GetAssets     ('Cpp/Lib'   ),
-            'LibAsset' =>$Outer->CreateAsset   ('Cpp/Lib'  ,[
-              'Path'     =>$Compiler->GetLibFile ($LibName.$_d),
-              '>Create'=>1,
-            ]),
+            'LibAsset' =>$LibAsset,
           ]);
         }
         $PathLibAsset->RemoveFromOuter();

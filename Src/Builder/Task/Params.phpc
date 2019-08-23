@@ -64,8 +64,8 @@
     
     Function Prepare($Exec, $Cmd)
     {
-      if(IsSet($Exec->Asset))
-        $this->Preload($Exec->Asset, $Cmd);
+      if(IsSet($Exec->Task_Asset))
+        $this->Preload($Exec->Task_Asset, $Cmd);
       
       if($this->bInline)
         return;

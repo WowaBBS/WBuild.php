@@ -1,0 +1,98 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  Class C_Builder_Task_Deps_Asset extends C_Object
+  {
+    Var $Asset        = null  ;
+    Var $CheckInput   = false ;
+    Var $CheckHash    = false ;
+    Var $CheckResult  = false ;
+    Var $Keys         = []    ; //<TODO:?
+    Var $LazyDepsArgs = []    ;
+
+    Var $DepensOn     = []    ;
+    Var $Dependend    = []    ;
+    Var $MyChanged    = false ;
+    Var $WasChanged   = false ;
+
+    Protected function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      $this->Asset        =$Args['Asset'       ];
+      $this->CheckResult  =$Args['CheckResult' ]?? false;
+      $this->CheckInput   =$Args['CheckInput'  ]?? !$this->CheckResult;
+      $this->CheckHash    =$Args['CheckHash'   ]?? true ;
+      $this->Keys         =$Args['Keys'        ]?? [];
+      $this->LazyDepsArgs =$Args['LazyDeps'    ]?? [];
+
+      if($this->CheckInput)
+        $this->Asset->CheckLazyDependsArgs($this->LazyDepsArgs);
+    }
+    
+    Function ClearDepends()
+    {
+      $this->DepensOn  =[];
+      $this->Dependend =[];
+    }
+    
+    Static Function _LogChangingType($WasChanged, $Default='')
+    {
+      Switch($WasChanged)
+      {
+      Case 'Added'     : return 'was added'   ;
+      Case 'Removed'   : return 'was removed' ;
+      Case 'Changed'   : return 'was changed' ;
+      Case 'DependsOn' : return 'depends was changed' ;
+      Case false       : return $Default;
+      }
+      return ' status '.$WasChanged;
+    }
+    
+    Function GetLogChangingType($Default='') { return Static::_LogChangingType($this->WasChanged, $Default); }
+    Function GetMyLogChangingType() { return Static::_LogChangingType($this->MyChanged, $this->GetLogChangingType()); }
+    
+    Function LogChanging($Logger)
+    {
+      if(!$this->WasChanged) return;
+      $Log=$Logger->Log('Log', '  ', $this->GetKey(), ' ', $this->GetMyLogChangingType());
+      ForEach($this->DepensOn As $Item)
+        if($Item->WasChanged)
+          $Log('    ', $Item->GetKey(), ' ', $Item->GetLogChangingType());
+      $Log->Done();
+    }
+    
+    Function OnChanged($OldHash, $NewHash)
+    {
+      $this->WasChanged=$OldHash===''? 'Added': ($NewHash===''? 'Removed':'Changed');
+      $this->MyChanged=$this->WasChanged;
+      ForEach($this->Dependend As $Item)
+        //if(!$Item->WasChanged)
+        $Item->WasChanged='DependsOn';
+    //$Log=$this->Log('Debug', '_File ', $this->GetKey(), ' was changed ', $OldHash, '!=', $NewHash);
+    }
+    
+    Function LoadInputTasks($ToTask)
+    {
+      $Asset=$this->Asset;
+      if(!IsSet($Asset->Tasks)) return;
+      ForEach($Asset->Tasks As $Task)
+      {
+        $ToTask->DependsTasks($Task);
+        // TODO:? $ToTask->Tasks_Manager->_Add($Task);
+      }
+    }
+    
+    Function InvalidateCache () { return $this->Asset->InvalidateCache (); }
+    Function GetFullPath     () { return $this->Asset->GetFullPath     (); }
+    Function Exists          () { return $this->Asset->Exists          (); }
+    Function Remove          () { return $this->Asset->Remove          (); }
+    Function GetKey          () { return $this->Asset->GetKey          (); }
+    Function GetHash         () { return $this->Asset->GetHash         (); }
+    Function GetLazyDepends  ($Logger)
+    {
+      $Args=$this->LazyDepsArgs;
+      $Args['Logger']=$Logger;
+      return $this->Asset->GetLazyDepends  ($Args);
+    }
+  };
+?>

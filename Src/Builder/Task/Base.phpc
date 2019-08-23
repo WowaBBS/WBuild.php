@@ -1,30 +1,54 @@
 <?
   $Loader->Parent_Class('/Object');
   
-  ///   * Processing
-  ///   * Finished
-  ///   * Failed
   class C_Builder_Task_Base extends C_Object
   {
-    /// States of task:
-    const Status_Undefined  =0 ; //< Undefined task
-    const Status_Wait       =1 ; //< Wait Depends
-    const Status_Ready      =2 ; //< Ready for starting
-    const Status_Processing =3 ;
-    const Status_Finished   =4 ;
-    const Status_Failed     =5 ;
-  
-    Var $Manager   ;
-    Var $Depends   = [];
-    Var $WaitFor   = [];
-    Var $SendTo    = [];
-    // TODO: Separate Finished and Failed for this and Depends tasks
-    Var $bFinished = false; //< Was executed
-    Var $bFailed   = false; //< Execution was failed
-    Var $bAsync    = false;
-    Var $Name      = 'Noname';
+    Var $Tasks_Manager     ;
+    Var $Tasks_WaitFor = [];
+    Var $Tasks_SendTo  = [];
+
+    Var $Task_Name     = 'Noname' ;
+    Var $Task_State    = 'Init'   ;
+    Var $Task_Storage  = null     ;
+    Var $Task_Vars     = null     ;
+    Var $Task_Logger   = null     ;
+    Var $Task_TimeOut  = 60*60    ; // 1 hour
     
-    Function GetMakeTasks(Array &$Res)
+    // TODO: Separate Finished and Failed for this and Depends tasks
+    Var $NumThreads    = -1    ; //< Number of threads, <0 -- task is sync
+    Var $CachePath     = False ;
+    Var $Cache         = null  ; //< Cache manager
+    Var $RemoveResultOnFailed = false;
+    Var $Performance_Info = [];
+    Var $Performance = null;
+    Var $OutIsFinished=false;
+    
+    Protected function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      $this->_CreateDependsAssets();
+      $this->OutIsFinished=$Args['OutIsFinished']?? false;
+      $this->Performance_Info=$Args['Performance']?? [];
+      $this->CachePath=$Args['CachePath']?? $this->CachePath;
+      $this->Task_Name=$Args['CachePath']?? $this->Task_Name;
+      if(IsSet($Args['Task_Asset'])) $this->SetTaskAsset($Args['Task_Asset'], $Args);
+      $this->Task_Name=$Args['Task_Name']?? $this->Task_Name;
+      if(IsSet($Args['Cache'])) $this->Cache=$Args['Cache'];
+    }
+    
+    Function SetTaskAsset($Task_Asset, $Args=[])
+    {
+      $this->Task_Asset =$Task_Asset;
+      $this->Task_Name  =$Task_Asset->MakeTaskName($Args['Task_Name_Add']?? '');
+      $this->Cache      =$Task_Asset->GetManager()->Cache;
+    }
+    
+    Function Task_GetLogger() { return $this->Task_Logger?? $this; }
+    
+    //****************************************************************
+    // State Initialization
+    
+    Function GetDependsTasks(Array &$Res)  // TODO: Dynamic?
     {
       $Id=$this->Object_Id;
       if(IsSet($Res[$Id]))
@@ -34,107 +58,477 @@
         return;
       }
       $Res[$Id]=true;
-      $this->LoadInputTasks(); // TODO: It't workaround for late binding
-      ForEach($this->Depends As $k=>$Task)
-        $Task->GetMakeTasks($Res);
+      
+      $this->DependsAssets->LoadInputTasks($this);
+        
+      ForEach($this->Tasks_WaitFor As $k=>$Task)
+        $Task->GetDependsTasks($Res);
+      
       UnSet($Res[$Id]);
       $Res[$Id]=$this;
     }
-    
-    Function Depends(... $Depends)
+        
+    Function Task_Init()
     {
-      ForEach($Depends As $Depend)
-        $this->Depends[$Depend->Object_Id]=$Depend;
+      $this->Task_CheckState_Init();
+      if($this->Tasks_WaitFor)
+      {
+        $Id=$this->Object_Id;
+        ForEach($this->Tasks_WaitFor As $i)
+          $i->Tasks_SendTo[$Id]=$this;
+        $this->Task_SetState_Wait();
+      }
+      else
+        $this->Task_SetState_Locking();
     }
     
-    Function _Prepare()
+    Function DependsTasks(... $DependsTasks)
     {
-      $this->WaitFor=$this->Depends;
-      $Id=$this->Object_Id;
-      ForEach($this->WaitFor As $i)
-        $i->SendTo[$Id]=$this;
+      $this->Task_CheckState_Init();
+      ForEach($DependsTasks As $Depend)
+      {
+        if($Depend->Object_Id===$this->Object_Id)
+          $this->Log('Fatal', 'The task wait itself');
+        if($Depend->Task_State!=='Init')
+        {
+          $Info=$Depend->Task_GetStateInfo();
+          if($Info['Done'])
+          {
+            if($Info['Failed'])
+              $this->Task_SetState_Rejected();
+            return;
+          }
+          $this->Log('Fatal', 'Depends on task ', $Depend->Task_Name, ' was added without state Init but with state ', $Depend->Task_State);
+        }
+        $this->Tasks_WaitFor[$Depend->Object_Id]=$Depend;
+      }
     }
     
-    Private Function EventFromTask($Task)
+    //****************************************************************
+    // Interface
+    
+  # Protected Function Prepare_Depends() {}
+    Protected Function DoExecute() { if(Self::Class==Static::Class) $this->Task_SetState_Finished(); }
+
+    //****************************************************************
+    // State
+    
+    Static Function Tasks_GetStateMachine()
     {
-      if($this->bFailed   ) return $this->Log('Fatal', 'UnReachable');
-      if($this->bFinished ) return $this->Log('Fatal', 'UnReachable');
-      if(!IsSet($this->WaitFor[$Task->Object_Id])) return $this->Log('Fatal', 'UnReachable');
-      UnSet($this->WaitFor[$Task->Object_Id]);
-      if($Task->bFailed) return $this->Failed();
-      if(!$Task->bFinished) return $this->Log('Fatal', 'UnReachable');
-      if(Count($this->WaitFor)===0) return $this->Ready();
+      static $Res=[];
+      if($Res) return $Res;
+      $Types=         ['Finish' ,'Exists' ,'Failed' ,'Done' , 'AllowNext'                          ];
+      $List=[
+        'Init'      =>[false    ,true     ,false    ,false  ,['Locking'   ,'Wait'     ,'Rejected' ]],
+        'Wait'      =>[false    ,true     ,false    ,false  ,['Locking'   ,'Failed'   ,'Rejected' ]],
+        'Locking'   =>[false    ,true     ,false    ,false  ,[             'Check'                ]],
+        'Check'     =>[false    ,true     ,false    ,false  ,['Ready'     ,'Skipped'  ,'Failed'   ]],
+        'Ready'     =>[false    ,true     ,false    ,false  ,['Started'               ,'Failed'   ]],
+        'Started'   =>[false    ,true     ,false    ,false  ,['InProcess' ,'Finished' ,'Failed'   ]],
+        'InProcess' =>[false    ,true     ,false    ,false  ,[             'Finished' ,'Failed'   ]],
+        'Skipped'   =>[false    ,true     ,false    ,true   ,[                                    ]],
+        'Finished'  =>[true     ,true     ,false    ,true   ,[                                    ]],
+        'Failed'    =>[false    ,true     ,true     ,true   ,[                                    ]],
+        'Rejected'  =>[false    ,true     ,true     ,true   ,[                                    ]],
+
+        'Error'     =>[false    ,false    ,true     ,true   ,[                                    ]],
+        'SetState'  =>[false    ,false    ,true     ,true   ,[                                    ]],
+      ];
+      $States=Array_Keys($List);
+      $AllowDefault=[];
+      ForEach($States As $State)
+        $AllowDefault[$State]=false;
+      ForEach($List As $State=>$Info)
+      {
+        $Item=['State'=>$State];
+        ForEach($Types As $k=>$Field)
+          $Item[$Field]=$Info[$k];
+        $AllowNext=$AllowDefault;
+        ForEach($Item['AllowNext']As $AllowState)
+          $AllowNext[$AllowState]=true;
+        $Item['AllowNext']=$AllowNext;
+        $Res[$State]=$Item;
+      }
+      return $Res;
+    }
+    
+    Static Function _Task_GetStateInfo($Task_State)
+    {
+      $Info=Static::Tasks_GetStateMachine();
+      return $Info[$Task_State]??$Info['Error'];
+    }
+    
+    Function Task_GetStateInfo()
+    {
+      return Static::_Task_GetStateInfo($this->Task_State);
+    }
+    
+    Function Task_SetState($State)
+    {
+      $Info=Static::_Task_GetStateInfo($State);
+      $OldInfo=$this->Task_GetStateInfo();
+      $OldState=$this->Task_State;
+      $this->Task_State='SetState';
+      if(!$Info['Exists'])
+        $this->Log('Fatal', 'Unknown state ', $State, ' for ', $this->Task_Name);
+      if($OldInfo['Done'])
+        $this->Log('Fatal', 'Task_SetState: Task ', $this->Task_Name, ' already finished')
+          ('  OldState: ', $OldState )
+          ('  NewState: ', $State    )
+        ;
+      if(!$OldInfo['AllowNext'][$State])
+        $this->Log('Fatal', 'Changing state from ', $OldState, ' to ', $State, ' is not allowed for task ', $this->Task_Name);
+      if($Info['Finish'])
+        if(!$this->Task_CanFinish())
+        {
+          $this->Task_State=$OldState;
+          return $this->Task_SetState_Failed();
+        }          
+      $this->Task_State=$State;
+      if($Info['Done'])
+        $this->Task_OnDone();
+        
+      $this->Tasks_Manager->_TaskStateChanged($this, $OldState, $State);
+      if($Info['Failed'])
+      {
+        $this->Task_UnbindEvent();
+        if($this->RemoveResultOnFailed)
+          $this->RemoveResult();
+      }
+      if($Info['Done'])
+        $this->_Task_Clear();
+    }
+    
+    Function Task_CheckState_Init()
+    {
+      if($this->Task_State!=='Init')
+        $this->Log('Fatal', 'Task ', $this->Task_Name, ' should be in state Init for creating depends');
+    }
+    
+    Private   Function Task_SetState_Wait      () { $this->Task_SetState('Wait'      ); }
+    Private   Function Task_SetState_Locking   () { $this->Task_SetState('Locking'   ); }
+    Private   Function Task_SetState_Check     () { $this->Task_SetState('Check'     ); }
+    Private   Function Task_SetState_Ready     () { $this->Task_SetState('Ready'     ); }
+    Private   Function Task_SetState_Started   () { $this->Task_SetState('Started'   ); }
+    Protected Function Task_SetState_InProcess () { $this->Task_SetState('InProcess' ); }
+    Private   Function Task_SetState_Skipped   () { $this->Task_SetState('Skipped'   ); }
+    Protected Function Task_SetState_Finished  () { $this->Task_SetState('Finished'  ); }
+    Protected Function Task_SetState_Failed    () { $this->Task_SetState('Failed'    ); }
+    Protected Function Task_SetState_Rejected  () { $this->Task_SetState('Rejected'  ); }
+    
+    Private Function Task_SendEvent()
+    {
+      ForEach($this->Tasks_SendTo As $SendTo)
+        $SendTo->Task_EventFromTask($this);
+      $this->Tasks_SendTo=[];
+    }
+    
+    Private Function Task_EventFromTask($Task)
+    {
+      $StateInfo=$this->Task_GetStateInfo();
+      if($StateInfo['Done'])
+        return $this->Log('Error', 'UnReachable');
+
+      if(!IsSet($this->Tasks_WaitFor[$Task->Object_Id]))
+        return $this->Log('Error', 'UnReachable');
+        
+      UnSet($this->Tasks_WaitFor[$Task->Object_Id]);
+      
+      if($Task->Task_GetStateInfo()['Failed'])
+        return $this->Task_SetState_Rejected();
+      if(Count($this->Tasks_WaitFor)===0)
+        return $this->Task_SetState_Locking();
       // Wait finishing for another tasks
     }
     
-    Private Function Failed()
-    {
-      $this->bFailed=true;
-      $this->SendEvent();
-      $this->Manager->Failed($this);
-      $this->_UnbindEvent();
-    }
-    
-    Private Function Finished()
-    {
-      $this->bFinished=true;
-      $this->SendEvent();
-      $this->Manager->Finished($this);
-    }
-    
-    Private Function Ready()
-    {
-      $this->Manager->Ready($this);
-    }
-    
-    Private Function _UnbindEvent()
+    Private Function Task_UnbindEvent()
     {
       $Id=$this->Object_Id;
-      ForEach($this->WaitFor As $i)
-        UnSet($i[$Id]);
+      ForEach($this->Tasks_WaitFor As $i)
+        UnSet($i->Tasks_SendTo[$Id]);
     }
     
-    Private Function SendEvent()
+    //****************************************************************
+    // Depends assets functional
+    
+    Protected $DependsAssets = null;
+    
+    Function _CreateDependsAssets()
     {
-      if(!$this->bFinished && !$this->bFailed) $this->Log('Fatal', 'UnReachable');
-      ForEach($this->SendTo As $SendTo)
-        $SendTo->EventFromTask($this);
-      $this->SendTo=[];
+      $this->DependsAssets=$this->Create_Object('/Builder/Task/Deps/List', ['.Build/']);
     }
     
+    Function GetDependsAssets()
+    {
+      $this->Task_CheckState_Init();
+      return $this->DependsAssets;
+    }
+    
+    Private Function Deps_Clear()
+    {
+      $this->DependsAssets->Clear();
+      $this->DependsAssets=null;
+    }
+    
+    Function Deps_RemoveResult()
+    {
+      $this->DependsAssets->RemoveResult();
+    }
+    
+    Function Deps_AddLazyDepends($Logger)
+    {
+      $this->DependsAssets->AddLazyDepends($Logger);
+    }
+    
+    Function AddCheckInput  (      $Asset ,Array $Args=[]) { return $this->GetDependsAssets()->AddInput($Asset, $Args); }
+    Function AddCheckInputs (Array $List  ,Array $Args=[]) { return $this->GetDependsAssets()->AddInputs($List, $Args); }
+    Function AddCheckFile   (      $Asset ,Array $Args=[]) { return $this->AddCheckInput($Asset, $Args); }
+    Function AddCheckFiles  (Array $List  ,Array $Args=[]) { ForEach($List As $Item) $this->AddCheckFile($Item, $Args); }
+
+    Function AddCheckResultFile($v, $Args=[])
+    {
+      $this->_AddCheckResultFile($v, $Args);
+      if($Args['AddTask']?? true)
+        $v->AddTask($this);
+    }
+
+    Function _AddCheckResultFile($v, $Args)
+    {
+     #$v->ShouldBeExists();
+     #$v->InvalidateCache(); // TODO: On finih task
+      $this->GetDependsAssets()->AddResult($v, $Args);
+    }
+    
+    //****************************************************************
+    // Make directory
+    
+    Private $MkDir       =[];
+
+    Function MkDir($v)
+    {
+      if(Is_Object($v))
+      {
+        $v->MkDir();
+        $v=$v->GetDirFullPath();
+      }
+
+      $v=StrTr($v, '\\', '/');
+      if(IsSet($this->MkDir[$v]))
+        return false;
+      
+      CreatePath($v);
+      $this->MkDir[$v]=true;
+      return $v;
+    }
+    
+    Private Function MkDir_Clear()
+    {
+      $this->MkDir=[];
+    }
+    
+    //****************************************************************
+    // Execute
+    
+    Function LogChanging     ($Logger    ) { return $this->DependsAssets->LogChanging     ($Logger   ); }
+    Function UpdateResult    (           ) { return $this->DependsAssets->UpdateResult    (          ); }
+    Function AssetWasChanged ($Asset     ) { return $this->DependsAssets->AssetWasChanged ($Asset    ); }
+    Function CheckInputs     ($Logger    ) { return $this->DependsAssets->CheckInputs     ($Logger   ); }
+    Function CheckResults    ($Logger    ) { return $this->DependsAssets->CheckResults    ($Logger   ); }
+    Function CheckChanges    (&$Res, $Old) { return $this->DependsAssets->CheckChanges    ($Res, $Old); }
+    
+    Protected Function Task_Vars_Update($Check)
+    {
+      $HasResults=!$Check?: $this->CheckResults(False);
+      
+      $New_Task_Vars=[
+        'Hashs'  =>[],
+        'Assets' =>[],
+      ];
+      $Old_Task_Vars=$this->Task_Vars+$New_Task_Vars;
+      
+      $this->_GetTaskHash($New_Task_Vars['Hashs']);
+      if($Check && $Old_Task_Vars['Hashs']!=$New_Task_Vars['Hashs'])
+      {
+        if($this->Task_Vars!==[])
+          $this->Log('Debug', 'Hash was changed')
+            ('  Old=',Serialize($Old_Task_Vars['Hashs']))
+            ('  New=',Serialize($New_Task_Vars['Hashs']))
+          ;
+        $this->Deps_RemoveResult();
+        $HasResults=false;
+      }
+      
+      $IsAssetsChanged=$this->CheckChanges(
+        $New_Task_Vars['Assets'],
+        $Old_Task_Vars['Assets']
+      );
+      
+      $this->Task_Vars=$New_Task_Vars;
+      if($Check && !$IsAssetsChanged && $HasResults)
+      {
+        $this->Task_SetState_Skipped();
+        return true;
+      }
+      
+      return false;
+    }
+    
+    Function Task_TimeUpdate($DeltaTime)
+    {
+      $this->Task_TimeOut-=$DeltaTime;
+      if($this->Task_TimeOut>0)
+        return true;
+
+      $this->Log('Error', 'Task ', $this->Task_Name, ' timed out');
+      $this->Task_SetState_Failed();
+      return false;
+    }
+    
+    Function Async_Update($DeltaTime):bool
+    {
+      if(!$this->Task_TimeUpdate($DeltaTime))
+        return false;
+      return true;
+    }
+    
+    Function Task_Locking($DeltaTime)
+    {
+      if(!$this->Task_TimeUpdate($DeltaTime))
+        return;
+      if($this->DependsAssets->IsEmpty())
+      {
+        $this->Task_SetState_Check();
+        return;
+      }
+      $IsFirst=true;
+      if(!$this->Task_Logger)
+        $this->Task_Logger=$this->GetLogger()->Create($this->CachePath.'.log');
+      else
+        $IsFirst=false;
+     #$this->Log('Debug', 'Task ', $this->Task_Name, ' try lock');
+      if($this->Task_Logger->TryLock())
+      {
+     #  $this->Log('Debug', 'Task ', $this->Task_Name, ' try lock ok');
+        $this->Task_SetState_Check();
+        return;
+      }
+     #$this->Log('Debug', 'Task ', $this->Task_Name, ' try lock failed');
+      if($IsFirst)
+        $this->Log('Log', 'Task ', $this->Task_Name, ' is locking');
+    }
+    
+    Function Task_Check()
+    {
+      if(!$this->DependsAssets->IsEmpty())
+      {
+        // TODO: override logging
+        $this->Deps_AddLazyDepends($this->Task_GetLogger()); // For example: includes
+  
+        if($this->CheckInputs($this->Task_GetLogger()))
+        {
+          $this->Log('Debug', 'Haven\'t required files for task ', $this->Task_Name);
+          $this->Task_SetState_Failed();
+          return;
+        }
+        
+        $Cache=$this->Cache;
+        if(!$Cache)
+          $this->Log('Fatal', 'No cache manager in task ', $this->Task_Name);
+        if(!$this->CachePath)
+          $this->Log('Fatal', 'No cache path in task ', $this->Task_Name);
+        $this->Task_Storage=$Storage=$Cache->GetStorage($this->CachePath.'.check');
+        $this->Task_Vars=$Storage->GetVars();
+        $DoLogChanging=$this->Task_Vars!==[];
+        if($this->Task_Vars_Update(true))
+          return;
+  
+        if($DoLogChanging)
+          $this->LogChanging($this->Task_GetLogger());
+      }
+      
+      $this->Task_SetState_Ready();
+    }
+
     Final Function Execute()
     {
-     #if(!$this->_Check())
-     #  return $this->Failed();
-      if(!$this->_Execute())
-        $this->Failed();
-     #else
-     #  if(!$this->_CheckResult())
-     #    $this->Failed();
-      if(!$this->bAsync)
-        $this->Finished();
+      $this->Task_SetState_Started();
+      
+      if($Args=$this->Performance_Info)
+      {
+        if(Is_String($Args))
+          $Args=['Name'=>$Args];
+        $Args+=['Logger'=>false];
+        $this->Performance=$this->Task_Asset->Performance($Args);
+      }
+
+      $this->DoExecute();
+      
+      if($this->Task_State==='Started')
+      {
+        $this->Log('Fatal', 'Task ', $this->Task_Name, ' is not changed its status from Started');
+        $this->Task_SetState_Failed();
+      }
     }
     
-    Final Function Async($Ok)
+    Protected Function Task_CanFinish():bool
     {
-      if(!$Ok)
-        $this->Failed();
-      $this->Finished();
+      if($this->DependsAssets->IsEmpty())
+        return true;
+
+      $this->UpdateResult();
+      return $this->CheckResults($this->Task_GetLogger());
     }
     
-    Function CleanResult()
+    Protected Function Task_OnDone()
     {
+      if($this->Performance)
+      {
+        $this->Performance->Finish($this->NumThreads/$this->Tasks_Manager->Threads_Maximum);
+        $this->Performance=null;
+      }
+      if($Storage=$this->Task_Storage)
+      {
+        $this->Task_Storage=null;
+        if($this->Task_State==='Failed' || 
+           $this->Task_State==='Finished')
+        {
+          $this->Task_Vars_Update(false);
+          $Storage->SetVars($this->Task_Vars);
+        }
+        $Storage->Done();
+        $this->Task_Vars=null;
+      }
+      if($this->Task_Logger)
+      {
+        $z=$this->Task_State=='Finished' && !$this->OutIsFinished;
+        $this->Task_Logger->Task_Magic($z? null:$this->GetLogger());
+        $this->Task_Logger->Done();
+        $this->Task_Logger=null;
+      }
+      // TODO: Restore logging
+      $this->Tasks_Manager->OnTaskDone($this);
+      $this->Task_SendEvent();
     }
     
-    Protected Function _Execute()
+    //****************************************************************
+    Protected Function _Task_Clear()
     {
-      return true;
+      $this->Deps_Clear();
+      $this->MkDir_Clear();
+      $this->Tasks_Manager =null;
+      $this->Tasks_WaitFor = [];
+      $this->Tasks_SendTo  = [];
+    }
+    
+    Function RemoveResult()
+    {
+      $this->Deps_RemoveResult();
     }
     
     Function _GetTaskHash(Array &$Res)
     {
       $Res['Task.Class' ]=Static::Class;
-      $Res['Task.Name'  ]=$this->Name;
+    //$Res['Task.Name'  ]=$this->Task_Name; // TODO: Remove
     }
 
     Function GetTaskHash()
@@ -147,8 +541,10 @@
     Protected Function _Debug_Info(Array &$Res)
     {
       Parent::_Debug_Info($Res);
-      UnSet($Res['Manager' ]);
-      UnSet($Res['SendTo'  ]);
+      UnSet($Res['Tasks_Manager' ]);
+      UnSet($Res['Tasks_SendTo'  ]);
+      if($this->Outer) unset($Res['Outer']);
+      $Res['Info']=$Res['Info']->Task_Name;
     }
   };
 ?>

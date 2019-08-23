@@ -32,7 +32,7 @@
       $Compiler->BuildDll([
         'Outer'        =>$Outer,
         'Name'         =>$LibName,
-        'Exec'         =>$Outer->CreateExec($OutPath.'Task/Dll/'.$LibName),
+        'Exec'         =>$DllAsset->CreateExec(['CachePath'=>$OutPath.'Task/Dll/'.$LibName, 'Performance'=>'Build']),
         'Objects'      =>$Outer->ExtractAssets ('Cpp/Obj'       ),
         'Using'        =>$Outer->GetAssets     ('Cpp/Using'     ),
         'ResAsset'     =>$Outer->ExtractAssets ('Cpp/Res'       ),

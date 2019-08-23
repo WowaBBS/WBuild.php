@@ -14,6 +14,7 @@
     Var $Empty_Lines_Last      = 1;
     
     Var $Warnings=[];
+    Var $NoLog =false;
   
     Var $Path_Replace= Array(
       'Default'=>Array(
@@ -153,11 +154,21 @@
     {
       $this->FilePath=$FilePath;
       $zSave=false;
+      if(!Is_FIle($FilePath))
+        $this->Log('Fatal', 'File not found for CPP/Analyzer')->File($FilePath);
       $Contents=File_Get_Contents($FilePath);
+      $PreUtf="\xEF\xBB\xBF";
+      if(SubStr($Contents, 0, StrLen($PreUtf))===$PreUtf)
+        $Contents=SubStr($Contents, 3);
+      else
+        $PreUtf='';
+      
       $C=$Contents;
       $C=$this->Process_Text($Contents);
       If($this->Allow_Write && $C!==False && $C!==$Contents)
       {
+        if(StrLen($PreUtf))
+          $C=$PreUtf.$C;
         if($this->Write_FilePath)
           $FilePath=$this->Write_FilePath;
         $this->Log('Debug', 'write ', $FilePath);
@@ -168,7 +179,8 @@
 
     Function Warning($Line, ...$Message)
     {
-      $Log=$this->Log('Warning', ...$Message)->File($this->FilePath, $Line);
+      if(!$this->NoLog)
+        $Log=$this->Log('Warning', ...$Message)->File($this->FilePath, $Line);
       $this->Warnings[]=[$Line, $Message];
     }
   }

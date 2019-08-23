@@ -71,12 +71,17 @@
       Default: $this->Log('Fatal', 'Unreachable');
       }
       
+      $Params->Add('/FS'); // force to use MSPDBSRV.EXE
+      
+      $FileParams=$this->CachePath.'.Opt';
+      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
+
       $Params->Add('-c');
       if(!Is_Array($this->Items))
         $this->Log('Fatal', 'Items is not array');
       ForEach($this->Items As $Item)
         $Params->Add($Item['SrcAsset' ]->GetFullPath()); // '-c ' ,
-      
+
       if($this->Dir!==False)
         $Params->Add('/Fo"',$this->Dir.'/"');
       ElseIf(Count($this->Items)==1)
@@ -84,16 +89,15 @@
       ElseIf(Count($this->Items)==0)
       {
         //TODO: Empty task
+        $this->Log('Fatal', 'Unreachable');
       }
       else
       {
       //$this->Debug([$this->Object_Id, $this->Dir, 'Fatal', $this->Remove, $this->Items]);
         $this->Log('Fatal', 'Unreachable');
       }
-      $FileParams=$this->Exec->CachePath.'.Opt';
-      $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
-      
-      $this->Compiler->Exec_Cl($this->Exec, $Params);
+        
+      $this->Compiler->Exec_Cl($this, $Params);
     }
   };
 ?>

@@ -21,10 +21,10 @@
       return File_Exists($this->GetFullPath());
     }
     
-    Function Remove()
+    Function Remove():bool
     {
-      if($this->Exists())
-        Unlink($this->GetFullPath());
+      if(!$this->Exists()) return true;
+      return Unlink($this->GetFullPath());
     }
     
     Protected Function _Init(Array $Args)
@@ -239,7 +239,7 @@
       {
         ForEach($Searches As $Asset)
         {
-          $Res=$Asset->Search($Path, $bIsFile);
+          $Res=$Asset->SearchNode($Path, ['IsFile'=>$bIsFile]);
           if($Res!=='')
             return [$Asset, $Res];
         }

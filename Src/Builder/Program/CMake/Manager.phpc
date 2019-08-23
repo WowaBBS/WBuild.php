@@ -32,6 +32,7 @@
     {
       return $this->Find();
     }
+    
     Function GetBinPath()
     {
       $Res=$this->Find();

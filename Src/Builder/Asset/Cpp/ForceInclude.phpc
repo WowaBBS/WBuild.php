@@ -1,0 +1,7 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/Cpp/Header');
+
+  class C_Builder_Asset_Cpp_ForceInclude extends C_Builder_Asset_Cpp_Header
+  {
+  };
+?>

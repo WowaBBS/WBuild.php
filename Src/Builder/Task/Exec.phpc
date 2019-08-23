@@ -1,20 +1,26 @@
 <?
-  $Loader->Parent_Class('/Builder/Task/Depends');
+  $Loader->Parent_Class('/Builder/Task/Base');
+  $Loader->Load_Lib('/FS/Utils');
   
-  class C_Builder_Task_Exec extends C_Builder_Task_Depends
+  class C_Builder_Task_Exec extends C_Builder_Task_Base
   {
-    Var $Descr=[];
-    Var $List=[];
-    Var $ContentHash=[];
-  //static $LabelIdx=0;
-    Var $LabelIdx=0;
+    Var $Exec_Descr   =[];
+    Var $Exec_List    =[];
+    Var $Exec_CmdList =[];
+    Var $Exec_Idx     =0 ;
+    Var $Exec_Log_Out =true ;
+    Var $Exec_Log_Err =true ;
+    Var $ContentHash  =[];
+  //static $LabelIdx  =0;
+    Var $LabelIdx     =0;
+    Var $Exec         =null;
+    Var $NumThreads   =1;
+    Var $Env          =[];
     
-    function _Init(Array $Args)
+    Protected function _Init(Array $Args)
     {
       parent::_Init($Args);
-      if(IsSet($Args['Asset']))
-        $this->Asset=$Args['Asset'];
-      $this->List[]='@echo off';
+      $this->Exec_List[]='@echo off';
     }
     
   //Function AllocLabelIdx() { return Self::$LabelIdx++; }
@@ -22,14 +28,15 @@
     
     Function Descr(...$Args)
     {
-      $this->Descr=Implode($Args);
-      $this->Exec('');
-      $this->Exec('');
-      ForEach(Explode("\n", $this->Descr) As $Line)
-        $this->Exec('Echo [Log] '.$Line);
-      $this->Exec('');
+      $this->Exec_Descr=Implode($Args);
+      $this->ExecCmd('');
+      $this->ExecCmd('');
+      ForEach(Explode("\n", $this->Exec_Descr) As $Line)
+        $this->ExecCmd('Echo [Log] '.$Line);
+      $this->ExecCmd('');
     }
     
+    Function ExecCmd($Cmd, $Args=null) { $this->Exec($Cmd, $Args); } // TODO:
     Function Exec($Cmd, $Args=null)
     {
       if($Args!==null)
@@ -43,7 +50,7 @@
       if(StrLen(Trim($_Args))>0)
         $_Args=' '.$_Args;
       $Res=$Cmd.$_Args;
-      $this->List[]=$Res;
+      $this->Exec_List[]=$Res;
     //TODO: $Args->CheckInput
     //TODO: $Args->CheckResult
       if($Args!==null)
@@ -56,12 +63,12 @@
 
     Function _MkDir(String $v)
     {
-      $this->Exec('MkDir "'.$v.'" 2>nul');
+      $this->ExecCmd('MkDir "'.$v.'" 2>nul');
     }
     
-    Function _CheckFile(String $v, ?String $i=null)
+    Function _AddCheckFile(String $v, ?String $i=null)
     {    
-      $this->Exec('if not exist "'.$v.'" echo [Error] Can`t find file "'.($i??$v).'" && exit /b');
+      $this->ExecCmd('if not exist "'.$v.'" echo [Error] Can`t find file "'.($i??$v).'" && exit /b');
     }
     
     Function Copy($From, $To)
@@ -78,22 +85,22 @@
         $this->_MkDir($v);
     }
     
-    Function CheckFile($v, bool $CheckHash=true)
+    Function AddCheckFile($v, Array $Args=[])
     {
-      if(Parent::CheckFile($v, $CheckHash))
-        $this->_CheckFile($v->GetFullPath(), $v->GetLocalPath());
+      if(Parent::AddCheckFile($v, $Args))
+        $this->_AddCheckFile($v->GetFullPath(), $v->GetLocalPath());
     }
     
-    Function CheckResultFile($v, $bAddTask=true)
+    Function _AddCheckResultFile($v, $Args)
     {
-      Parent::CheckResultFile($v, $bAddTask);
-      $this->_CheckFile($v->GetFullPath(), $v->GetLocalPath());
+      Parent::_AddCheckResultFile($v, $Args);
+      $this->_AddCheckFile($v->GetFullPath(), $v->GetLocalPath());
     }
     
     Function _GetTaskHash(Array &$Res)
     {
       Parent::_GetTaskHash($Res);
-      $Res['Task.Exec'   ]=$this->List        ;
+      $Res['Task.Exec'   ]=$this->Exec_List   ;
       $Res['ContentHash' ]=$this->ContentHash ;
     }
     
@@ -106,40 +113,151 @@
       $Content=$this->ToString();
       $this->ContentHash[]=md5($Content);
       File_Put_Contents($File, $Content);
-      $this->List=[];
-      $this->Log('Log', 'call "',$File,'"');
+      $this->Exec_List=[];
+    //$this->Log('Log', 'call "',$File,'"');
       $this->Exec('call "'.$File.'"');
+      return $File;
+    }
+    
+    Function AddOutFile($File=false)
+    {
+      If($File===false)
+        $File=$this->CachePath;
+      $File.='.out';
+      CreatePath(DirName($File));
+      $this->Exec_Log_Out=$File;
+      File_Put_Contents($File, '');
+      return $File;
+    }
+    
+    Function AddErrFile($File=false)
+    {
+      If($File===false)
+        $File=$this->CachePath;
+      $File.='.err';
+      CreatePath(DirName($File));
+      $this->Exec_Log_Err=$File;
+      File_Put_Contents($File, '');
       return $File;
     }
     
     Function ToString($Separator="\r\n")
     {
-      return Implode($Separator, $this->List);
+      return Implode($Separator, $this->Exec_List);
     }
     
-    Function Refuse()
+    Function _Task_Clear()
     {
-      $this->List        =[];
-      Parent::Refuse();
+      $this->Exec_List=[];
+      Parent::_Task_Clear();
     }
     
-    Function Finish()
+    Function Exec_Finish()
     {
     }
-    
-    Protected Function Prepare_Depends() {}
     
     Protected Function DoExecute()
     {
-      $Exec=$this->Create_Object('/System/Exec');
-      $Exec->Env=$_SERVER;
+    //$this->Log('Log', 'Async_Exec ', $this->Task_Name);
+      if($this->Exec_Log_Out===true) $this->AddOutFile();
+      if($this->Exec_Log_Err===true) $this->AddErrFile();
       
-      ForEach($this->List As $Item)
+      $this->Exec=$this->Create_Object('/System/Exec');
+      $this->Exec->Env=$_SERVER+$this->Env;
+      
+      if($this->Async_Next(true))
+        while($this->Async_Next()) {};
+      if(!$this->Exec)
+        $this->Task_SetState_Failed();
+      else
+        $this->Task_SetState_InProcess();
+    }
+
+    Function Async_Update($DeltaTime):bool
+    {
+      if(!Parent::Async_Update($DeltaTime))
+        return false;
+      while($this->Async_Next()) {};
+      return true;
+    }
+    
+    Function Async_Next(bool $First=false)
+    {
+    # echo 'IsExec=', (bool)$this->Exec, "\n";
+    # echo 'Alive=', $this->Exec->Is_Alive(), "\n";
+    # $this->Debug($this->Exec->GetStatus());
+      if(!$First)
       {
-        $Exec->Command=$Item;
-        $Exec->Execute();
+        if($this->Exec && $this->Exec->Is_Alive())
+          return false;
+        if($this->Exec->GetExitCode()!==0)
+        {
+          $this->Log('Error', 'ExitCode=', $this->Exec->GetExitCode());
+          $this->Task_SetState_Failed();
+          return false;
+        }
       }
-      $Exec->Done();
+    //$this->Log('Log', 'Async_Next ', $this->Task_Name);
+      if(IsSet($this->Exec_List[$this->Exec_Idx]))
+      {
+        $Item=$this->Exec_List[$this->Exec_Idx];
+        $this->Exec_Idx++;
+      //$this->Debug($this->Exec_List);
+      //$this->Debug($Item);
+        if(!$this->Exec)
+        {
+          $this->Log('Fatal', 'Task ', $this->Task_Name, ' haven\'t exec object for item: ', $Item);
+          return false;
+        }
+        if($this->Exec_Log_Out) $Item.=' >>"' .$this->Exec_Log_Out.'"';
+        if($this->Exec_Log_Err) $Item.=' 2>>"'.$this->Exec_Log_Err.'"';
+        $this->Exec->Command=$Item;
+      //$this->Log('Log', 'Exec ', $Item);
+        if(!$this->Exec->Execute($this->NumThreads<0))
+        {
+          $this->Task_SetState_Failed();
+          return false;
+        }
+        return true;
+      }
+      
+      $this->Task_SetState_Finished();
+      return false;
+    }
+    
+    Function _UpdateLog($File, $IsError=false)
+    {
+      ClearStatCache(true, $File);
+      if(FileSize($File)<=0)
+      {
+        UnLink($File);
+        return;
+      }
+      if($this->Task_State=='Finished' && !$this->OutIsFinished)
+        return;
+      $Out=File_Get_Contents($File);
+      $Out=StrTr($Out, ["\r\n"=>"\n", "\n"=>'']);
+      if($IsError)
+        $this->Log('Error', 'Exec_Error_Log:')($Out);
+      else
+        $this->Log('Log', 'Exec_Output_Log:')($Out);
+      // TODO: Write Output
+    }
+    
+    Protected Function Task_OnDone()
+    {
+      if($this->Exec)
+      {
+        if($this->Exec->Is_Alive())
+        {
+          $this->Log('Error', 'Task ', $this->Task_Name, ' was terminated');
+          $this->Exec->Terminate();
+        }
+        $this->Exec->Done();
+      }
+      Parent::Task_OnDone();
+      if(Is_String($this->Exec_Log_Out)) $this->_UpdateLog($this->Exec_Log_Out, false );
+      if(Is_String($this->Exec_Log_Err)) $this->_UpdateLog($this->Exec_Log_Err, true  );
     }
   };
 

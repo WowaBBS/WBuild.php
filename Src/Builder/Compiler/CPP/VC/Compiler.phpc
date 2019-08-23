@@ -1,0 +1,13 @@
+<?
+  $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Compiler');
+
+  class C_Builder_Compiler_CPP_VC_Compiler extends C_Builder_Compiler_CPP_Base_Compiler
+  {
+    Protected Function CanGroupByDir() { return true; }
+
+    Protected Function _CreateTaskCompile(Array $Args)
+    {
+      return $Args['Outer']->Create_Object('/Builder/Compiler/CPP/VC/Task/Compile', $Args);
+    }
+  };
+?>

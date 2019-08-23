@@ -19,10 +19,6 @@
       $this->Manager=$Args['Manager'];
     }
   
-    Function _Prepare($Exec)
-    {
-    }
-    
     Function CreateOutPath($Outer)
     {
       $I=$Outer->GetModuleInstance();
@@ -55,11 +51,19 @@
     
     Final Function Compile(Array $Args)
     {
-      $Task=$this->CreateTaskCompile($Args);
-      $Task->Compile();
+      $Args['Compiler']=$this;
+      $Compiler=$this->GetCompiler();
+      $Compiler->Compile($Args);
     }
     
-    Abstract Protected Function CreateTaskCompile(Array $Args);
+    Protected $Compiler=null;
+    
+    Protected Function GetCompiler()
+    {
+      return $this->Compiler?: $this->Compiler=$this->_CreateCompiler([]);
+    }
+    
+    Abstract Protected Function _CreateCompiler(Array $Args);
     
     Static Function AgregateLibs($Libs)
     {
@@ -88,19 +92,24 @@
       $ResAsset  =$Args['ResAsset' ];
       $Includes  =$Args['Includes' ];
 
+      $LazyDeps=[
+        'Cpp/Id'       =>$Exec->Object_Id ,
+        'Cpp/Includes' =>$Includes        ,
+      ];
+        
       $Exec->Descr('Build ',$ResAsset->GetLocalPathNick());
-      $Exec->CheckInputs($Includes); // TODO: Check depends for resources
-      $Exec->CheckFile  ($RcAsset );
+    //$Exec->AddCheckInputs($Includes); // TODO: Check depends for resources
+      $Exec->AddCheckInput ($RcAsset, ['LazyDeps'=>$LazyDeps]);
       $Exec->MkDir($ResAsset);
       
       //rc /l"0x0409" /nologo /fo"Release\app.res" app.rc
       
       $this->_BuildRc($Args);
  
-      $Exec->CheckResultFile($ResAsset);
+      $Exec->AddCheckResultFile($ResAsset);
       
       $Exec->SaveCallTo();
-      $Exec->Finish();
+      $Exec->Exec_Finish();
     }
     
     Final Function BuildResX(Array $Args)
@@ -112,16 +121,16 @@
       
       //resgen /useSourcePath /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Core.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Data.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Drawing.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Windows.Forms.dll" /r:"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.0\System.Xml.dll" /compile FogTunerControl.resX,Release\FogTuner.FogTunerControl.resources
       $Exec->Descr('Build ',$Resources->GetLocalPathNick());
-      $Exec->CheckFile  ($ResXAsset );
-      $Exec->CheckFiles ($Using     );
+      $Exec->AddCheckFile  ($ResXAsset );
+      $Exec->AddCheckFiles ($Using     );
       $Exec->MkDir($Resources);
     
       $this->_BuildResX($Args);
 
-      $Exec->CheckResultFile($Resources);
+      $Exec->AddCheckResultFile($Resources);
       
       $Exec->SaveCallTo();
-      $Exec->Finish();
+      $Exec->Exec_Finish();
     }
     
   //$Args['Exec'     ]=$this->Create_Exec();
@@ -151,21 +160,21 @@
       $this->PrepareExec($Exec);
       
       $Exec->Descr('Build ',$ExeAsset->GetLocalPathNick());
-      $Exec->CheckFiles($Objects   );
-      $Exec->CheckFiles($Libs      );
-      $Exec->CheckFiles($Using     );
-      $Exec->CheckFiles($ResAsset  );
-      $Exec->CheckFiles($DefAsset  );
-      $Exec->CheckFiles($Resources );
-      $Exec->CheckFiles($Manifests );
+      $Exec->AddCheckFiles($Objects   );
+      $Exec->AddCheckFiles($Libs      );
+      $Exec->AddCheckFiles($Using     );
+      $Exec->AddCheckFiles($ResAsset  );
+      $Exec->AddCheckFiles($DefAsset  );
+      $Exec->AddCheckFiles($Resources );
+      $Exec->AddCheckFiles($Manifests );
       $Exec->MkDir($ExeAsset);
       
       $this->_BuildExe($Args);
       // TODO: Copy depends dlls
-      $Exec->CheckResultFile($ExeAsset);
+      $Exec->AddCheckResultFile($ExeAsset);
 
       $Exec->SaveCallTo();
-      $Exec->Finish();
+      $Exec->Exec_Finish();
     }
 
   //$Args['Exec'     ]=$this->Create_Exec();
@@ -233,25 +242,25 @@
       $this->PrepareExec($Exec);
 
       $Exec->Descr('Build ',$DllAsset->GetLocalPathNick());
-      $Exec->CheckFiles($Objects   );
-      $Exec->CheckFiles($Libs      );
-      $Exec->CheckFiles($Using     );
-      $Exec->CheckFiles($ResAsset  );
-      $Exec->CheckFiles($DefAsset  );
-      $Exec->CheckFiles($Resources );
-      $Exec->CheckFiles($Manifests );
+      $Exec->AddCheckFiles($Objects   );
+      $Exec->AddCheckFiles($Libs      );
+      $Exec->AddCheckFiles($Using     );
+      $Exec->AddCheckFiles($ResAsset  );
+      $Exec->AddCheckFiles($DefAsset  );
+      $Exec->AddCheckFiles($Resources );
+      $Exec->AddCheckFiles($Manifests );
       $Exec->MkDir($DllAsset);
       if($LibAsset)
         $Exec->MkDir($LibAsset);
 
       $this->_BuildDll($Args);
 
-      $Exec->CheckResultFile($DllAsset);
+      $Exec->AddCheckResultFile($DllAsset);
       if($LibAsset)
-        $Exec->CheckResultFile($LibAsset);
+        $Exec->AddCheckResultFile($LibAsset);
 
       $Exec->SaveCallTo();
-      $Exec->Finish();
+      $Exec->Exec_Finish();
     }
 
   //$Args['Exec'     ]=$this->Create_Exec();
@@ -274,17 +283,18 @@
       
       $Exec->Descr('MakeLib ',$LibAsset->GetLocalPathNick());
       
-      $Exec->CheckFiles($Objects );
-    //$Exec->CheckFiles($Libs    );
+      $Exec->AddCheckFiles($Objects );
+    //$Exec->AddCheckFiles($Libs    );
       $Exec->MkDir($LibAsset);
  
       $this->_BuildLib($Args);
-      $Exec->CheckResultFile($LibAsset);
+      $Exec->AddCheckResultFile($LibAsset);
       $Exec->SaveCallTo();
-      $Exec->Finish();
+      $Exec->Exec_Finish();
     }
 
     Function CreateParams() { return $this->Create_Object('/Builder/Task/Params'); }
+
   //****************************************************************
   // Debug
     
@@ -293,7 +303,7 @@
       Parent::_Debug_Info($Res);
       UnSet($Res['Manager' ]);
     }
-      
+    
     Function _ToDebugInfo() { return $this->CMake_GetGenerator(); }
   
   //****************************************************************

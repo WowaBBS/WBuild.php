@@ -2,115 +2,226 @@
   $Loader->Parent_Class('/Object');
 //$Loader->Using_Class('/Builder/Task/Base');
 
-  /// States of task:
-  ///   * Wait Depends
-  ///   * Ready for starting
-  ///   * Processing
-  ///   * Finished
-  ///   * Failed
-  
-  // TODO: Remove
   class C_Builder_Task_Manager extends C_Object
   {
-    Var $List      =[]; // $Id=>$Task
-    Var $Wait      =[]; // $Id=>$Task
-    Var $Ready     =[]; // $Id=>$Task
-    Var $InProcess =[]; // $Id=>$Task
-    Var $Finished  =[]; // $Id=>$Task
-    Var $Failed    =[]; // $Id=>$Task
-    Var $bPrepared =false;
+    Var $List                =[]; // $Id=>$Task // TODO: Remove
+    Var $Threads_Maximum     =4;
+    Var $Threads_Started     =0;
+    Var $Wait_Sleep          =50*1000*1000;
+    Var $Tasks_Ready_Changed =false;
+    Var $TasksByState=[
+      'Init'      =>[],
+      'Wait'      =>[],
+      'Locking'   =>[],
+      'Check'     =>[],
+      'Ready'     =>[],
+      'Started'   =>[],
+      'InProcess' =>[],
+      'Skipped'   =>[],
+      'Finished'  =>[],
+      'Failed'    =>[],
+      'Rejected'  =>[],
+    ];
+    Var $NumTasksDone=0;
+    Var $NumTasksAdded=0;
     
-    Function Deprecated_Add(C_Builder_Task_Base $Task)
+    function _Init(Array $Args)
     {
-      $this->_Add($Task);
-      $this->_Prepare($Task);
+      parent::_Init($Args);
+      $this->Threads_Maximum=$Args['Threads_Maximum']?? Static::getNumberOfLogicalCPUCores();
+    }
+    
+    Function OnTaskDone($Task)
+    {
+      $this->NumTasksDone++;
+      $End=$Task->Task_State==='Finished'? '':' is '.$Task->Task_State;
+      $this->Log('Log',
+        '  [', $this->NumTasksDone, '/', $this->NumTasksAdded, '] ',
+        $Task->Task_Name, $End
+      );
+    }
+    
+    Function _TaskStateChanged($Task, $OldState, $State)
+    {
+      $Id=$Task->Object_Id;
+      if(!$this->TasksByState[$OldState][$Id])
+        $this->Log('Fatal', 'Task ', $Task->Task_Name, ' hadn\'t ols state ', $OldState);
+      else
+        UnSet($this->TasksByState[$OldState][$Id]);
+      if(IsSet($this->TasksByState[$State]))
+        $this->TasksByState[$State][$Id]=$Task;
+      else
+        $this->Log('Fatal', 'Task ', $Task->Task_Name, ' has unknown state ', $State);
+      if($State==='Ready')
+        $this->Tasks_Ready_Changed=true;
     }
     
     Function Create($Type='Base', $Vars=[])
     {
-      if($this->bPrepared) $this->Log('Fatal', 'Task manager should be prepared for creating task');
       $Class='/Builder/Task/'.$Type;
       $Res=$this->Create_Object($Class, $Vars);
       $this->_Add($Res);
       Return $Res;
     }
     
-    Function _Add($Task)
+    Public Function _Add($Task) // TODO: Private
     {
+      $this->NumTasksAdded++;
       $Id=$Task->Object_Id;
       if(IsSet($this->List[$Id]))
-        $this->Log('Fatal', 'UnReachable');
-      $Task->Manager=$this;
-      $this->List[$Id]=$Task;
-    }
-    
-    Function _Prepare(C_Builder_Task_Base $Task)
-    {
-      $Task->_Prepare();
-      $Id=$Task->Object_Id;
-      if(Count($Task->Depends)>0)
-        $this->Wait[$Id]=$Task;
+      {
+        $this->Log('Error', 'Task ', $Task->Task_Name, ' was already added to task manager');
+      }
       else
-        $this->Ready[$Id]=$Task;
+      {
+        if($Task->Tasks_Manager)
+          $this->Log('Fatal', 'Task ', $Task->Task_Name, ' was already added to another task manager');
+        $Task->Tasks_Manager=$this;
+        $this->List[$Id]=$Task;
+        $State=$Task->Task_State;
+        if($State!=='Init')
+          $this->Log('Fatal', 'Task ', $Task->Task_Name, ' hasn\'t state Init and have another state ', $State);
+        else
+          $this->TasksByState[$State][$Id]=$Task;
+      }
     }
     
-    Function Prepare()
+    Function Async_Update($DeltaTime)
     {
-      if($this->bPrepared) $this->Log('Fatal', 'UnReachable');
-      $this->bPrepared=true;
-      ForEach($this->List As $Task)
-        $this->_Prepare($Task);
-    }
-    
-    Function GetNext()
-    {
-      if(!$this->bPrepared)
-        $this->Prepare();
-      $Res=Array_Pop($this->Ready);
-      if(!$Res)
-        return null;
-      $this->InProcess[$Res->Object_Id]=$Res;
+      ForEach($this->TasksByState['InProcess']As $Item)
+        $Item->Async_Update($DeltaTime);
+      $Res=0;
+      ForEach($this->TasksByState['InProcess']As $Item)
+        if($Item->NumThreads>0)
+          $Res+=$Item->NumThreads;
+      $this->Threads_Started=$Res;
       return $Res;
     }
     
-    Function Failed(C_Builder_Task_Base $Task)
+    Private Function ExecuteReadyTasks($DeltaTime):bool
     {
-      if(!$Task->bFailed) $this->Log('Fatal', 'Failed in not failed =)');
+      While($Tasks=$this->TasksByState['Init'])
+        ForEach($Tasks As $Task)
+          $Task->Task_Init();
+          
+      $Tasks=$this->TasksByState['Locking'];
+      ForEach($Tasks As $Task)
+         $Task->Task_Locking($DeltaTime);
 
-      $Id=$Task->Object_Id;
-
-      UnSet($this->Wait      [$Id]);
-      UnSet($this->Ready     [$Id]);
-      UnSet($this->InProcess [$Id]);
-      UnSet($this->Finished  [$Id]);
-      $this->Failed    [$Id]=$Task;
+      While($Tasks=$this->TasksByState['Check'])
+        ForEach($Tasks As $Task)
+          $Task->Task_Check();
+      
+      if($this->Tasks_Ready_Changed)
+      {
+        KSort($this->TasksByState['Ready']); // Some slowly, but user friendly
+        $this->Tasks_Ready_Changed=false;
+      }
+      $Threads_Maximum=&$this->Threads_Maximum;
+      $Threads_Started=&$this->Threads_Started;
+      $Res=false;
+      ForEach($this->TasksByState['Ready'] As $Id=>$Task)
+        if($Threads_Started<=0 || $Task->NumThreads+$Threads_Started<=$Threads_Maximum)
+        {
+          $Task->Execute();
+        //$this->Log('Log', $Task->Task_Name, ' is ', $Task->Task_State);
+          $Res=true;
+          if($Task->NumThreads>0)
+            $Threads_Started+=$Task->NumThreads;
+          if($this->Tasks_Ready_Changed)
+            break;
+        }
+      return $Res; // Count($this->TasksByState['Started'])>0
     }
     
-    Function Finished(C_Builder_Task_Base $Task)
+    Function IsActive()
     {
-      if(!$Task->bFinished) $this->Log('Fatal', 'Finished is not finished =)');
-
-      $Id=$Task->Object_Id;
-
-      UnSet($this->Wait      [$Id]);
-      UnSet($this->Ready     [$Id]);
-      UnSet($this->InProcess [$Id]);
-      $this->Finished  [$Id]=$Task;
-      UnSet($this->Failed    [$Id]);
+      return
+        Count($this->TasksByState['Init'      ])>0 ||
+        Count($this->TasksByState['Locking'   ])>0 ||
+        Count($this->TasksByState['Check'     ])>0 ||
+        Count($this->TasksByState['Ready'     ])>0 ||
+        Count($this->TasksByState['InProcess' ])>0  ;
     }
     
-    Function Ready(C_Builder_Task_Base $Task)
+    Function Execute()
     {
-      if($Task->bFailed) $this->Log('Fatal', 'Failed task can`t be ready');
-      if($Task->bFinished) $this->Log('Fatal', 'Finishd task can`t be ready');
+      $Time2=$Time=MicroTime(true);
+      while($this->IsActive())
+      {
+        $DeltaTime=$Time2-$Time;
+        if(!$this->ExecuteReadyTasks($DeltaTime))
+          Time_NanoSleep(0, $this->Wait_Sleep);
+       #echo '[',
+       #  Count($this->TasksByState['Init'      ]),',',
+       #  Count($this->TasksByState['Locking'   ]),',',
+       #  Count($this->TasksByState['Check'     ]),',',
+       #  Count($this->TasksByState['Ready'     ]),',',
+       #  Count($this->TasksByState['InProcess' ]),',',$this->Threads_Started,']'  ;
+        $this->Async_Update($DeltaTime);
+        $Time=$Time2;
+        $Time2=MicroTime(true);
+      }
+      
+      if($this->TasksByState['Wait'])
+      {
+        $Log=$this->Log('Error', 'Some tasks in wait status yet:');
+        ForEach($this->TasksByState['Wait']As $Task)
+        {
+          $Log('  ', $Task->Task_Name, ' wait for:');
+          ForEach($Task->Tasks_WaitFor As $k=>$Task_WaitFor)
+            $Log('    ', $k, ': ', $Task_WaitFor->Task_Name, ' ', $Task_WaitFor->Task_State);
+        # $Deb=[$Task->Exec_List];
+        # ForEach($Task->Tasks_WaitFor As $k=>$Task_WaitFor)
+        #   $Deb[]=$Task_WaitFor->Exec_Descr;
+        # $this->Debug($Deb);
+        }
+        $Log->Done();
+      }
+      if($this->TasksByState['Init'])
+      {
+        $Log=$this->Log('Error', 'Some tasks in init status yet:');
+        ForEach($this->TasksByState['Init']As $Task)
+          $Log('  ', $Task->Task_Name);
+        $Log->Done();
+      }
+      $Log=$this->Log('Log', 'All tasks done:');
+      ForEach($this->TasksByState As $Type=>$List)
+        if(Count($List)>0)
+          $Log('  ', Str_Pad($Type, 9), ' : ', Count($List));
+      $Log('  ', Str_Pad('Total', 9), ' : ', $this->NumTasksAdded);
+      $Log->Done();
+    }
 
-      $Id=$Task->Object_Id;
-
-      UnSet($this->Wait      [$Id]);
-      $this->Ready     [$Id]=$Task;
-      UnSet($this->InProcess [$Id]);
-      UnSet($this->Finished  [$Id]);
-      UnSet($this->Failed    [$Id]);
+    public static function getNumberOfLogicalCPUCores()
+    {
+      static $Res=0;
+      if($Res>0)
+        return $Res;
+      if($Res=$_SERVER['NUMBER_OF_PROCESSORS']?? 0)
+        return $Res;
+      if(Is_File('/proc/cpuinfo'))
+      {
+        $Lines=File_Get_Contents('/proc/cpuinfo');
+        $Lines=Explode("\n", $Lines);
+        $Res=0;
+        ForEach($Lines As $Line)
+          if(StrPos('processor', $Line)>=0)
+            $Res++;
+      }
+      else
+      {
+        $Lines=`wmic computersystem get NumberOfLogicalProcessors`;
+        if($Lines!==null)
+        {
+          $Lines=Explode("\n", StrTr(Trim($Lines), ["\r"=>'']));
+          if(Count($Lines)==2)
+            $Res=(int)$Lines[1];
+        }
+      }
+      If($Res<=0)
+        $Res=1;
+      return $Res;
     }
   };
 ?>

@@ -6,12 +6,11 @@
 
   class C_Builder_Manager extends C_Object
   {
-    Var $CacheDir='.Build';
-    Var $Cache;
-  
-    Var $Modules;
-    
-    Var $OnAsset;
+    Var $CacheDir ='.Build';
+    Var $Cache    ;
+    Var $Modules  ;
+    Var $OnAsset  ;
+    Var $Performance ;
     
     Function _Init(Array $Args)
     {
@@ -22,7 +21,8 @@
       $ModulesArgs= $Args['Modules']??[''];
       $ModulesArgs['CacheDir']='Modules';
       $ModulesArgs['Manager']=$this;
-      $this->Modules=$this->Create_Object('/Builder/Modules', $ModulesArgs);
+      $this->Performance =$this->Create_Object('/Debug/Performance');
+      $this->Modules    =$this->Create_Object('/Builder/Modules', $ModulesArgs);
     }
  
     Function GetModule($Name)
@@ -85,7 +85,7 @@
       if(File_Exists($FileName))
         $this->AddPath(File_Get_Contents($FileName));
       elseif($Err)
-        $this->Log('Error', 'File not found: ', $FileName);
+        $this->Log('Error', 'Path file not found: ', $FileName);
     }
     
     Function LoadPathInstalled()
@@ -111,6 +111,7 @@
  
     //****************************************************************
     // Programs
+    
     Var $Programs=[];
     
     Function GetProgram($Name, Array $Args=[])

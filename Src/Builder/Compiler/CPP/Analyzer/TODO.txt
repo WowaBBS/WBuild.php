@@ -1,0 +1,20 @@
+
+[Warning] String is not ended
+
+1)
+if (byte & 0b1000'0000)
+
+2)
+auto fragmentShaderSource = R"shader(
+   #version 330 core
+
+   void main()
+   {
+   }
+)shader";
+
+3)
+const char* vShader = "\
+  void main()\
+  {\
+  }";

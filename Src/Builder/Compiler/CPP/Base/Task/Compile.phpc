@@ -1,9 +1,7 @@
 <?
-//$Loader->Parent_Class('/Builder/Task/Base');
-  $Loader->Parent_Class('/Builder/Task/Depends');
+  $Loader->Parent_Class('/Builder/Task/Exec');
 
-//Abstract Class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Task_Base
-  Abstract Class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Task_Depends
+  Abstract Class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Task_Exec
   {
     Var $Compiler     = Null    ;
   //Var $Args         = []      ;
@@ -20,19 +18,17 @@
     Var $Pch          = False   ;
     Var $PchAsset     = Null    ;
     Var $ForceInclude = []      ;
-    Var $Libs         = []      ;  // TODO: Remove
+   #Var $Libs         = []      ; // TODO: Remove
+    Var $Disabled     = []      ;
+    Var $LazyDepsId   = false   ;
 
-    Var $Exec         = Null    ;
-    Var $EmptyExec    = Null    ;
-    Var $ForceHeaders = []      ;
-  
-    Protected Function _Cloneable() { return true; }
-    
     Protected Function _Init(Array $Args)
     {
+      if(!IsSet($Args['Performance']))
+        $Args['Performance']='Compile';
+      if(!IsSet($Args['OutIsFinished']))
+        $Args['OutIsFinished']=!$Args['Task_Asset']->IsExternalModule();
       Parent::_Init($Args);
-      
-      $this->Asset        =$Args['Outer'        ]; // TODO: Asset
       
       $this->Compiler     =$Args['Compiler'     ];
       $this->Defines      =$Args['Defines'      ];
@@ -49,13 +45,14 @@
       $this->Pch          =$Args['Pch'          ]?? False ;
       $this->PchAsset     =$Args['PchAsset'     ]?? Null;
       $this->ForceInclude =$Args['ForceInclude' ]?? [];
-      $this->Libs         =$Args['Libs'         ]?? []; // TODO: Remove?
+    # $this->Libs         =$Args['Libs'         ]?? []; // TODO: Remove?
+      $this->Disabled     =$Args['Disabled'     ]?? False;
+      $this->LazyDepsId   =$Args['LazyDepsId'   ];
+      
+      $this->Call_MakeCompile();
     }
 
     Abstract Protected Function MakeCompile(); // {}
-    Abstract Protected Function CanGroupByDir();
-    
-    Function NeedOptimize() { return True; }
     
     Private Function Call_MakeCompile()
     {
@@ -66,311 +63,125 @@
             $Log('>>>>>>>>>');
             $Log('Dir: ',$this->Dir);
           //$Item=$this->GetFirst();
-          //$Log($this->Exec->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath());
-            ForEach($this->Items As $Item) // TODO: Remove exec
+          //$Log($this->CachePath,'     -> ',$Item['ObjAsset']->GetLocalPath());
+            ForEach($this->Items As $Item)
               $Log($Item['TaskPath'],'     -> ',$Item['ObjAsset']->GetLocalPath());
             $Log('<<<<<<<<<');
           }
         );
         
-      $NeedOptimize=$this->NeedOptimize();
-
-      $First=Reset($this->Items);
-      $this->CachePath=$First['TaskPath'].'.Main';
-      $Exec=$First['ObjAsset']->CreateExec($First['TaskPath']);
-      $this->Exec=$Exec;
-
-      $this->Compiler->PrepareExec($Exec);
-      $Exec->CheckInputs($this->Includes, !$NeedOptimize);
-      $this->CheckInputs($this->Includes, !$NeedOptimize);
-     #$Exec->CheckInputs($this->UsingPath); // TODO:
-      $Exec->CheckInputs($this->Using);
-      $this->CheckInputs($this->Using);
-      $Exec->MkDir($First['ObjAsset']);
+      $this->Compiler->PrepareExec($this);
+    # $this->AddCheckInputs($this->Includes); // No includes check but check by depends headers
+     #$this->AddCheckInputs($this->UsingPath); // TODO:
+      $this->AddCheckInputs($this->Using);
+      $this->MkDir($this->Task_Asset);
+      
+      $LazyDeps=[
+        'Cpp/Id'       =>$this->LazyDepsId ,
+        'Cpp/Includes' =>$this->Includes   ,
+      ];
         
       ForEach($this->Items As $Item)
       {
         $SrcAsset =$Item['SrcAsset' ];
-
-        $Exec->Descr('Compile ',$SrcAsset->GetLocalPathNick());
-        
-        $Exec->CheckFile($SrcAsset);
-        $this->CheckFile($SrcAsset);
-        
+        $this->Descr('Compile ', $SrcAsset->GetLocalPathNick());
+        $this->AddCheckFile($SrcAsset, ['LazyDeps'=>$LazyDeps]);
         UnSet($SrcAsset );
+      } 
+      
+      ForEach($this->ForceInclude As $Item)
+      {
+        $this->AddCheckFile($Item, ['LazyDeps'=>$LazyDeps]);
+        UnSet($Item );
       } 
     
       if($this->PchAsset)
-      {
-        $Exec->CheckFile($this->PchAsset);
-        $this->CheckFile($this->PchAsset);
-      }
+        $this->AddCheckFile($this->PchAsset);
 
-     #$this->LoadHeaders();
       $this->MakeCompile();
       
       ForEach($this->Items As $Item)
-      {
-        $Exec->CheckResultFile($Item['ObjAsset'], !$NeedOptimize);
-        $this->CheckResultFile($Item['ObjAsset'],  $NeedOptimize);
-      }
+        $this->AddCheckResultFile($Item['ObjAsset'], ['AddTask'=>!$this->Disabled]);
       
-      if($NeedOptimize)
-        ForEach($this->Items As $Item)
-          $Item['ObjAsset']->AddTask($this);
-      
-      $Exec->SaveCallTo();
-      $Exec->Finish();
-    }
-    
-    Final Function Compile()
-    {
-      $FileDepends=[];
-     #ForEach($this->Objects As $Item)
-     #  $FileDepends[$Item->Object_Id]=$Item;
-      ForEach($this->Libs As $Item)
-        $FileDepends[$Item->Object_Id]=$Item;
-      if($this->DepUsing)
-        ForEach($this->Using As $Item)
-          $Item->UseForObj($FileDepends);
-      if($FileDepends)
-        ForEach($this->Items As $Item)
-        {
-          $Item['ObjAsset']->AddFileDepends($FileDepends);
-  //TODO: $Item['ObjAsset']->AddFileDepends($Item['SrcAsset']->GetFileDepends()); // Dll and Libs
-        }
-      
-      ForEach($this->Split() As $Item)
-        $Item->Compile_();
-    }
-    
-    Protected Function Split(Array $Res=[])
-    {
-      if($Pch=$this->Outer->GetLastAsset('Cpp/Pch'))
-        if($StdAfx=$Pch->ExtractPch($this))
-        {
-          $this->Pch=$Pch;
-          $Task=$this->Clone();
-          $Task->Items    =$StdAfx;
-          $Task->PchType  ='Create';
-          $this->PchType  ='Use';
-          $this->PchAsset =$StdAfx[0]['ObjAsset'];
-          
-          $Res[]=$Task;
-          
-          if($Pch->IsForce())
-            $this->ForceInclude=
-              [$PchHeader->GetKey()=>$Pch->GetHeaderAsset()]+
-              $this->ForceInclude;
-        }
-    //***
-      $c=count($this->Items);
-      if(!$c) return [];
-      if($c>1 && $this->CanGroupByDir())
-      {
-        $Groups=[];
-        ForEach($this->Items As $Item)
-        {
-          $GPath=$Item['ObjAsset']->GetDirFullPath();
-          if(!IsSet($Groups[$GPath]))
-            $Groups[$GPath]=[$Item];
-          else
-            $Groups[$GPath][]=$Item;
-        }
-        ForEach($Groups As $GPath=>$GItems)
-        {
-          $Task=$this->Clone();
-          $Task->Dir     =$GPath; //$ObjAsset->GetDirFullPath();
-          $Task->Items   =$GItems;
-          $Res[]=$Task;
-        }
-      //$this->Remove=true;
-      }
-      else
-      {
-        $Res[]=$this;
-      }
-      Return $Res;
-    }
-    
-    Function Compile_()
-    {          
-      if(IsSet($this->Dir))
-        $this->Call_MakeCompile();
-      else
-        ForEach($this->Items As $k=>$Item)
-        {
-          $Task=$this->Clone();
-          $Task->Items=[$Item];
-          $Task->Call_MakeCompile();
-        }
-    }
-
-    Protected Function Prepare_Depends()
-    {
-      if(!$this->NeedOptimize())
-        return;
-      // LoadHeaders();
-      $ForceHeaders=[];
-      ForEach($this->ForceInclude As $Item)
-        $ForceHeaders+=$Item->GetHeaders(
-          $this->Object_Id    ,
-          $this->Includes     ,
-          $this->Compiler
-        );
-      $this->ForceHeaders=$ForceHeaders;
-        
-      $OldItems =$this->Items ;
-      $OldExec  =$this->Exec  ;
-      
-      $First=Reset($this->Items);
-      $EmptyExec=$First['ObjAsset']->CreateExec($First['TaskPath'].'.Empty');
-      $this->Items =[];
-      $this->Exec=$EmptyExec;
-      $this->Compiler->PrepareExec($EmptyExec);
-      $EmptyExec->CheckInputs($this->ForceHeaders);
-      $this->MakeCompile();
-
-      $this->Items     =$OldItems  ;
-      $this->Exec      =$OldExec   ;
-      $this->EmptyExec =$EmptyExec ;
-
-      // TODO: $this->Compiler into Includes
-      ForEach($this->Items As $k=>$Item)
-      {
-        $Headers=
-          $Item['SrcAsset']->GetHeaders(
-            $this->Object_Id    ,
-            $this->Includes     
-          );
-        $this->Items[$k]['Headers']=$Headers;
-        $this->CheckInputs($Headers);
-      }
-    }
-    
-    Function _GetTaskHash(Array &$Res)
-    {
-      Parent::_GetTaskHash($Res);
-    //$R=[]; $this->EmptyExec->_GetTaskHash($R);
-      $R=$this->EmptyExec->GetTaskHash();
-      $Res['Task.Exec'   ]=$R['Task.Exec'   ];
-      $Res['ContentHash' ]=$R['ContentHash' ];
-    //$Res['Task.Exec'   ]=$this->EmptyExec->List        ;
-    //$Res['ContentHash' ]=$this->EmptyExec->ContentHash ;
+      $this->SaveCallTo();
+      $this->Exec_Finish();
     }
     
     Function CleanResult()
     {
-      if(!$this->NeedOptimize())
-        Parent::CleanResult();
+      Parent::CleanResult();
     }
     
-    Protected Function DoExecute()
+    Function GetListChanged()
     {
-      if(!$this->NeedOptimize())
-      {
-        $this->Exec->DoExecute();
-        return;
-      }
-    
-      $OldExec  =$this->Exec  ;
-      $OldItems =$this->Items ;
-
-      $First=Reset($this->Items);
-      $Exec=$First['ObjAsset']->CreateExec($First['TaskPath'].'.Part');
-      $this->Exec=$Exec;
-      
-      $z=true;
-      $_CheckVars=$this->EmptyExec->AgregateCheckVars();
+      $_CheckVars=$this->CheckVars;
       if($_CheckVars===1)
       {
         $this->Log('Debug',
           'Recompile all',
           ' because $_CheckVars===1 was changed'
         );
-        $z=false;
+        return true;
       }
-      ElseIf(Is_Array($_CheckVars))
-      {
-        $CheckVars=$this->CheckVars;
-        UnSet($_CheckVars['Task.Class' ]);
-        UnSet($_CheckVars['Task.Name'  ]);
-        UnSet($_CheckVars['Task.Check' ]);
-        ForEach($_CheckVars As $k=>$v)
-          if(($CheckVars[$k]??false)!==$v)
-          {
-          //$this->Debug(['Changed', $v, $CheckVars[$k]]);
-            $this->Log('Debug',
-              'Recompile all',
-              ' because ', $k, '=>', $v,' was changed',
-              ' from ', ($CheckVars[$k]??false)
-            );
-           #$this->Debug([
-           #  'Recompile all because key was changed',
-           #  'Key'=>$k,
-           #  'From'=>($CheckVars[$k]??false),
-           #  'To'=>$v,
-           #  'All'=>$CheckVars
-           #]);
-            $z=false;
-          //break;
-          }
-      }
-      Else
+      If(!Is_Array($_CheckVars))
       {
         $this->Log('Fatal', 'What is it: ', $_CheckVars);
-        $z=false;
+        return true;
       }
-      if($z)
-      {  
-        $Items=$this->Items;
-        ForEach($Items As $k=>$Item)
-        {
-          if(!$Item['ObjAsset']->Exists())
-          {
-            $this->Log('Debug',
-              'Recompile ', $Item['SrcAsset']->GetLocalPath(),
-              ' because ',$Item['ObjAsset']->GetLocalPath(), ' is not exists'
-            );
-            Continue;
-          }
-          if(!$this->Cache_CheckFile($Item['SrcAsset']))
-          {
-            $this->Log('Log',
-              'Recompile ', $Item['SrcAsset']->GetLocalPath(),
-              ' because it was changed'
-            );
-            Continue;
-          }
-          $z=false;
-          ForEach($Item['Headers'] As $Header)
-            if(!$this->Cache_CheckFile($Header))
-            {
-              $this->Log('Log',
-                'Recompile ', $Item['SrcAsset']->GetLocalPath(),
-                ' because ', $Header->GetLocalPath(), ' was changed'
-              );
-              $z=true;
-              break;
-            }
-          if($z)
-            Continue;
-          UnSet($Items[$k]);
-        }
-        $this->Items =$Items ;
+
+      $Items=$this->Items;
+      if(Count($Items)==1)
+        return true;
+      $IsAll=true;
+      ForEach($Items As $k=>$Item)
+      {
+        if($this->AssetWasChanged($Item['ObjAsset'])) Continue;
+        if($this->AssetWasChanged($Item['SrcAsset'])) Continue;
+        
+        UnSet($Items[$k]);
+        $IsAll=false;
       }
+      return $IsAll?: $Items;
+    }
+    
+    Protected Function DoExecute()
+    {
+      if(Count($this->Items)==1)
+        return Parent::DoExecute();
+      else
+      {
+        $this->Log('Fatal', 'Unsupported TODO the next');
+        return;
+      }
+      
+      // TODO:
+      $ListChanged=$this->GetListChanged();
+      if($ListChanged===true) // All
+        return Parent::DoExecute();
+      
+      $OldItems     =$this->Items     ;
+      $OldCachePath =$this->CachePath ;
+
+      $this->CachePath.='.Part';
+    //$this->CachePath.='.Main';
+    
+      $this->Items=$ListChanged;
+    
       ForEach($this->Items As $Item)
         $Item['ObjAsset']->Remove();
       
-      $this->Compiler->PrepareExec($Exec);
-      $this->MakeCompile();
-      $Exec->SaveCallTo();
-      $Exec->Finish();
-      $Exec->DoExecute();
+      $this->Exec_Clear();
       
-      $this->Exec  =$OldExec  ;
-      $this->Items =$OldItems ;
+      $this->Compiler->PrepareExec($this);
+      $this->MakeCompile();
+      
+      $this->SaveCallTo();
+      $this->Exec_Finish();
+
+      $this->Items     =$OldItems     ;
+      $this->CachePath =$OldCachePath ;
+      
+      Parent::DoExecute();
     }
-    
   };
 ?>

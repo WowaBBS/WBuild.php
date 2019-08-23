@@ -9,6 +9,28 @@
       return BaseName($this->GetFullPath());
     }
     
+    Function MakeTaskName($Add='')
+    {
+      return
+        ($this->IsExternalModule() ?'Ext '  :'').
+        ($this->IsDebug   ()? 'Debug'   .' ':'').
+        ($this->IsStatic  ()? 'Static'  .' ':'').
+        ($this->IsRelease ()? 'Release' .' ':'').
+         $this->GetModule()->FullName.': '.
+        ($Add!==''? $Add.' ':'').
+         $this->GetFileName()
+      ;
+    }
+    
+    Function CreateExec(Array $Args)
+    {
+      $Args['Task_Asset']=$this;
+      if(!IsSet($Args['CachePath']))
+        $this->Log('Fatal', 'CachePath is not defined');
+      $Res=$this->Create_Object('/Builder/Task/Exec', $Args);
+      return $Res;
+    }
+    
     Function GetDirFullPath()
     {
       return DirName($this->GetFullPath());
@@ -85,5 +107,45 @@
         $this->GetFileName(),
       ];
     }
+  //****************************************************************
+  // Lazy Depends
+
+    Final Function CheckLazyDependsArgs(Array $Args)
+    {
+      $Res=[];
+      $this->_CheckLazyDepsArgs($Res, $Args);
+      if($Res===[])
+        return true;
+
+      $Log=$this->Log('Fatal', 'LazyDepends havn\'t arguments:');
+      ForEach($Res As $Item)
+        if(Is_Array($Item))
+          $Log('  ', ...$Item);
+        else
+          $Log('  ', $Item);
+      $Log->Done();
+      
+      return False;
+    }
+    
+    Final Function GetLazyDepends(Array $Args)
+    {
+      if(!$this->CheckLazyDependsArgs($Args))
+        return [];
+      $Res=[];
+      $this->_GetLazyDeps($Res, $Args);
+      return $Res;
+    }
+
+    Protected Function _CheckLazyDepsArgs(Array &$Res, Array $Args)
+    {
+      // TODO: Checker
+    }
+    
+    Protected Function _GetLazyDeps(Array &$Res, Array $Args)
+    {
+    }
+  //****************************************************************
+  
   };
 ?>

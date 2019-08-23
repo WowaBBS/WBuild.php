@@ -11,10 +11,6 @@
     
     Function GetCompilerIdHash() { return $this->Path; }
     
-    Function _Prepare($Exec)
-    {
-    }
-
     Function GetPchFile    ($Name) { return       $Name.'.gch' ; }
     Function GetObjFile    ($Name) { return       $Name.'.o'   ; }
     Function GetExeFile    ($Name) { return       $Name.'.exe' ; }
@@ -29,9 +25,9 @@
     Function Exec_GPP ($Exec, $Params) { $Exec->Exec($this->Path.'/bin/g++',$Params); }
     Function Exec_Ar  ($Exec, $Params) { $Exec->Exec($this->Path.'/bin/ar' ,$Params); }
    
-    Protected Function CreateTaskCompile(Array $Args)
+    Protected Function _CreateCompiler(Array $Args)
     {
-      return $this->Create_Object('/Builder/Compiler/CPP/GCC/Task/Compile', $Args);
+      return $this->Create_Object('/Builder/Compiler/CPP/GCC/Compiler', $Args);
     }
     
   //$Args['Exec'    ]=$this->Create_Exec();

@@ -1,0 +1,119 @@
+<?
+  $Loader->Parent_Class('/Object');
+
+  Abstract Class C_Builder_Compiler_CPP_Base_Compiler extends C_Object
+  {
+    Protected Function _Cloneable() { return true; }
+    
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+    }
+
+    Final Protected Function CreateTaskCompile(Array $Args)
+    {
+      $First=Reset($Args['Items']);
+      $Args['CachePath'  ]=$First['TaskPath'];
+      $Args['Task_Asset' ]=$First['ObjAsset'];
+      $Args['Task_Name'  ]=$First['SrcAsset']->MakeTaskName($Args['Task_Name_Add']?? '');
+      return $this->_CreateTaskCompile($Args);
+    }
+    
+    Abstract Protected Function _CreateTaskCompile(Array $Args);
+    
+    Abstract Protected Function CanGroupByDir();
+    Function IsParallels():bool { return true;}
+    Function IsSupportPch():bool { return true;}
+    
+    Final Function Compile($Args)
+    {
+      if(IsSet($Args['DepUsing'     ])) $Args['DepUsing'     ]= False;
+      if(IsSet($Args['Dir'          ])) $Args['Dir'          ]= False ; //$ObjAsset->GetDirFullPath()
+      if(IsSet($Args['PchType'      ])) $Args['PchType'      ]='NoUse';
+      if(IsSet($Args['Pch'          ])) $Args['Pch'          ]= False ;
+      if(IsSet($Args['PchAsset'     ])) $Args['PchAsset'     ]= Null;
+      if(IsSet($Args['ForceInclude' ])) $Args['ForceInclude' ]= [];
+     #if(IsSet($Args['Libs'         ])) $Args['Libs'         ]= []; // TODO: Remove?
+      if(IsSet($Args['Disabled'     ])) $Args['Disabled'     ]= false;
+
+      $FileDepends=[];
+     #ForEach($Args['Objects'] As $Item)
+     #  $FileDepends[$Item->Object_Id]=$Item;
+    # ForEach($Args['Libs'] As $Item)
+    #   $FileDepends[$Item->Object_Id]=$Item;
+      if($Args['DepUsing'])
+        ForEach($Args['Using']As $Item)
+          $Item->UseForObj($FileDepends);
+      if($FileDepends)
+        ForEach($Args['Items'] As $Item)
+        {
+          $Item['ObjAsset']->AddFileDepends($FileDepends);
+  //TODO: $Item['ObjAsset']->AddFileDepends($Item['SrcAsset']->GetFileDepends()); // Dll and Libs
+        }
+      
+      $List=$this->Split($Args);
+      ForEach($List As $Item)
+        $this->CreateTaskCompile($Item);
+    }
+    
+    Protected Function Split($Args, Array $Res=[])
+    {
+      if($this->IsSupportPch())
+      if($Pch=$Args['Outer']->GetLastAsset('Cpp/Pch'))
+        if($StdAfx=$Pch->ExtractPch($Args))
+        {
+          $Args['Pch'     ]=$Pch;
+          $Task=$Args;
+          $Task['Items'   ]=$StdAfx;
+          $Task['PchType' ]='Create';
+          $Args['PchType' ]='Use';
+          $Args['PchAsset']=$StdAfx[0]['ObjAsset'];
+          
+          $Res[]=$Task;
+          
+          if($Pch->IsForce())
+            $Args['ForceInclude']=
+              [$PchHeader->GetKey()=>$Pch->GetHeaderAsset()]+
+              $Args['ForceInclude'];
+        }
+    //***
+      $c=count($Args['Items']);
+      if(!$c) return [];
+      $IsParallels=$this->IsParallels();
+      $GroupByDir=$c>1 && $this->CanGroupByDir();
+      if($IsParallels || !$GroupByDir)
+      {
+        ForEach($Args['Items']As $Item)
+        {
+          $Task=$Args;
+          $Task['Items']=[$Item];
+          $Res[]=$Task;
+        }
+        return $Res; //TODO: Added because was bug of duplicates tasks with the same bat file
+        $Args['Disabled']=true;
+      }
+      if($GroupByDir)
+      {
+        $Groups=[];
+        ForEach($Args['Items']As $Item)
+        {
+          $GPath=$Item['ObjAsset']->GetDirFullPath();
+          if(!IsSet($Groups[$GPath]))
+            $Groups[$GPath]=[$Item];
+          else
+            $Groups[$GPath][]=$Item;
+        }
+        ForEach($Groups As $GPath=>$GItems)
+        {
+          $Task=$Args;
+          $Task['Dir'   ]=$GPath  ; //$ObjAsset->GetDirFullPath();
+          $Task['Items' ]=$GItems ;
+          $Task['Task_Name_Add' ]='.Dir';
+          $Res[]=$Task;
+        }
+      //$this->Remove=true;
+      }
+      Return $Res;
+    }
+  };
+?>

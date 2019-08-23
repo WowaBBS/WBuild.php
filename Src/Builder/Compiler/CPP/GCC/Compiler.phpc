@@ -1,0 +1,12 @@
+<?
+  $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Compiler');
+
+  class C_Builder_Compiler_CPP_Base_Compiler extends C_Builder_Compiler_CPP_Base_Compiler
+  {
+    Protected Function _CreateTaskCompile(Array $Args)
+    {
+      return $Args['Outer']->Create_Object('/Builder/Compiler/CPP/GCC/Task/Compile', $Args);
+    }
+    
+  };
+?>

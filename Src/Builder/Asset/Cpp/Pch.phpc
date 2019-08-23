@@ -36,13 +36,13 @@
       return $this->Force;
     }
     
-    Function Prepare($Task)
+    Function Prepare(Array $TaskArgs)
     {
-      $Outer     =$Task->Outer     ;
-      $Compiler  =$Task->Compiler  ;
-      $Includes  =$Task->Includes  ; // For search StdAfx.h
-      $EnumCache =$Task->EnumCache ;
-      $OutPath   =$Task->OutPath   ;
+      $Outer     =$TaskArgs['Outer'     ];
+      $Compiler  =$TaskArgs['Compiler'  ];
+      $Includes  =$TaskArgs['Includes'  ]; // For search StdAfx.h
+      $EnumCache =$TaskArgs['EnumCache' ];
+      $OutPath   =$TaskArgs['OutPath'   ];
       
       $HeaderName=$this->HeaderName;
       ForEach(Array_Reverse($Includes) As $Include)
@@ -58,17 +58,17 @@
       return false;
     }
     
-    Function ExtractPch($Task)
+    Function ExtractPch(Array &$TaskArgs)
     {
       if(!$this->bInited)
-        if(!$this->Prepare($Task))
+        if(!$this->Prepare($TaskArgs))
           return [];
-      // TODO: Init by $Task
+      // TODO: Init by $TaskArgs
       $FileName=$this->CppName;
     //$this->Log('Debug', 'Orig: ', $FileName);
       $Res=[];
       $Remove=[];
-      ForEach($Task->Items As $k=>$Item)
+      ForEach($TaskArgs['Items']As $k=>$Item)
       {
         $SrcAsset=$Item['SrcAsset'];
         $SrcName=$SrcAsset->GetFileName();
@@ -84,9 +84,9 @@
         }
       }
       ForEach($Remove As $k)
-        UnSet($Task->Items[$k]);
+        UnSet($TaskArgs['Items'][$k]);
       
-     #ForEach($Task->Items As $k=>$Item)
+     #ForEach($TaskArgs['Items']As $k=>$Item)
      #{
      #  $SrcAsset=$Item['SrcAsset'];
      #  $SrcName=$SrcAsset->GetFileName();

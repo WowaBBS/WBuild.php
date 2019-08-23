@@ -8,6 +8,7 @@
   
     Function GetInfo()
     {
+      $NoLog=$this->IsExternalModule();
       $Hash=$this->GetHash();
       if($this->Info && $this->Info['Hash']===$Hash)
         return $this->Info;
@@ -16,7 +17,7 @@
 
       if($this->Parent)
       {
-        $Key=$this->Parent->GetFullPath();                        
+        $Key=$this->Parent->GetFullPath();
         $Cache=$this->GetModule()->EnumCache->AllocEnumDir($Key, 'Cpp', ['NoZero'=>true, 'Pad'=>1]);
         $Storage=$Cache->GetStorage($this->GetLocalPath().'.Info');
       }
@@ -35,12 +36,14 @@
          $Vars['Hash'    ]===$Hash    )
       {
         $this->Info=$Vars;
-        ForEach($Vars['Warnings'] As $Warning)
-          $this->Log('Warning', ...$Warning[1])->File($this->GetFullPath(), $Warning[0]);
+        if(!$NoLog)
+          ForEach($Vars['Warnings']As $Warning)
+            $this->Log('Warning', ...$Warning[1])->File($this->GetFullPath(), $Warning[0]);
         return $this->Info;
       }
       
       $Src=$this->Create_Object('/Builder/Compiler/CPP/Analyzer/Cpp');
+      $Src->NoLog=$NoLog;
       $Src->Process_FilePath($this->GetFullPath());
     //$Src->Debug([
     //  'Warnings'=>$Src->Warnings,
@@ -65,45 +68,67 @@
     Var $CacheHeader=[];
     Var $RecursiveIncluding=false;
   
-    Function _GetHeaders(Int $Id, $Includes):Array
+    Function _GetHeaders(Int $Id, $Includes, $Logger, $Stack):Array
     {
+      $NoLog=$this->IsExternalModule();
       if($this->RecurseIncluding)
       {
-        $this->Log('Error', 'Recursive including header ', $this->GetLocalPath());
+        if(!$NoLog)
+        {
+          $Stack2=Array_Reverse($Stack); //, true);
+          $Logger->Log('Error', 'Recursive including header ', $this->GetLocalPath());
+          $File=$this->GetFullPath();
+          ForEach($Stack2 As $k=>$Item)
+          {
+            $Logger->Log('Note', $k)->File($Item);
+            if($Item['File']===$File)
+              break;
+          }
+        }
         return [];
       }
       if(IsSet($this->CacheHeader[$Id]))
         return $this->CacheHeader[$Id];
+      $SearchArgs=[
+        'InFile'=>[
+          'File'=>$this->GetFullPath(),
+          'Line'=>false,
+        ],
+      ];
       $this->RecurseIncluding=true;
       $Res=[];
      #ForEach($Force As $Item)
-     #  $Res+=$Item->_GetHeaders($Id, $Includes);
+     #  $Res+=$Item->_GetHeaders($Id, $Includes, $Logger, $Stack);
       $Dir=DirName($this->GetLocalPath());
       $Dir=$Dir==='.'? '':$Dir.'/';
       $Parent=$this->Parent;
-      ForEach($this->GetIncludes() As $I=>$Tmp)
+      ForEach($this->GetIncludes() As $I=>$Line)
       {
+        $SearchArgs['InFile']['Line']=(int)$Line;
         $Asset=null;
         If($Parent)
-          $Asset=$Parent->SearchAsset($Dir.$I, 'Cpp/Header');
+          $Asset=$Parent->SearchAsset($Dir.$I, 'Cpp/Header', $SearchArgs);
         If(!$Asset)
           ForEach($Includes As $Path)
-            If($Asset=$Path->SearchAsset($I, 'Cpp/Header'))
+            If($Asset=$Path->SearchAsset($I, 'Cpp/Header', $SearchArgs))
               Break;
         If($Asset)
         {
           If(!IsSet($Res[$Asset->GetKey()]))
           {
             $Res[$Asset->GetKey()]=$Asset;
-            $Res+=$Asset->_GetHeaders($Id, $Includes);
+            $Stack2=$Stack;
+            $Stack2[]=$SearchArgs['InFile'];
+            $Res+=$Asset->_GetHeaders($Id, $Includes, $Logger, $Stack2);
           }
         //Else
-        //  $this->Log('Error', 'Recur')
+        //  $Logger->Log('Error', 'Recur');
         }
         ElseIf(IsSet($this->NotFound[$I]))
         {
           $this->NotFound[$I]=true;
-          $this->Log('Warning', 'Include ',$I, ' not found from ', $this->GetLocalPath());
+          if(!$NoLog)
+            $Logger->Log('Warning', 'Include ',$I, ' not found from ', $this->GetLocalPath());
         }
       }
       $this->CacheHeader[$Id]=$Res;
@@ -111,10 +136,30 @@
       return $Res;
     }
     
-    Function GetHeaders($Id, $Includes)
+    Function GetHeaders($Id, $Includes, $Logger)
     {
-      return $this->_GetHeaders($Id, $Includes);
+      if(!$Logger) $Logger=$this;
+      return $this->_GetHeaders($Id, $Includes, $Logger, []);
     }
+
+    Protected Function _CheckLazyDepsArgs(Array &$Res, Array $Args)
+    {
+      $Id       =$Args['Cpp/Id'       ]?? False; // TODO: Move into parent class
+      $Includes =$Args['Cpp/Includes' ]?? False;
+      
+      if(!Is_Integer ($Id       )) $Res[]='Cpp/Id'       ;
+      if(!Is_Array   ($Includes )) $Res[]='Cpp/Includes' ;
+    }
+    
+    Protected Function _GetLazyDeps(Array &$Res, Array $Args)
+    {
+      $Id       =$Args['Cpp/Id'       ]?? False; // TODO: Move into parent class
+      $Includes =$Args['Cpp/Includes' ]?? False;
+      $Logger   =$Args['Logger'       ]?? null;
+      
+      $Res+=$this->GetHeaders($Id, $Includes, $Logger);
+    }
+
   //****************************************************************
   // Debug
 

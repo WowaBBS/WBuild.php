@@ -139,23 +139,6 @@
       );
       return null;
     }
-  /*
-    Function Prepare($Context)
-    {
-      $Res=[];
-      ForEach($Assets->Public As $List)
-        ForEach($List As $Item)
-          $Item->GetPrepareTasks($Res);
-    }
- 
-    Function Make($Context)
-    {
-      $Res=[];
-      ForEach($Assets->Public As $List)
-        ForEach($List As $Item)
-          $Item->GetMakeTasks($Res);
-    }
-  */
  
     Protected Function _Done()
     {

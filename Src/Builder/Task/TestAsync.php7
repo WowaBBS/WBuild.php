@@ -1,0 +1,53 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  
+  $Manager=$Loader->Create_Object('/Builder/Task/Manager');
+  $Manager->Cache=$Loader->Create_Object('/Cache/Manager', ['.Build/']);
+  
+  Function Create($Manager, $Task_Name, $DependsTasks=[], $NumThreads=1)
+  {
+    $Task=$Manager->Create('Exec', [
+      'Cache'      =>$Manager->Cache,
+      'Task_Name' =>$Task_Name,
+      'CachePath'  =>$Task_Name,
+    ]);
+    $Task->DependsTasks(... $DependsTasks);
+    $Task->Exec('AsyncTask.bat');
+    $Task->SaveCallTo('.Build/'.$Task_Name);
+    $Task->AddOutFile('.Build/'.$Task_Name);
+    $Task->AddErrFile('.Build/'.$Task_Name);
+    $Task->NumThreads=$NumThreads;
+   #$Task->NumThreads=0;
+    $Task->Env['Task_Id']=$Task_Name;
+   #$Task->Exec('D:\EP\main\Builder\WBuild\Builder\Task\AsyncTask.bat');
+    return $Task;
+  }
+
+  $T1  =Create($Manager ,'T1'  ,[], 4);
+
+  $C11 =Create($Manager ,'C11' ,[$T1]);
+  $C12 =Create($Manager ,'C12' ,[$T1]);
+  $C13 =Create($Manager ,'C13' ,[$T1]);
+  $C14 =Create($Manager ,'C14' ,[   ]);
+  $C15 =Create($Manager ,'C15' ,[   ]);
+  $C16 =Create($Manager ,'C16' ,[   ]);
+  $B1  =Create($Manager ,'B1'  ,[$C11, $C12, $C13, $C14, $C15, $C16], 4);
+  
+  $C13->GetDependsAssets()->NoEmpty=true;
+
+  $C21 =Create($Manager ,'C21' ,[   ]);
+  $C22 =Create($Manager ,'C22' ,[$B1]);
+  $C23 =Create($Manager ,'C23' ,[$B1]);
+  $C24 =Create($Manager ,'C24' ,[$B1]);
+  $C25 =Create($Manager ,'C25' ,[$B1]);
+  $C26 =Create($Manager ,'C26' ,[   ]);
+  $B2  =Create($Manager ,'B2'  ,[$C21, $C22, $C23, $C24, $C25, $C26], 4);
+  
+ #$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('debug.log');
+ #$Deb->Debug($Manager);
+  
+  $Manager->Log('Log', 'Threads_Maximum=', $Manager->Threads_Maximum);
+  $Manager->Execute();
+  
+  echo 'All tasks were done',"\n";
+?>

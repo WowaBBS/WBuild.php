@@ -43,6 +43,11 @@
     //$Path=RealPath($Path); $Path=StrTr($Path, '\\', '/');
       $PathLen =StrLen($Path)+1;
       
+      $Performance=$this->Manager->Performance->Start([
+        'Logger' =>$this,
+        'Name'   =>'LoadModules',
+      //'Title'  =>,
+      ]);
       $Stack   =[$Path];
       While(IsSet($Stack[0]))
       {
@@ -50,7 +55,7 @@
         if(Is_File($Dir.'/.module.php'))
         {
           $FullName=SubStr($Dir, $PathLen);
-          $this->Log('Log', 'Module ', $FullName);
+          $this->Log('Log', '  Module ', $FullName);
           
           $Pos = StrRPos($FullName, '/');
           if($Pos===False)
@@ -102,6 +107,7 @@
         }
         CloseDir($Handle);
       }
+      $Performance->Finish();
     }
     
     Function Get($Name)

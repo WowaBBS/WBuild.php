@@ -3,7 +3,7 @@
   
   Class C_Builder_Compiler_CPP_Analyzer_Cpp Extends C_Builder_Compiler_CPP_Analyzer_Text
   {
-    Static $Version=3;
+    Static $Version=4;
   
     var $Include_Replace       = !true ;
     
@@ -37,16 +37,16 @@
     Var $Includes=[];
     Var $HasForm=false;
     
-    Function AddInclude($Include)
+    Function AddInclude($Include, $Line)
     {
       $Type=$Include[0].$Include[StrLen($Include)-1];
       $Path=SubStr($Include, 1, -1);
       If(!IsSet($this->Includes[$Path]))
-        $this->Includes[$Path]=0;
+        $this->Includes[$Path]=$Line.','.$Type;
       Switch($Type)
       {
-      Case '<>' : $this->Includes[$Path]|=1; break;
-      Case '""' : $this->Includes[$Path]|=2; break;
+      Case '<>' : break;
+      Case '""' : break;
       Default   : $this->Warning(-1, 'Unknown #include ', $Include);
       }
     }
@@ -297,7 +297,7 @@
               case 'include' :
                 if($m3!=='')
                   $this->Warning($i, 'Stange include');
-                $this->AddInclude($m2);
+                $this->AddInclude($m2, $i);
               break;
               case 'undef'   : break;
               case 'warning' :

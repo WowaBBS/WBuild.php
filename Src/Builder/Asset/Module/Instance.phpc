@@ -8,6 +8,7 @@
     Var $Modules   ;
     Var $Manager   ;
     Var $EnumCache ;
+    Var $IsExternalModule =null;
     
     Protected Function _Init(Array $Args)
     {
@@ -43,26 +44,36 @@
     
     Function IsModuleInstance() { return true; }
     
-    Function Make()
+    Function Tasks_Make()
     {
       $Res=[];
-      $Depends=[];
-      ForEach($this->Public As $List)
-        ForEach($List As $Item)
-          $Item->GetMakeTasks($Res, $Depends);
+      ForEach($this->Public As $Assets)
+        ForEach($Assets As $Asset)
+          $Asset->GetTasks($Res);
       return $Res;
     }
     
     Function Build()
     {
-      $Tasks=$this->Make();
       $Manager=$this->Create_Object('/Builder/Task/Manager');
-      ForEach($Tasks As $k=>$v)
-        $Manager->_Add($v);
-      ForEach($Tasks As $k=>$v)
-        $v->Execute();
+      $Performance=$this->Performance([
+        'Name'   =>'CollectingTasks',
+        'Title'  =>$this->GetModule()->FullName,
+      ]);
+      $Tasks=$this->Tasks_Make();
+      $Log=$this->Log('Log', 'Added tasks:');
+      ForEach($Tasks As $k=>$Task)
+        $Log('  ',$Task->Task_Name);
+      $Log->Done();
+      ForEach($Tasks As $k=>$Task)
+        $Manager->_Add($Task);
+      $Performance->Finish();
+      $Manager->Execute();
       $Manager->Done();
     }
+    
+    Function SetExternalModule($v) { if($this->IsExternalModule!==false) $this->IsExternalModule=$v; }
+    Function IsExternalModule() { return $this->IsExternalModule===true; }
 
     Function GetModuleInstance()
     {

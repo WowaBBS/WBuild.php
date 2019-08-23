@@ -37,15 +37,19 @@
         $I=$Outer->GetModuleInstance();
         $OutPath=$I->EnumCache->FullPath;
         
-        $Exec=$this->CreateExec($OutPath.'Task/Copy/'.$ResNick);
+        $Exec=$Dest->CreateExec([
+          'CachePath'     =>$OutPath.'Task/Copy/'.$ResNick,
+          'Task_Name_Add' =>'Copy',
+        ]);
         
-        $Exec->CheckInput($i);
+        $Exec->RemoveResultOnFailed=true;
+        $Exec->AddCheckInput($i);
         $Exec->MkDir($Dest);
         $Exec->Copy($i, $Dest);
 
-        $Exec->CheckResultFile($Dest);
+        $Exec->AddCheckResultFile($Dest);
         $Exec->SaveCallTo();
-        $Exec->Finish();
+        $Exec->Exec_Finish();
       }
       
       if($TargetDir)

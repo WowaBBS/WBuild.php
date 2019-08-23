@@ -148,10 +148,9 @@
     Function DefineDLLImport () { return '__declspec(dllimport)'; }
   //Function DefineDLLProxy  () { return '__declspec(dllimport dllexport)'; }
 
-    Protected Function CreateTaskCompile(Array $Args)
+    Protected Function _CreateCompiler(Array $Args)
     {
-      $Args['Compiler']=$this;
-      return $Args['Outer']->Create_Object('/Builder/Compiler/CPP/VC/Task/Compile', $Args);
+      return $this->Create_Object('/Builder/Compiler/CPP/VC/Compiler', $Args);
     }
     
     Final Function _BuildRc(Array $Args)
@@ -318,6 +317,7 @@
       $FileParams=$Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
       
+      $Exec->NumThreads=4; // TODO:
       $ExecLink=$this->Exec_Link($Exec, $Params);
 
       if($Manifests)
@@ -343,7 +343,7 @@
       }
     
       if($PdbAsset)
-        $Exec->CheckResultFile($PdbAsset); // TODO: Lazy check???
+        $Exec->AddCheckResultFile($PdbAsset); // TODO: Lazy check???
     }
 
   //$Args['Exec'     ]=$this->Create_Exec();

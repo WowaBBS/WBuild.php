@@ -24,7 +24,7 @@
       $OutPath=$Compiler->CreateOutPath($Outer);
       $Compiler->BuildRc([
         'Outer'    =>$Outer,
-        'Exec'     =>$Outer->CreateExec($OutPath.'Task/Rc/'.$ResNick),
+        'Exec'     =>$RcAsset->CreateExec(['CachePath'=>$OutPath.'Task/Rc/'.$ResNick]),
         'RcAsset'  =>$RcAsset,
         'ResAsset' =>$Outer->CreateAsset('Cpp/Res', ['Path'=>$OutPath.'/Rc/'.$ResNick.'.res', '>Create'=>1]),
         'Includes' =>$Outer->GetAssetsR ('Cpp/Include'),

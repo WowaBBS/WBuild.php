@@ -66,8 +66,11 @@
       return $Parent;
     }
     
-    Function Search($Path, $bIsFile=true)
+    Function SearchNode($Path, $Args=[])
     {
+      $bIsFile =$Args['IsFile']??true;
+      $Logger  =$Args['Logger']??$this;
+      $InFile  =$Args['InFile']??[false];
     //$this->Log('Debug', 'Search:',$Path,' ',$this->GetFullPath());
       $Res=$this->GetSubPath($Path);
       $Res=NormPath($Res);
@@ -76,23 +79,23 @@
       {
         $Real=StrTr(RealPath($Res), '\\', '/');
         if(StrLen($Real)!==StrLen($Res))
-          $this->Log('Fatal', 'Different paths:', "\n",
+          $Logger->Log('Fatal', 'Different paths:', "\n",
             '   Used=',$Res  ,"\n",
             '   Real=',$Real
-          );
+          )->File($InFile);
         elseif($Real!==$Res)
         {
           $RealPath=SubStr($Real, -StrLen($Path));
           if($RealPath===$Path)
-            $this->Log('Warning', '??? Different paths:', "\n",
+            $Logger->Log('Warning', '??? Different paths:', "\n",
               '   Used=',$Res  ,"\n",
               '   Real=',$Real
-            );
+            )->File($InFile);
           else
-            $this->Log('Error', 'Different paths:', "\n",
+            $Logger->Log('Error', 'Different paths:', "\n",
               '   Used=',$Path,"\n",
               '   Real=',$RealPath
-            );
+            )->File($InFile);
         }
           
         return $Real;
@@ -114,13 +117,17 @@
       return $Res;
     }
     
-    Function _SearchAsset($Path, $Type, $bIsFile=true, $Param=[], Array $Args=[])
+    Function _SearchAsset($Path, $Type, Array $Args=[])
     {
-      $Res=$this->Search($Path, $bIsFile);
+      $Res=$this->SearchNode($Path, $Args);
       if($Res==='') return null;
+      
+      $Logger =$Args['Logger']??$this;
+      $InFile =$Args['InFile']??[false];
+      
       $Base=$this->GetFullPath();
       if(false)
-        $this->Log('Log', '_SearchAsset',"\n",
+        $Logger->Log('Log', '_SearchAsset',"\n",
           'Current: ', $Base, "\n",
           'Search: ', $Path, "\n",
           'Res: ', $Res
@@ -129,33 +136,33 @@
       if($base!=$Base)
       {
         $Path=NormPath($Path);
-      //$this->Log('Fatal', 'Different base path',"\n",
-        $this->Log('Error', 'Different base path',"\n",
+      //$Logger->Log('Fatal', 'Different base path',"\n",
+        $Logger->Log('Error', 'Different base path',"\n",
           'For file: ', $Path, "\n",
           'Actual: ', $base, "\n",
           'Excepted: ', $Base
-        );
+        )->File($InFile);
       //$Res=$Path; //??
       }
       else
       {
         if(SubStr($Res, StrLen($Base), 1)!=='/')
-          $this->Log('Fatal', 'Unreachable');
+          $Logger->Log('Fatal', 'Unreachable')->File($InFile);
         $Res=SubStr($Res, StrLen($Base)+1);
       }
     //$this->Log('Debug', 'Res=', $Res);
-      return $this->_CreateSubAsset($Res, $Type, $Param, $Args);
+      return $this->_CreateSubAsset($Res, $Type, $Args['Create']['Param']??[], $Args['Create']['Args']??[]);
     }
     
   //Function GetDefaultAssetItemInfo() { return False; }
     
-    Function SearchAsset($Path, $Type, $bIsFile=true)
+    Function SearchAsset($Path, $Type, $Args=[])
     {
-      return $this->SubAssets[$Path][$Type] ?? $this->_SearchAsset($Path, $Type, $bIsFile);
+      return $this->SubAssets[$Path][$Type] ?? $this->_SearchAsset($Path, $Type, $Args);
     }
     
-  //Function SearchDir  ($Path) { return Search($Path, false ); }
-  //Function SearchFile ($Path) { return Search($Path, true  ); }
+  //Function SearchDir  ($Path) { return SearchNode($Path, ['IsFile'=>false ]); }
+  //Function SearchFile ($Path) { return SearchNode($Path, ['IsFile'=>true  ]); }
     
     Protected Function _IsFile() { return false; }
     
@@ -180,7 +187,13 @@
       $Args=[];
       ForEach($Files As $File)
       {
-        $Asset=$this->_CreateSubAsset($File->GetLocalPath (), $AssetType, $Param, $Args);
+        $Path=$File->GetLocalPath();
+        if(StrLen($Path)==0 || $Path[0]!='/')
+          $this->Log('Error' ,'TODO: Some times ago it gave path with / but now without it')
+            ('If you changed this functional please remove this log and do it right')->File($Path);
+        else
+          $Path=SubStr($Path, 1);
+        $Asset=$this->_CreateSubAsset($Path, $AssetType, $Param, $Args);
         $Res[$Asset->GetKey()]=$Asset;
       }
       return $Res;

@@ -67,7 +67,7 @@
       $Resources->ResPrivate=$ResXAsset->ResPrivate;
       $Compiler->BuildResX([
         'Outer'     =>$Outer,
-        'Exec'      =>$Outer->CreateExec($OutPath.'Task/ResX/'.$ResNick),
+        'Exec'      =>$ResXAsset->CreateExec(['CachePath'=>$OutPath.'Task/ResX/'.$ResNick]),
         'Using'     =>$Outer->GetAssets    ('Cpp/Using'     ),
         'ResXAsset' =>$ResXAsset,
         'Resources' =>$Resources,

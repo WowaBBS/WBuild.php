@@ -1,0 +1,184 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  Class C_Builder_Task_Deps_List extends C_Object
+  {
+    Var $List     =[];
+  //Var $LazyDeps =[];
+    Var $NoEmpty  =false; // Only for test
+
+    Protected function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+    }
+    
+    Function IsEmpty() { return count($this->List)==0 && !$this->NoEmpty; }
+    
+    Function AddAsset($Asset, Array $Args=[])
+    {
+      $Key=$Asset->GetKey();
+      if(IsSet($this->List[$Key]))
+      {
+        if(!($Args['SkipDups']??false))
+          $this->Log($Asset->IsNoSearch()? 'Warning':'Error', 'Asset ', $Key, ' already exists in Task Depens List');
+        return $this->List[$Key];
+      }
+      $Args['Asset']=$Asset;
+      $Item=$this->Create_Object('/Builder/Task/Deps/Asset', $Args);
+      $this->List[$Key]=$Item;
+      return $Item;
+    }
+    
+    Function AddInput($Asset, Array $Args=[])
+    {
+      // TODO: It't disabled for late binding in GetMakeTasks
+    //if(IsSet($Asset->Tasks))
+    //  ForEach($Asset->Tasks As $Task)
+    //    $this->DependsTasks($Task);
+      $Args['CheckInput']=!$Asset->IsNoSearch();
+      $this->AddAsset($Asset, $Args);
+      return $Res;
+    }
+    
+    Function AddInputs(Array $List, Array $Args=[])
+    {
+      ForEach($List As $Asset)
+        $this->AddInput($Asset, $Args);
+    }
+
+    Function AddResult($Asset, Array $Args=[])
+    {
+      $Res=!$Asset->IsNoSearch();
+      $Args['CheckResult' ]=true;
+      $Args['CheckHash'   ]=true;
+      $this->AddAsset($Asset, $Args);
+      return $Res;
+    }
+    
+    Function Clear()
+    {
+      ForEach($this->List As $Item)
+        $Item->ClearDepends();
+      $this->List=[];
+    }
+    
+    Function CheckInputs($Logger)
+    {
+      $Res=false;
+      ForEach($this->List As $Item)
+        if($Item->CheckInput && !$Item->Exists())
+        {
+          if($Logger)
+            $Logger->Log('Error', 'Input file not found ',$Item->GetFullPath());
+          else
+            return true;
+          $Res=true;
+        }
+      return $Res;
+    }
+    
+    Function CheckResults($Logger)
+    {
+      $Res=true;
+      ForEach($this->List As $Item)
+        if($Item->CheckResult && !$Item->Exists())
+        {
+          if($Logger)
+            $Logger->Log('Error', 'Result file not found ',$Item->GetFullPath());
+          else
+            return false;
+          $Res=false;
+        }
+      return $Res;
+    }
+    
+    Function CheckChanges(&$Res, $Old)
+    {
+      $Check=false;
+      ForEach($this->List As $Item)
+        if($Item->CheckHash)
+        {
+          $Key=$Item->GetKey();
+          $OldHash=$Old[$Key]?? '';
+          $NewHash=$Item->GetHash();
+          $Res[$Key]=$NewHash;
+          if($OldHash==$NewHash)
+            Continue;
+          $Item->OnChanged($OldHash, $NewHash);
+          $Check=true;
+        }
+      return $Check;
+    }
+    
+    Function AssetWasChanged($Asset)
+    {
+      if(!$Asset->Exists())
+        return true;
+      $Item=$this->List[$Asset->GetKey()]??False;
+      if($Item===false)
+        return true;
+      return $Item->WasChanged;
+    }
+    
+    Function LoadInputTasks($ToTask)
+    {
+      ForEach($this->List As $Item)
+        if($Item->CheckInput)
+          $Item->LoadInputTasks($ToTask);
+    }
+    
+    Function LogChanging($Logger)
+    {
+      ForEach($this->List As $Item)
+        if($Item->CheckInput || $Item->CheckResult)
+        $Item->LogChanging($Logger);
+    }
+
+    Function RemoveResult()
+    {
+      ForEach($this->List As $Item)
+        if($Item->CheckResult)
+          $Item->Remove();
+    }
+
+    Function UpdateResult()
+    {
+      ForEach($this->List As $Item)
+        if($Item->CheckResult)
+          $Item->InvalidateCache(); // TODO: On finih task
+    }
+    
+    Function AddLazyDepends($Logger)
+    {
+      $ItemArgs=[
+        'CheckInput'  => false ,
+        'CheckResult' => false ,
+        'CheckHash'   => true  ,
+        'SkipDups'    => true  ,
+      ];
+      ForEach($this->List As $Item)
+        if($Item->CheckInput)
+        {
+          $List=$Item->GetLazyDepends($Logger);
+          ForEach($List As $Asset)
+          {
+            $LazyItem=$this->AddAsset($Asset, $ItemArgs);
+            $Item->DepensOn[$LazyItem->GetKey()]=$LazyItem;
+            $LazyItem->Dependend[$Item->GetKey()]=$Item;
+          }
+        }
+    }
+
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      Parent::_Debug_Info($Res);
+      
+      $L=[];
+      ForEach($this->List As $R)
+        $L[]=$R->ToDebugInfo();
+      $Res['List']=$L;
+      
+      if($this->Outer) unset($Res['Outer']);
+    }
+  };
+?>

@@ -16,10 +16,15 @@
 
       $PathExeAsset=$Outer->CreateAsset('Bin/Path', $OutPath.'Bin');
       
+      $ExeAsset=$Outer->CreateAsset('Bin/Exe', [
+          'Path'=>$Compiler->GetExeFile($ExeName.$_d),
+          '>FileDepends'=>$Param['>FileDepends']??[],
+          '>Create'=>1,
+      ]);
       $Compiler->BuildExe([
         'Outer'     =>$Outer,
         'Name'      =>$ExeName,
-        'Exec'      =>$Outer->CreateExec($OutPath.'Task/Exe/'.$ExeName),
+        'Exec'      =>$ExeAsset->CreateExec(['CachePath'=>$OutPath.'Task/Exe/'.$ExeName, 'Performance'=>'Build']),
         'Using'     =>$Outer->GetAssets     ('Cpp/Using'     ),
         'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'       ),
         'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'       ),
@@ -27,11 +32,7 @@
         'DefAsset'  =>$Outer->ExtractAssets ('Cpp/Def'       ),
         'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
         'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
-        'ExeAsset'  =>$Outer->CreateAsset   ('Bin/Exe', [
-          'Path'=>$Compiler->GetExeFile($ExeName.$_d),
-          '>FileDepends'=>$Param['>FileDepends']??[],
-          '>Create'=>1,
-        ]),
+        'ExeAsset'  =>$ExeAsset,
       ]);
 
       $PathExeAsset->RemoveFromOuter();
