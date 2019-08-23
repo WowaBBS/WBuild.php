@@ -7,14 +7,22 @@ if (byte & 0b1000'0000)
 2)
 auto fragmentShaderSource = R"shader(
    #version 330 core
+   out vec4 FragColor;
+   flat in uint idx;
+   uniform vec4 uniColor;
 
    void main()
    {
+      FragColor = uniColor;
    }
 )shader";
 
 3)
-const char* vShader = "\
-  void main()\
-  {\
-  }";
+         const char* vShader = "\
+            in  vec2 sh_Vertex;\
+            out vec2 texCoords;\
+            void main()\
+            {\
+               texCoords.xy = sh_Vertex.xy + 0.5;\
+               gl_Position  = vec4( sh_Vertex.xy * 2.0, 0.0, 1.0 );\
+            }";

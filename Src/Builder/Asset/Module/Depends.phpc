@@ -13,8 +13,8 @@
     {
       Parent::_Init($Args);
       $this->Name =$Args['Name'      ];
-      $Context    =$Args['Context'   ]??[];
-      $IsExternal =$Args['>External' ]?? ($this->IsExternalModule()? true:null);
+      $Context    =$Args['Context'   ]?? [];
+      $IsExternal =$Args['>External' ]?? null;
       $this->IsExternal=$IsExternal;
       $I=$this->GetModuleInstance();
       $Context=$Context? $this->GetManager()->Create_Context($Context):$I->Context;
@@ -24,7 +24,9 @@
 
       if($this->Instance)
       {
-        $this->Instance->SetExternalModule($IsExternal);
+        if(!$I->IsExternalModule)
+          asdf();
+        $this->Instance->SetExternalModule($IsExternal, $this);
         // TODO: Check Debug Developing
         $this->Outer->AddFrom($this->Instance, null, IsSet($Args['Debug']['AddFrom']));
       }

@@ -1,5 +1,6 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/List');
+  $Loader->Load_Type('/Builder/Asset/Module/External');
 
   class C_Builder_Asset_Module_Instance extends C_Builder_Asset_List
   {
@@ -23,7 +24,8 @@
     //$this->Log('Debug', 'EnumCache   ', $this->Module->EnumCache   ->FullPath);
       $this->EnumCache = $this->Module->EnumCache->AllocEnumDir($Key, 'I', ['NoZero'=>true, 'Pad'=>1]); //'Instance', ['NoZero'=>true,  'Pad'=>1, 'Split'=>'_'] , ['Pad'=>1, 'NoZero'=>true]
     //$this->Log('Debug', 'EnumCacheI  ', $this->EnumCache   ->FullPath);
-      parent::_Init($Args);
+      $this->IsExternalModule=new T_Builder_Asset_Module_External($this);
+      Parent::_Init($Args);
     }
 
     Function GetDependsModule($Name)
@@ -72,14 +74,10 @@
       $Manager->Done();
     }
     
-    Function SetExternalModule($v) { if($this->IsExternalModule!==false) $this->IsExternalModule=$v; }
-    Function IsExternalModule() { return $this->IsExternalModule===true; }
+    Function SetExternalModule($v, $Instance) { $this->IsExternalModule->Add($v, $Instance); }
+    Function IsExternalModule() { return $this->IsExternalModule->Get($this); }
 
-    Function GetModuleInstance()
-    {
-      return $this;
-    }
-    
+    Function GetModuleInstance() { return $this; }
     Function GetModules () { return $this->Modules ; }
     Function GetModule  () { return $this->Module  ; }
     

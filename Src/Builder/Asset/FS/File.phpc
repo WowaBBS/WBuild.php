@@ -12,7 +12,7 @@
     Function MakeTaskName($Add='')
     {
       return
-        ($this->IsExternalModule() ?'Ext '  :'').
+      # ($this->IsExternalModule() ?'Ext '  :'').
         ($this->IsDebug   ()? 'Debug'   .' ':'').
         ($this->IsStatic  ()? 'Static'  .' ':'').
         ($this->IsRelease ()? 'Release' .' ':'').

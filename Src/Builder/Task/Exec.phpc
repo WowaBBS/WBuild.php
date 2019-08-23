@@ -233,7 +233,7 @@
         UnLink($File);
         return;
       }
-      if($this->Task_State=='Finished' && !$this->OutIsFinished)
+      if(($this->Task_State==='Finished' || $this->Task_State==='Skipped')&& !$this->OutIsFinished)
         return;
       $Out=File_Get_Contents($File);
       $Out=StrTr($Out, ["\r\n"=>"\n", "\n"=>'']);

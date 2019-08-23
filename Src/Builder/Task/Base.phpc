@@ -500,7 +500,7 @@
       }
       if($this->Task_Logger)
       {
-        $z=$this->Task_State=='Finished' && !$this->OutIsFinished;
+        $z=($this->Task_State==='Finished' || $this->Task_State==='Skipped')&& !$this->OutIsFinished;
         $this->Task_Logger->Task_Magic($z? null:$this->GetLogger());
         $this->Task_Logger->Done();
         $this->Task_Logger=null;
