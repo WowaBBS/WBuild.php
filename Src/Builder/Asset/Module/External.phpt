@@ -3,6 +3,50 @@
  
   class T_Builder_Asset_Module_External
   {
+    Var $Id    =0;
+    Var $Name  =0;
+    Var $Value =null;
+    Var $First ='>Uninited';
+    
+    Function __Construct($ModuleInstance)
+    {
+      $this->Id   =$ModuleInstance->Object_Id ;
+      $this->Name =$ModuleInstance->GetModule()->FullName;
+    }
+    
+    Function Add($v, $Owner, $ToInstance)
+    {
+      if($Owner===null)
+        $v=False;
+      if($v===null)
+        $v=$Owner->GetModuleInstance()->IsExternalModule->Get($ToInstance);
+      $ModuleName=$Owner? $Owner->GetModule()->FullName:'>Initial';
+      if($this->Value!==null)
+      {
+        if($this->Value!==$v)
+          $ToInstance->Log('Error', 'Trying to change external status for module ', $this->Name, ' from ',
+            ($this->Value? 'True':'False'), ' (Setted in ', $this->First, ')', ' to ',
+            ($v? 'True':'False'), ' (From ', $ModuleName, ')'
+          );
+        return;
+      }
+      $this->Value=$v;
+      $this->First=$ModuleName;
+    }
+    
+    Function Get($By)
+    {
+      if($this->Value===null)
+        $By->Log('Error', 'External status is not assigned for module ', $this->Name, ' required by ',$By->GetModule()->FullName);
+      return $this->Value===true;
+    }
+  };
+
+//****************************************************************
+// TODO: Remove
+
+  class T_Builder_Asset_Module_External_Smart
+  {
     Var $Id          =0;
     Var $Name        =0;
     Var $Allow       =[];
@@ -17,16 +61,18 @@
       $this->Name =$ModuleInstance->GetModule()->FullName;
     }
     
-    Function Add($v, $Owner)
+    Function Add($v, $Owner, $ToInstance)
     {
       if($this->Freezed)
       {
-        $Owner->Log('Error', 'ExternalModuleControl was freezed');
+        $ToInstance->Log('Error', 'ExternalModuleControl was freezed');
       }
+      if(!$Owner) // If root module
+        return;
       $MI=$Owner->GetModuleInstance();
       $Rec=$MI->IsExternalModule;
       if(!$Rec)
-        $Owner->Log('Fatal', 'Module hasn\'t IsExternalModule');
+        $ToInstance->Log('Fatal', 'Module hasn\'t IsExternalModule');
       $Item=[$Rec->Id=>$Rec];
       if($v===null  ) $this->Indifferent +=$Item; else
       if($v===true  ) $this->Allow       +=$Item; else

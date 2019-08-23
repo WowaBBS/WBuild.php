@@ -12,10 +12,9 @@
     Function MakeTaskName($Add='')
     {
       return
-      # ($this->IsExternalModule() ?'Ext '  :'').
-        ($this->IsDebug   ()? 'Debug'   .' ':'').
-        ($this->IsStatic  ()? 'Static'  .' ':'').
-        ($this->IsRelease ()? 'Release' .' ':'').
+        ($this->IsExternalModule() ?'Ext '  :'').
+         $this->GetContext()->SimpleName.' '.
+      //($this->IsStatic  ()? 'Static'  .' ':'').
          $this->GetModule()->FullName.': '.
         ($Add!==''? $Add.' ':'').
          $this->GetFileName()

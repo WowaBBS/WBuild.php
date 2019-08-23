@@ -1,0 +1,76 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/Base');
+
+  class C_Builder_Asset_Module_Conflict extends C_Builder_Asset_Base
+  {
+    Var $Key   ='';
+    Var $Value ='';
+
+    Function GetKey() { return $this->Key; }
+    
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      if(IsSet($Args['Key']))
+        $this->Set(
+          $Args['Key'],
+          IsSet($Args['Value'])? $Args['Value']:''
+        );
+      if($this->Outer->Assets_IsPublic)
+        $this->Log('Fatal',
+          'Module/Conflict with Key=', $Key,
+          ' counldn\'t be public in module ', $this->GetModule()->FullName
+        );
+    }
+    
+    Function Set(String $Key, String $Value='')
+    {
+      $this->Key   = $Key   ;
+      $this->Value = $Value ;
+    }
+    
+    Static Function _ParseParams($Args)
+    {
+      $Param=$Args['Param'];
+      unset($Args['Param']);
+      $Args['Key'   ]=$Param['Key'   ]?? $Param[0];
+      $Args['Value' ]=$Param['Value' ]?? $Param[1];
+      return [$Args];
+    }
+
+    Function IsCopyable($From, $To)
+    {
+      $List=$To->GetAssets('Module/Conflict');
+      $Found=null;
+      $Key=$this->GetKey();
+      ForEach($List As $Item)
+        if($Item->GetKey()===$Key)
+        {
+          $Found=$Item;
+          break;
+        }
+      If(!$Found)
+        $this->Log('Fatal',
+          'Module/Conflict with Key=', $Key,
+          ' not found in module ', $To->GetModule()->FullName
+        );
+      ElseIf($Found->Value!==$this->Value)
+      {
+        $this->Log('Fatal', 'Module/Conflict with Key=', $Key, ' is different:')
+          (' from module ', $From ->GetModule()->FullName, ($From ->Assets_IsPublic?' (Public)':' (Private)'),' value is "', $this  ->Value, '"')
+          (' to   module ', $To   ->GetModule()->FullName, ($To   ->Assets_IsPublic?' (Public)':' (Private)'),' value is "', $Found ->Value, '"')
+        ;
+      }
+      ElseIf($To   ->Assets_IsPublic)
+        $this->Log('Fatal', 'Module/Conflict with Key=', $Key, ' target couldn\'t be public:')
+          (' from module ', $From ->GetModule()->FullName, ($From ->Assets_IsPublic?' (Public)':' (Private)'),' value is "', $this  ->Value, '"')
+          (' to   module ', $To   ->GetModule()->FullName, ($To   ->Assets_IsPublic?' (Public)':' (Private)'),' value is "', $Found ->Value, '"')
+        ;
+      
+      return true;
+    }
+  };
+
+  $DebM=$Loader->Get_Singleton('/Debug/Manager');
+  $DebM->AddInlineClass('C_Builder_Asset_Module_Define');
+?>

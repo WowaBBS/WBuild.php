@@ -22,9 +22,11 @@
     Function CreateOutPath($Outer)
     {
       $I=$Outer->GetModuleInstance();
-      $Add=$this->DirVersion.($Outer->IsDebug()? '_Debug':'').($Outer->IsStatic()? '_Static':'');
+    //$Add=$this->DirVersion.($Outer->IsDebug()? '_Debug':'').($Outer->IsStatic()? '_Static':'');
+      $Add=$Outer->GetContext()->SimpleName;
+      $Key=Serialize($Outer->GetContext()->GetInitId());
     //$Add=Static::$ShortName.'_'.$this->DirVersion.'_'.($Outer->IsDebug()? '_Debug':'').($Outer->IsStatic()? '_Static':'');
-      $Key=$this->GetCompilerIdHash(); // TODO: Predefines
+    //$Key=$this->GetCompilerIdHash(); // TODO: Predefines
       $Res=$I->EnumCache->AllocFull($Key, $Add, ['Pad'=>1, 'NoZero'=>true, 'Split'=>'_']).'/';
       return $Res;
     }

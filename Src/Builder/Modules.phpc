@@ -123,11 +123,11 @@
       parent::_Done();
     }
     
-    Function Create_Context($Args)
-    {
-      $Args['Modules']=$this;
-      return $this->Create_Object('/Builder/Context', $Args);
-    }
+  # Function Create_Context($Args)
+  # {
+  #   $Args['Modules']=$this;
+  #   return $this->Create_Object('/Builder/Context', $Args);
+  # }
 
     Protected Function _Debug_Info(Array &$Res)
     {

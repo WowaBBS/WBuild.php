@@ -5,7 +5,7 @@
   {
     Static Function _ParseParams($Args)
     {
-      $Args['Outer']->IsPublic=true;
+      $Args['Outer']->Assets_IsPublic=true;
       return []; 
     }
   };

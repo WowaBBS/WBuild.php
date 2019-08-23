@@ -193,7 +193,7 @@
           return false;
         if($this->Exec->GetExitCode()!==0)
         {
-          $this->Log('Error', 'ExitCode=', $this->Exec->GetExitCode());
+        //$this->Log('Error', 'ExitCode=', $this->Exec->GetExitCode());
           $this->Task_SetState_Failed();
           return false;
         }
@@ -252,6 +252,13 @@
       // TODO: Write Output
     }
     
+    Protected Function Task_OnLog()
+    {
+      Parent::Task_OnLog();
+      if(Is_String($this->Exec_Log_Out)) $this->_UpdateLog($this->Exec_Log_Out, 'Output' );
+      if(Is_String($this->Exec_Log_Err)) $this->_UpdateLog($this->Exec_Log_Err, 'Error'  );
+    }
+    
     Protected Function Task_OnDone()
     {
       if($this->Exec)
@@ -264,8 +271,6 @@
         $this->Exec->Done();
       }
       Parent::Task_OnDone();
-      if(Is_String($this->Exec_Log_Out)) $this->_UpdateLog($this->Exec_Log_Out, 'Output' );
-      if(Is_String($this->Exec_Log_Err)) $this->_UpdateLog($this->Exec_Log_Err, 'Error'  );
     }
   };
 

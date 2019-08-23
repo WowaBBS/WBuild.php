@@ -19,12 +19,12 @@
       if($Desr)
         $Deb->WriteLn($Desr.':');
       $Res=[];
-      ForEach($Outer->List As $Type=>$List)
+      ForEach($Outer->Assets_List As $Type=>$List)
         ForEach($List As $Id=>$Asset)
           $Res[$Type][]=$Id;
       $Deb->Debug($Res);
       $Res=[];
-      ForEach($Outer->Public As $Type=>$List)
+      ForEach($Outer->Assets_Public As $Type=>$List)
         ForEach($List As $Id=>$Asset)
           $Res[$Type][]=$Id;
       $Deb->Debug($Res);

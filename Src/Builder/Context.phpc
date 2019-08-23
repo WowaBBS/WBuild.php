@@ -12,31 +12,108 @@
     Var $Manager ;
   //Var $Modules ;
   
-    Var $Assets  ;
-    Var $Config  ;
-    Private $ContextId ;
+    Var $InitAssets    =[];
+    Var $InitConfig    ;
+    Var $Assets        =[];
+    Var $Config        ;
+    Var $Configuration ='Release';
+    Var $Platform      ='Win32';
+    Var $ConfigMap     =[];
+    Var $SimpleName    ='Undefined';
     
-    Private Function _GetContextId()
+    Private $InitId ;
+    Private $ContextId ; //< TODO: Remove?
+    
+    Private Function _GetContextId() //< TODO: Remove?
     {
       return [
-        'Assets' => $this->Assets ,
-        'Config' => $this->Config->GetContextId(),
+        'Assets'        =>$this->InitAssets ,
+        'Config'        =>$this->InitConfig->GetContextId(),
+        'Configuration' =>$this->Configuration ,
+        'Platform'      =>$this->Platform      ,
       ];
     }
  
-    Function GetContextId()
+    Private Function _GetInitId()
+    {
+      return [
+        'Assets'        =>$this->InitAssets ,
+        'Config'        =>$this->InitConfig->GetContextId(),
+      ];
+    }
+ 
+    Function GetContextId() //< TODO: Remove?
     {
       return $this->ContextId;
+    }
+ 
+    Function GetInitId()
+    {
+      return $this->InitId;
     }
  
     Protected Function _Init(Array $Args)
     {
       parent::_Init($Args);
-      $this->Assets=$Args['Assets']?? [];
-      $this->Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);
-      $this->Manager=$Args['Manager'];
+      $this->InitAssets=$Args['Assets']?? [];
+      $this->Manager       =$Args['Manager'       ];
+      $this->Configuration =$Args['Configuration' ]?? $this->Configuration ;
+      $this->Platform      =$Args['Platform'      ]?? $this->Platform      ;
+      
+      $Res=[
+        'Config'=>[],
+        'Assets'=>[],
+        'ConfigMap'=>[],
+        'SimpleName'=>[],
+      ];
+      $Cs=$this->Manager->Configurations;
+      $this->Configuration =$this->_Load($Res, $Cs['Configuration' ], $this->Configuration ,'Configuration' );
+      $this->Platform      =$this->_Load($Res, $Cs['Platform'      ], $this->Platform      ,'Platform'      );
+      
+      $Res['Assets'][]=$this->InitAssets;
+      $Res['Config'][]=$Args['Config']?? [];
+      
+      $this->ConfigMap=$Res['ConfigMap'];
+      $this->Assets=Array_Merge(...$Res['Assets']);
+      $Res['Config']=Array_Merge(...$Res['Config']);
+      $this->SimpleName=Implode('', $Res['SimpleName']);
+      
     //$this->Modules=$Args['Modules'];
-      $this->ContextId=$this->_GetContextId();
+    //$this->Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);
+      $this->InitConfig=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);
+      $this->Config=$this->Create_Object('/Builder/Config/Set');
+    # ForEach($Res['Config']As $Config)
+    #   $this->Config->Set($Config);
+      $this->Config->Set($Res['Config']);
+      $this->ContextId=$this->_GetContextId(); //< TODO: Remove?
+      $this->InitId=$this->_GetInitId();
+      
+    # UnSet($Args['Manager']);
+    # UnSet($Args['Outer']);
+    # $this->Debug([
+    #   'Args'=>$Args,
+    #   'Config'=>$Res,
+    # ]);
+    }
+    
+    Protected Function _Load(&$Res, $List, $Name, $Type)
+    {
+      $R=$List[$Name]?? False;
+      If($R===False)
+         $this->Log('Fatal', 'Context ', $Type, ' ', $this->Platform, ' not found');
+      if(Is_String($R))
+        return $this->_Load($Res, $List, $R, $Type);
+      $v=$R['Depends'       ]?? False; if($v!==False) $this->_Load($Res, $List, $v, $Type);
+      $v=$R['Config'        ]?? False; if($v!==False) $Res['Config'][]=$v;
+      $v=$R['Assets'        ]?? False; if($v!==False) $Res['Assets'][]=$v;
+      $v=$R['Configuration' ]?? False; if($v!==False) $Res['ConfigMap']=$v+$Res['ConfigMap'];
+      $Res['SimpleName'][$Type]=$R['SimpleName']?? $Name;
+      return $Name;
+    }
+    
+    Function GetAssets()
+    {
+      return $this->Assets;
     }
 
     Function IsDebug()
@@ -47,6 +124,26 @@
     Function IsStatic()
     {
       return $this->Config->Value['Static'];
+    }
+    
+    Function Get_Context($Context)
+    {
+      if(!Is_Array($Context))
+        $Context=$this->ConfigMap[$Context]?? $Context;
+      if($Context===true)
+        return $this;
+      if($Context===false)
+        return $this;
+      
+      if(Is_String($Context))
+        $Context=[$Context];
+      
+      if(!Is_Array($Context))
+        $this->Log('Error', 'Context is not Array=',$Context);
+      
+      $Context['Configuration' ]=$Context['Configuration' ]?? $Context[0]?? $this->Configuration ;
+      $Context['Platform'      ]=$Context['Platform'      ]?? $Context[1]?? $this->Platform      ;
+      return $this->Manager->Create_Context($Context);
     }
   }
 ?>

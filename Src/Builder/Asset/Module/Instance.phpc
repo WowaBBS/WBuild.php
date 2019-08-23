@@ -25,6 +25,7 @@
       $this->EnumCache = $this->Module->EnumCache->AllocEnumDir($Key, 'I', ['NoZero'=>true, 'Pad'=>1]); //'Instance', ['NoZero'=>true,  'Pad'=>1, 'Split'=>'_'] , ['Pad'=>1, 'NoZero'=>true]
     //$this->Log('Debug', 'EnumCacheI  ', $this->EnumCache   ->FullPath);
       $this->IsExternalModule=new T_Builder_Asset_Module_External($this);
+      $this->SetExternalModule($Args['IsExternal']?? null, $Args['ExternalBy']?? null);
       Parent::_Init($Args);
     }
 
@@ -49,7 +50,7 @@
     Function Tasks_Make()
     {
       $Res=[];
-      ForEach($this->Public As $Assets)
+      ForEach($this->Assets_Public As $Assets)
         ForEach($Assets As $Asset)
           $Asset->GetTasks($Res);
       return $Res;
@@ -74,7 +75,7 @@
       $Manager->Done();
     }
     
-    Function SetExternalModule($v, $Instance) { $this->IsExternalModule->Add($v, $Instance); }
+    Function SetExternalModule($v, $Instance) { $this->IsExternalModule->Add($v, $Instance, $this); }
     Function IsExternalModule() { return $this->IsExternalModule->Get($this); }
 
     Function GetModuleInstance() { return $this; }

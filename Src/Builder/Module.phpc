@@ -85,19 +85,23 @@
     
     Protected $Instances=[];
     
-    Function CreateInstance($Context)
+    Function CreateInstance($Context, $IsExternal=null, $ExternalBy=null)
     {
       $Key=Serialize($Context->GetContextId());
-      if(IsSet($this->Instances[$Key]))
+      $Res=$this->Instances[$Key]?? False;
+      if($Res!==False)
       {
-        if($this->Instances[$Key])
-          return $this->Instances[$Key];
+        if($Res!==True)
+        {
+          $Res->SetExternalModule($IsExternal, $ExternalBy);
+          return $Res;
+        }
         $this->Log('Fatal', 'Recursive creating instance of ', $this->Name);
         return null;
       }
-      $this->Instances[$Key]=false;
+      $this->Instances[$Key]=True;
       $Assets=Array_Merge(
-        $Context->Assets  ,
+        $Context->GetAssets(),
         $this->Assets_Init 
       );
       $Assets=Array_Merge(
@@ -111,7 +115,9 @@
         'Context'    =>$Context ,
         'Module'     =>$this    ,
         'Modules'    =>$this->Modules,
-        'Key'        =>$Key,
+        'Key'        =>Serialize($Context->GetInitId()),
+        'IsExternal' =>$IsExternal ,
+        'ExternalBy' =>$ExternalBy ,
       ];
       $Res=$this->Create_Object($Info->Class, $Args);
       $this->Instances[$Key]=$Res;

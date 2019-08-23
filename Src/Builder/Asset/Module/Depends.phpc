@@ -17,10 +17,11 @@
       $IsExternal =$Args['>External' ]?? null;
       $this->IsExternal=$IsExternal;
       $I=$this->GetModuleInstance();
-      $Context=$Context? $this->GetManager()->Create_Context($Context):$I->Context;
+      $Context=$I->Context->Get_Context($Context);
+    //$Context=$Context? $this->GetManager()->Create_Context($Context):$I->Context;
       
       if($Module=$I->GetModule()->GetSubModule($this->Name))
-        $this->Instance=$Module->CreateInstance($Context);
+        $this->Instance=$Module->CreateInstance($Context, $IsExternal, $this);
 
       if($this->Instance)
       {
@@ -52,11 +53,14 @@
           continue;
         }
         $_Args=$Args;
-        $HasContext=Is_Array($v);
-        $_Args['Name'      ]=$HasContext? $k:$v;
+        If(!Is_String($k))
+        {
+          $k=$v;
+          $v=!$IsExternal;
+        }
+        $_Args['Name'      ]=$k;
         $_Args['>External' ]=$IsExternal;
-        if($HasContext)
-          $_Args['Context' ]=$v;
+        $_Args['Context' ]=$v;
         $Res[]=$_Args;
       }
       

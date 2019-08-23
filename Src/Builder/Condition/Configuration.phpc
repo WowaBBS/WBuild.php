@@ -1,0 +1,25 @@
+<?
+  $Loader->Parent_Class('/Builder/Condition/Base');
+  $Loader->Using_Class('/Builder/Config/Defines');
+ 
+  class C_Builder_Condition_Configuration extends C_Builder_Condition_Base
+  {
+    Var $Configuration =False;
+    Var $Platform      =False;
+    
+    function _Init(Array $Args)
+    {
+      parent::_Init($Args);
+      $Param=$Args['Param'];
+      $this->Configuration =$Param['Configuration' ]?? $Param[0]?? False;
+      $this->Platform      =$Param['Platform'      ]?? $Param[1]?? False;
+    }
+    
+    protected function CheckContext(C_Builder_Context $Context, $Args)
+    {
+      return
+        ($this->Configuration ===False || $this->Configuration ===$Context->Configuration )&&
+        ($this->Platform      ===False || $this->Platform      ===$Context->Platform      );
+    }
+  }
+?>

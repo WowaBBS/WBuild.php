@@ -492,6 +492,16 @@
       return false;
     }
     
+    Protected Function Task_OnLog()
+    {
+      if($this->Task_Logger)
+      {
+        $this->Task_Logger->Task_Magic($this->NeedShowLog('Log')? $this->GetLogger():null);
+        $this->Task_Logger->Done();
+        $this->Task_Logger=null;
+      }
+    }
+    
     Protected Function Task_OnDone()
     {
       if($this->Performance)
@@ -511,14 +521,8 @@
         $Storage->Done();
         $this->Task_Vars=null;
       }
-      if($this->Task_Logger)
-      {
-        $this->Task_Logger->Task_Magic($this->NeedShowLog('Log')? $this->GetLogger():null);
-        $this->Task_Logger->Done();
-        $this->Task_Logger=null;
-      }
-      // TODO: Restore logging
       $this->Tasks_Manager->OnTaskDone($this);
+      $this->Task_OnLog();
       $this->Task_SendEvent();
     }
     
