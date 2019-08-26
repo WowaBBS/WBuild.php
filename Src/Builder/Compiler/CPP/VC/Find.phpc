@@ -11,7 +11,7 @@
       'HKCU\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
     ];
 
-    function Find()
+    function Find($Manager)
     {
       $this->Log('Log', 'Search installed Visual Studios');
       $Reg=$this->Create_Object('/System/Reg');
@@ -32,6 +32,14 @@
           ]; //explode('.', $k)
         //$Res[$v]=['Path'=>$v, 'RegVer'=>[(int)$Ver, (int)$Ver2]];
       $Reg->Done();
+      // 'E:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community' => 'Visual Studio Community 2019',
+      ForEach($Manager->Manager->GetInstalledPrograms() As $Key=>$Info)
+      {
+        if(StrPos($Info['Title'], 'Visual Studio')===false) continue;
+        if(StrPos($Info['Title'], '2019')===false) continue;
+        if(IsSet($Res[$v])) continue;
+        $Res[$v]=$Info+['RegVer'=>'16.0'];
+      }
       return $Res;
     }
   }

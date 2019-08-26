@@ -28,8 +28,16 @@
       ['MSVC++' ,[ 12,0  ], 1800 ,[ 12,0] ,2013 ,0 ,'VS2013' ,'Visual Studio 2013 version 12.0'],
       ['MSVC++' ,[ 14,0  ], 1900 ,[ 14,0] ,2015 ,0 ,'VS2015' ,'Visual Studio 2015 version 14.0'],
       ['MSVC++' ,[ 14,1  ], 1910 ,[ 15,0] ,2017 ,0 ,'VS2017' ,'Visual Studio 2017 version 15.0'],
-      ['MSVC++' ,[ 14,11 ], 1911 ,[ 15,3] ,2017 ,1 ,'VS2017' ,'Visual Studio 2017 version 15.3'],
-      ['MSVC++' ,[ 14,12 ], 1912 ,[ 15,5] ,2017 ,2 ,'VS2017' ,'Visual Studio 2017 version 15.5'],
+      ['MSVC++' ,[ 14,11 ], 1911 ,[ 15,3] ,2017 ,3 ,'VS2017' ,'Visual Studio 2017 version 15.3'],
+      ['MSVC++' ,[ 14,12 ], 1912 ,[ 15,5] ,2017 ,5 ,'VS2017' ,'Visual Studio 2017 version 15.5'],
+      ['MSVC++' ,[ 14,13 ], 1913 ,[ 15,6] ,2017 ,6 ,'VS2017' ,'Visual Studio 2017 version 15.6'],
+      ['MSVC++' ,[ 14,14 ], 1914 ,[ 15,7] ,2017 ,7 ,'VS2017' ,'Visual Studio 2017 version 15.7'],
+      ['MSVC++' ,[ 14,15 ], 1915 ,[ 15,8] ,2017 ,8 ,'VS2017' ,'Visual Studio 2017 version 15.8'],
+      ['MSVC++' ,[ 14,16 ], 1916 ,[ 15,9] ,2017 ,9 ,'VS2017' ,'Visual Studio 2017 version 15.9'],
+      ['MSVC++' ,[ 14,20 ], 1920 ,[ 16,0] ,2019 ,0 ,'VS2019' ,'Visual Studio 2019 version 16.0'],
+      ['MSVC++' ,[ 14,21 ], 1921 ,[ 16,1] ,2019 ,1 ,'VS2019' ,'Visual Studio 2019 version 16.1'],
+      ['MSVC++' ,[ 14,22 ], 1922 ,[ 16,2] ,2019 ,2 ,'VS2019' ,'Visual Studio 2019 version 16.2'],
+      ['MSVC++' ,[ 14,23 ], 1923 ,[ 16,3] ,2019 ,3 ,'VS2019' ,'Visual Studio 2019 version 16.3'],
     ];
     
     Private Function LoadInfo(&$Item)
@@ -96,7 +104,7 @@
       $this->MapInfo=$Check;
       $Res=[];
       $BuilderVer=1;
-      ForEach($Finder->Find() As $Item)
+      ForEach($Finder->Find($this) As $Item)
       {
       //$this->Log('Debug', $Item['Path']);
         $R=$MapList->Get($Item['Path'],
