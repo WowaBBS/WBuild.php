@@ -1,40 +1,58 @@
 <?
+//set_time_limit(1);
   Require_Once 'Using.php';
   
-  if(!IsSet($MainTarget )) $MainTarget ='UnTarget';
-  if(!IsSet($OutTasks   )) $OutTasks   ='Un_tasks.bat';
-  if(!IsSet($Modules    )) $Modules    ='Un./';
-  if(!IsSet($Op         )) $Op         ='Build';
-  $Mode=0;
+  if(!IsSet($MainTarget    )) $MainTarget    ='UnTarget'     ;
+  if(!IsSet($OutTasks      )) $OutTasks      ='Un_tasks.bat' ; //<TODO: Remove
+  if(!IsSet($Modules       )) $Modules       ='Un./'         ;
+  if(!IsSet($Op            )) $Op            ='Build'        ;
+  if(!IsSet($Configuration )) $Configuration ='Release'      ;
+  if(!IsSet($Platform      )) $Platform      ='Win32'        ;
+  if(!IsSet($LogFile       )) $LogFile       =''             ;
+  if(!IsSet($CachePath     )) $CacheDir      ='.Build'       ;
+  $Mode='arg';
   ForEach($argv as $k=>$Arg)
     switch($Mode)
     {
-    case 0:
+    case 'arg':
       Switch($Arg)
       {
-      case '/target'  : $Mode=1; break;
-      case '-target'  : $Mode=1; break;
-      case '/tasks'   : $Mode=2; break;
-      case '-tasks'   : $Mode=2; break;
-      case '/modules' : $Mode=3; break;
-      case '-modules' : $Mode=3; break;
-      case '/op'      : $Mode=4; break;
-      case '-op'      : $Mode=4; break;
+      case '/target'        : $Mode='target'        ; break;
+      case '-target'        : $Mode='target'        ; break;
+      case '/tasks'         : $Mode='tasks'         ; break;
+      case '-tasks'         : $Mode='tasks'         ; break;
+      case '/modules'       : $Mode='modules'       ; break;
+      case '-modules'       : $Mode='modules'       ; break;
+      case '/op'            : $Mode='op'            ; break;
+      case '-op'            : $Mode='op'            ; break;
+      case '/configuration' : $Mode='configuration' ; break;
+      case '-configuration' : $Mode='configuration' ; break;
+      case '/platform'      : $Mode='platform'      ; break;
+      case '-platform'      : $Mode='platform'      ; break;
+      case '/log'           : $Mode='log'           ; break;
+      case '-log'           : $Mode='log'           ; break;
+      case '/cache'         : $Mode='cache'         ; break;
+      case '-cache'         : $Mode='cache'         ; break;
       default:
-        echo 'Arg ', $Arg, ' is unsupported',"\n";
+        if($k>0)
+          $Loader->Log('Error', 'Arg ', $Arg, ' is unsupported');
       }
       break;
-    case 1: $MainTarget =$Arg; $Mode=0;  break;
-    case 2: $OutTasks   =$Arg; $Mode=0;  break;
-    case 3: $Modules    =$Arg; $Mode=0;  break;
-    case 4: $Op         =$Arg; $Mode=0;  break;
+    case 'target'        : $MainTarget    =$Arg; $Mode='arg';  break;
+    case 'tasks'         : $OutTasks      =$Arg; $Mode='arg';  break; //<TODO: Remove
+    case 'modules'       : $Modules       =$Arg; $Mode='arg';  break;
+    case 'op'            : $Op            =$Arg; $Mode='arg';  break;
+    case 'configuration' : $Configuration =$Arg; $Mode='arg';  break;
+    case 'platform'      : $Platform      =$Arg; $Mode='arg';  break;
+    case 'log'           : $LogFile       =$Arg; $Mode='arg';  break;
+    case 'cache'         : $CacheDir      =$Arg; $Mode='arg';  break;
     }
     
   switch($Op)
   {
-  case 'Build'   : $bBuild=true;               Break;
-  case 'ReBuild' : $bBuild=true; $bClean=true; Break;
-  case 'Clean'   :               $bClean=true; Break;
+  case 'Build'   :               $bBuild=true; Break;
+  case 'ReBuild' : $bClean=true; $bBuild=true; Break;
+  case 'Clean'   : $bClean=true;               Break;
   default:
     echo '[Error] Not allowed operator (-op) ',$Op,"\n";
     echo '  Allowed operators:',"\n";
@@ -43,16 +61,20 @@
     echo '   -op Clean',"\n";
   }
   
+  if($LogFile!=='')
+    $Loader->GetLogger()->Add($LogFile);
 //var_dump($argv);
 //return;
  
-  $Manager=$Loader->Create_Object('/Builder/Manager', ['Modules'=>[$Modules]]);
-  if(!IsSet($Args))
   $Args=[
-  //'Config'=>['Win32', 'VC'=>-2015, 'Debug'],
-    'Assets'=>[
-      //['Asset/Include', './Target/Options.Debug.php'],    
-    ],
+    'Modules'=>[$Modules],
+    'Configurations'=>$Modules.'/Build/Config.php',
+    'CacheDir'=>$CacheDir,
+  ];
+  $Manager=$Loader->Create_Object('/Builder/Manager', $Args);
+  $Args=[
+    'Configuration' =>$Configuration ,
+    'Platform'      =>$Platform      ,
   ];
   $Context=$Manager->Create_Context($Args);
   $Module=$Manager->Modules->Get($MainTarget);
@@ -63,9 +85,9 @@
   }
   $Instance=$Module->CreateInstance($Context);
 
-  $Tasks=$Instance->Make();
-  if($Op==='BuildTasks')
+  if($Op==='BuildTasks') // TODO:
   {
+    $Tasks=$Instance->Make();
     $ResTasks=[];
     ForEach($Tasks As $k=>$v)
       $ResTasks=Array_Merge($ResTasks, $v->List);
@@ -73,13 +95,8 @@
     $ResTasks=Implode("\r\n", $ResTasks);
     $OutTasks->Write($ResTasks);
   }
-  elseif($Op==='Build')
-  {
-    $Manager=$Loader->Create_Object('/Builder/Task/Manager');
-    ForEach($Tasks As $k=>$v)
-      $Manager->_Add($v);
-    ForEach($Tasks As $k=>$v)
-      $v->Execute();
-  }
+  elseif($bBuild)
+    $Instance->Build();
+
   $Manager->Done();
 ?>
