@@ -26,8 +26,11 @@
     {
       $this->OnAsset=new TDelegate();
       parent::_Init($Args);
-      $this->CacheDir=FileName_Normalize(RealPath('./').'/'.($Args['CacheDir']??$this->CacheDir)).'/';
-      $this->Cache=$this->Create_Object('/Cache/Manager', [$this->CacheDir]);
+      $CacheDir=$Args['CacheDir']?? $this->CacheDir;
+      CreatePath($CacheDir);
+      $CacheDir=StrTr(RealPath($CacheDir), '\\', '/').'/';
+      $this->CacheDir=$CacheDir;
+      $this->Cache=$this->Create_Object('/Cache/Manager', [$CacheDir]);
       $ModulesArgs= $Args['Modules']??[''];
       $ModulesArgs['CacheDir']='Modules';
       $ModulesArgs['Manager']=$this;
@@ -46,6 +49,7 @@
     {
       $this->Modules->Done();
       $this->Modules=null;
+      $this->Performance->Done();
       parent::_Done();
     }
     

@@ -1,4 +1,4 @@
-<?
+<?                    
 //$Loader->Load_Class("System/Env");
  
   $Loader->Parent_Class('/Object');
@@ -106,15 +106,14 @@
           
         //$this->Log('Log', '>',$File);
           $Cmd=[
-            "@echo off\r\n",
-          //'SET >',$k,'.txt2',"\r\n",
-            'call "',$VcFile,'"',"\r\n",
-          //'MkDir ',$PathObj,"\r\n",
-            'SET >',$FileEnv,"\r\n",
-          //'cl 2>info\\',$k,'.info',"\r\n",
-          //'cl /nologo -c ',$FileSrc,' /Fo: ',$FileObj,"\r\n",
-            'cl /nologo -c ',$FileSrc,' /Fo',$FileObj,"\r\n",
-            'link /nologo ',$FileObj,' /OUT:',$FileExe,"\r\n",
+            "@echo off\n",
+          //'SET >',$k,'.txt2',"\n",
+            'call "',$VcFile,'"',"\n",
+          //'MkDir ',$PathObj,"\n",
+            'SET >"',$FileEnv,'"',"\n",
+          //'cl /nologo -c ',$FileSrc,' /Fo: ',$FileObj,"\n",
+            'cl /nologo -c "',$FileSrc,'" /Fo"',$FileObj,'"',"\n",
+            'link /nologo "',$FileObj,'" /OUT:"',$FileExe,'"',"\n",
           ];
           $ToolsList=['cl', 'link', 'lib', 'mt', 'rc', 'ResGen'];
           $Tools=[];
@@ -123,7 +122,7 @@
             $FileInfo=$PathInfo.$k.'.'.$ToolItem.'.Info.txt' ;
             $FileHelp=$PathInfo.$k.'.'.$ToolItem.'.Help.txt' ;
           
-            $Cmd[]=$ToolItem.' /? >'.$FileHelp.' 2>'.$FileInfo."\r\n";
+            $Cmd[]=$ToolItem.' /? >'.$FileHelp.' 2>'.$FileInfo."\n";
             
             $Tool=[
               'Cmd'  =>$ToolItem,
@@ -133,16 +132,21 @@
             $Tools[$ToolItem]=$Tool;
           }
           FS_File_Put_Contents($FileBat, implode($Cmd));
-          exec($FileBat);
+          $Exec=$this->Create_Object('/System/Exec');
+          $Exec->Env=$CurrEnv->GetMap();
+          $Exec->Command=$FileBat.'>nul';
+          $Exec->Execute();
+          $Exec->Done();
           
           // Begin Env
           $ItemEnv->Clear();
           $ItemEnv->LoadFile($FileEnv);
         //unlink($FileEnv);
-          $CurrEnv->LoadCurrent();
           $ItemEnv->Minus($CurrEnv);
           // TODO:
           static $Removes_PreInit=[
+          //'__DOTNET_ADD_32BIT',         ?
+          //'__DOTNET_PREFERRED_BITNESS', ?
             '__VSCMD_PREINIT_PATH'    ,
             '__VSCMD_PREINIT_INCLUDE' ,
             '__VSCMD_PREINIT_LIB'     ,
