@@ -49,11 +49,16 @@
       ],
       'Cpp/Compiler'=>[
         'GCC'       =>[],
-      //'GCC_Max'   =>['Required'=>['GCC']],
         'VC'        =>[],
-      //'VC_Max'    =>['Required'=>['VC']],
         'CLang'     =>[],
-      //'CLang_Max' =>['Required'=>['CLang']],
+        
+        'GCC_Max'   =>['Required'=>['GCC'   ]],
+        'VC_Max'    =>['Required'=>['VC'    ]],
+        'CLang_Max' =>['Required'=>['CLang' ]],
+        
+        'GCC_Min'   =>['Required'=>['GCC'   ]],
+        'VC_Min'    =>['Required'=>['VC'    ]],
+        'CLang_Min' =>['Required'=>['CLang' ]],
       ],
       'Build'=>[
         'Test'       =>[],

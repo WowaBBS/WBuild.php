@@ -137,6 +137,7 @@
     
     Function NormalizeVersion($v)
     {
+      if($v<0) return [0, $this->NormalizeVersion(-$v)[0]-1];
       if($v<20) $v+=2000; // Year
       if($v<2002) return [$v*100000, ($v+1)*100000-1]; //_MSC_VER
       if($v>3000) return [$v, $v]; //_MSC_FULL_VER
@@ -174,10 +175,22 @@
     {
       if(!Is_Object($Config))
         $this->Log('Fatal', 'UnReachable C_Builder_Compiler_CPP_VC_Manager::NormalizeVersion()');
-      $VC  =$Config->Value['VC'      ];
+      
+      $VC     =$Config->Value['VC'     ]?? False;
+      $VC_Min =$Config->Value['VC_Min' ]?? False;
+      $VC_Max =$Config->Value['VC_Max' ]?? False;
+      
+      if($VC!== False && $VC!==True)
+        $VC=$this->MsVer($VC);
+      else
+        $VC=[0, 1000000000];
+      
+      if($VC_Min===False || $VC_Min===True) $VC_Min=$VC[0];
+      if($VC_Max===False || $VC_Max===True) $VC_Max=$VC[1];
+      
       $Res=[
-        'VC_Min' =>$VC>0? $this->MsVer( $VC)[0]:0,
-        'VC_Max' =>$VC<0? $this->MsVer(-$VC)[0]:1000000000,
+        'VC_Min' =>$this->MsVer($VC_Min)[0],
+        'VC_Max' =>$this->MsVer($VC_Max)[1],
         'Win'    =>$Config->Value['Windows' ],
         'x86'    =>$Config->Value['x86'     ],
         'arm'    =>$Config->Value['arm'     ],
@@ -224,6 +237,7 @@
       ForEach($this->List As $Item)
         if($this->CheckCfg($Cfg, $Item))
            return $this->_Get($Item);
+      $this->Debug([$Cfg, $Config['Value']]);
       return null;
     }
   }   
