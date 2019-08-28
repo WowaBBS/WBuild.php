@@ -89,7 +89,8 @@
     Function AddCheckFile($v, Array $Args=[])
     {
       if(Parent::AddCheckFile($v, $Args))
-        $this->_AddCheckFile($v->GetFullPath(), $v->GetLocalPath());
+        if(!$v->IsNoSearch())
+          $this->_AddCheckFile($v->GetFullPath(), $v->GetLocalPath());
     }
     
     Function _AddCheckResultFile($v, $Args)

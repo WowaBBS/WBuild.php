@@ -28,6 +28,9 @@
       
       $DefineAssets=[];
       
+      $DLL_Export =[];
+      $DLL_Import =[];
+      $DLL_Zero   =[];
       if($DLL!=='')
       {
         if(Is_String($DLL))
@@ -39,9 +42,6 @@
       //}
       //else
       //  $DLL_Proxy=[];
-        $DLL_Export =[];
-        $DLL_Import =[];
-        $DLL_Zero   =[];
         ForEach($DLL As $DLLi=>$DllType)
         {
           if(Is_Integer($DLLi))

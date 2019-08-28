@@ -71,7 +71,7 @@
     Function _GetHeaders(Int $Id, $Includes, $Logger, $Stack):Array
     {
       $NoLog=$this->IsExternalModule();
-      if($this->RecurseIncluding)
+      if($this->RecursiveIncluding)
       {
         if(!$NoLog)
         {
@@ -95,7 +95,7 @@
           'Line'=>false,
         ],
       ];
-      $this->RecurseIncluding=true;
+      $this->RecursiveIncluding=true;
       $Res=[];
      #ForEach($Force As $Item)
      #  $Res+=$Item->_GetHeaders($Id, $Includes, $Logger, $Stack);
@@ -132,7 +132,7 @@
         }
       }
       $this->CacheHeader[$Id]=$Res;
-      $this->RecurseIncluding=False;
+      $this->RecursiveIncluding=False;
       return $Res;
     }
     

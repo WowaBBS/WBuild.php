@@ -128,6 +128,7 @@
             $S=SubStr($S, 0, $ic).' '.SubStr($S, $j+1);
             $j=$ic;
             $ic=false;
+            $l=StrLen($S);
             break;
           }
           break;

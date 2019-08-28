@@ -30,7 +30,7 @@
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
-      $this->ResPrivate=$this->Outer->IsPrivate;
+      $this->ResPrivate=$this->Outer->Assets_IsPrivate;
       
       if($this->DependentUponName!==false) $this->SearchDependentUpon($this->DependentUponName);
       elseif($this->SearchDependentUpon($this->GetLocalPathNick().'.h')) {}

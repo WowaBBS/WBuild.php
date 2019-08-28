@@ -38,8 +38,7 @@
     //  ForEach($Asset->Tasks As $Task)
     //    $this->DependsTasks($Task);
       $Args['CheckInput']=!$Asset->IsNoSearch();
-      $this->AddAsset($Asset, $Args);
-      return $Res;
+      return $this->AddAsset($Asset, $Args);
     }
     
     Function AddInputs(Array $List, Array $Args=[])
