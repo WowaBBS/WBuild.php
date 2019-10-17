@@ -34,12 +34,13 @@
       $Reg->Done();
       // 'E:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community' => 'Visual Studio Community 2019',
       ForEach($Manager->Manager->GetInstalledPrograms() As $Key=>$Info)
-      {
-        if(StrPos($Info['Title'], 'Visual Studio')===false) continue;
-        if(StrPos($Info['Title'], '2019')===false) continue;
-        if(IsSet($Res[$v])) continue;
-        $Res[$v]=$Info+['RegVer'=>'16.0'];
-      }
+        if(IsSet($Info['Title']))
+        {
+          if(StrPos($Info['Title'], 'Visual Studio')===false) continue;
+          if(StrPos($Info['Title'], '2019')===false) continue;
+          if(IsSet($Res[$v])) continue;
+          $Res[$v]=$Info+['RegVer'=>'?'];
+        }
       return $Res;
     }
   }

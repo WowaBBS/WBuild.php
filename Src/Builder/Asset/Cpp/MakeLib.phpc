@@ -17,8 +17,13 @@
       
       $OutPath=$Param['OutPath'];
       
-      $DLL=IsSet($Param['DLL'])? $Param['DLL']:''; // TODOL "??" ?
-      $Def=IsSet($Param['Def'])? $Param['Def']:[];
+      $DLL          =$Param['DLL'          ]?? ''; // TODOL "??" ?
+      $Def          =$Param['Def'          ]?? [];
+      $DllCondition =$Param['DllCondition' ]?? [];
+      if($DllCondition && $Mode===3)
+        if(!$Outer->CheckCondition($DllCondition))
+          $Mode=2;
+
       if(!Is_Array($Def))
         $Def=[$Def];
       $IsDll = $Mode>=3 &&($DLL!==''||Count($Def)>0);

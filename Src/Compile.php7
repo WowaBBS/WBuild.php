@@ -73,6 +73,10 @@
   ];
   $Manager=$Loader->Create_Object('/Builder/Manager', $Args);
   $Args=[
+  //'Config'=>['Win32', 'VC'=>-2015, 'Debug'],
+    'Assets'=>[
+    //['Asset/Include', './Target/Options.Debug.php'],    
+    ],
     'Configuration' =>$Configuration ,
     'Platform'      =>$Platform      ,
   ];
@@ -85,18 +89,9 @@
   }
   $Instance=$Module->CreateInstance($Context);
 
-  if($Op==='BuildTasks') // TODO:
-  {
-    $Tasks=$Instance->Make();
-    $ResTasks=[];
-    ForEach($Tasks As $k=>$v)
-      $ResTasks=Array_Merge($ResTasks, $v->List);
-    $OutTasks=$Loader->Get_Singleton('/Debug/Manager')->Get($OutTasks);
-    $ResTasks=Implode("\r\n", $ResTasks);
-    $OutTasks->Write($ResTasks);
-  }
-  elseif($bBuild)
+  if($bBuild)
     $Instance->Build();
 
   $Manager->Done();
+  $Loader->Done();
 ?>

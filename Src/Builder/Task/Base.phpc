@@ -402,7 +402,7 @@
       }
       $IsFirst=true;
       if(!$this->Task_Logger)
-        $this->Task_Logger=$this->GetLogger()->Create($this->CachePath.'.log');
+        $this->Task_Logger=$this->GetLogger()->CreateFile($this->CachePath.'.log');
       else
         $IsFirst=false;
      #$this->Log('Debug', 'Task ', $this->Task_Name, ' try lock');

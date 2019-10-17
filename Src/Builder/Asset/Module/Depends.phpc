@@ -72,7 +72,8 @@
     Protected Function _Debug_Info(Array &$Res)
     {
       Parent::_Debug_Info($Res);
-      $Res['Instance']=$this->Instance->ToDebugInfo();
+      if($this->Instance)
+        $Res['Instance']=$this->Instance->ToDebugInfo();
     }
     
   //****************************************************************

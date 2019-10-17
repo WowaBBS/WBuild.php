@@ -127,7 +127,7 @@
       }
     }
     
-    Function CheckCondition($Condition, $Args)
+    Function CheckCondition($Condition, $Args=[])
     {
       $Condition_Factory=$this->Get_Singleton('/Builder/Condition/Factory');
       $Condition=$Condition_Factory->Create($Condition);

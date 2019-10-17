@@ -256,6 +256,7 @@
           $Log('    ', $Search->GetFullPath(), ' from ', $Search->GetModule()->FullName, ' type ', $Search->Asset_Info->Name);
         $Cfg['Path'   ]=$Path   ;
         $Log->Debug($Cfg);
+        $Log->NoBackTrace();
         $Log->Done();
       }
       return [null, $Path];
