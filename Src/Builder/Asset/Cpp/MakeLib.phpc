@@ -33,9 +33,10 @@
       
       $DefineAssets=[];
       
-      $DLL_Export =[];
-      $DLL_Import =[];
-      $DLL_Zero   =[];
+      $DLL_Export  =[];
+      $DLL_Import  =[];
+      $DLL_Zero    =[];
+      $DLL_Include =[];
       if($DLL!=='')
       {
         if(Is_String($DLL))
@@ -57,9 +58,10 @@
           switch($DllType)
           {
           case 'Extern':
-            $DLL_Export [$DLLi]=$Compiler->DefineDLLExport();
-            $DLL_Import [$DLLi]=$Compiler->DefineDLLImport();
-            $DLL_Zero   [$DLLi]='';
+            $DLL_Export  [$DLLi]=$Compiler->DefineDLLExport();
+            $DLL_Import  [$DLLi]=$Compiler->DefineDLLImport();
+            $DLL_Zero    [$DLLi]='';
+            $DLL_Include [$DLLi]='';
             break;
           default:
             // TODO: static 
@@ -78,9 +80,10 @@
             if(IsSet($DefTypes[$DllType]))
             {
               $DT=$DefTypes[$DllType];
-              if($DT[0]) $DLL_Export [$DLLi]='';
-              if($DT[1]) $DLL_Import [$DLLi]='';
-              if($DT[2]) $DLL_Zero   [$DLLi]='';
+              if($DT[0]) $DLL_Export  [$DLLi]='';
+              if($DT[1]) $DLL_Import  [$DLLi]='';
+              if($DT[2]) $DLL_Zero    [$DLLi]='';
+              if($DT[3]) $DLL_Include [$DLLi]='';
             }
             else
               $this->Fatal('Unknown DllType ',$DllType);
@@ -148,6 +151,7 @@
             'Libs'     =>$Outer->GetAssets     ('Cpp/Lib'   ),
             'LibAsset' =>$LibAsset,
           ]);
+          $Outer->CreateAsset('Cpp/Define', $DLL_Include);
         }
         $PathLibAsset->RemoveFromOuter();
       }
