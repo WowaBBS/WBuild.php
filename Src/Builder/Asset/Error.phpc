@@ -5,7 +5,8 @@
   {
     Static Function _ParseParams($Args)
     {
-      $this->Log('Fatal', Implode("\n", $Args['Param']));
+      $Outer=$Args['Outer'];
+      $Outer->Log('Fatal', Implode("\n", $Args['Param']))->NoBackTrace();
       return []; 
     }
   };
