@@ -1,6 +1,7 @@
 <?
   for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
 
+  $Loader->GetLogger()->Add('Test.log');
   $Src=$Loader->Create_Object('/Builder/Compiler/CPP/Analyzer/Cpp');
   $Src->Allow_Write=True;
   $Src->Write_FilePath='Test.Out.h';

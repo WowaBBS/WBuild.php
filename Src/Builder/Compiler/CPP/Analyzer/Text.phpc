@@ -138,7 +138,7 @@
       ForEach($CrList As $LineNumber=>$CurrentCr)
         If($CurrentCr!=$Cr && $CurrentCr!='')
         {
-          $this->Warning($LineNumber+1, 'NewLine has different format');
+          $this->Warning($LineNumber, 'NewLine has different format');
           break;
         }
       If($this->Replace_New_Line)
@@ -179,9 +179,13 @@
 
     Function Warning($Line, ...$Message)
     {
+      if(!Is_Array($Line))
+        $Line=[$Line, False];
+      if($Line[0]!==False) $Line[0]++;
+      if($Line[1]!==False) $Line[1]++;
       if(!$this->NoLog)
-        $Log=$this->Log('Warning', ...$Message)->File($this->FilePath, $Line);
-      $this->Warnings[]=[$Line, $Message];
+        $Log=$this->Log('Warning', ...$Message)->File($this->FilePath, $Line[0], $Line[1]);
+      $this->Warnings[]=[$Line[0], $Line[1], $Message];
     }
   }
 ?>

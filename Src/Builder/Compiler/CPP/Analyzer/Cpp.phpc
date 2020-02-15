@@ -3,7 +3,7 @@
   
   Class C_Builder_Compiler_CPP_Analyzer_Cpp Extends C_Builder_Compiler_CPP_Analyzer_Text
   {
-    Static $Version=4;
+    Static $Version=5;
   
     var $Include_Replace       = !true ;
     
@@ -14,6 +14,7 @@
     var $Pragma_Once_Remove    = true  ;
     var $Pragma_Once_Add       = true  ;
     var $Warn_Block_Inline     = false ;
+    Protected String $EndRawString='';
     
     var $Path_Replace= Array(
       '"'=>Array(
@@ -47,7 +48,7 @@
       {
       Case '<>' : break;
       Case '""' : break;
-      Default   : $this->Warning(-1, 'Unknown #include ', $Include);
+      Default   : $this->Warning(false, 'Unknown #include ', $Include);
       }
     }
     
@@ -71,20 +72,18 @@
     //return StrLen(Trim(SubStr($S, $in+1)))==0;
     }
     
-    function Check_Comments($i, $S)
+    function Check_Line($i, $S, $m=0)
     {
       $l=StrLen($S);
-      $m=0;
       $ic=false; // // || /*
-      $IsBlockComment=false;
       for($j=0; $j<$l; $j++)
         switch($m)
         {
         case 0:
           switch($S[$j])
           {
-          case "'": $m=1; break; // 'string'
-          case '"': $m=2; break; // "string"
+          case "'": if(!$j || strpos('0123456789abcdefABCDEF', $S[$j-1])===false) $m=1; break; // 'string'
+          case '"': if($j && $S[$j-1]==='R') $m=9; else $m=2; break; // "string" or raw string
           case '/': $m=5; break; //
           }
           break;
@@ -124,7 +123,7 @@
           {
           case '/': $m=0;
             if($this->Warn_Block_Inline)
-              $this->Warning($i.':'.$ic, 'Block inline comment');
+              $this->Warning([$i, $j], 'Block inline comment is wrong');
             $S=SubStr($S, 0, $ic).' '.SubStr($S, $j+1);
             $j=$ic;
             $ic=false;
@@ -132,36 +131,60 @@
             break;
           }
           break;
+        case 9:
+          $ice=StrPos($S, '(', $j);
+          if($ice===false)
+          {
+            $this->Warning([$i, $j], 'Block raw string is wrong: ', SubStr($S, $j));
+            $m=10;
+            break 2;
+          } 
+          $this->EndRawString=')'.SubStr($S, $j, $ice-$j).'"';
+          $j=$ice;
+          $ice=strpos($S, $this->EndRawString, $j);
+          if($ice!==false)
+          {
+            $Mode=0;
+            $j=$ice+StrLen($this->EndRawString);
+          }
+          break 2;
         }
-      $IsComment=false;
+      $Type='Code';
       switch($m)
       {
       case 0: break; // Normal
       case 1: // str1
       case 2: // str2
       case 3: // str1 slash
-      case 4: // str2 slash
         $this->Warning($i, 'String is not ended');
+        break;
+      case 4: // str2 slash
+        $Type='String/Slash';
         break;
       case 5: // / 
       //$this->Warning($i, 'Unknown slash');
         break;
       case 6:  // //
+        if($this->Check_InlineCR(Trim($S)))
+          $Type='Comment/Inline';
         $S=SubStr($S, 0, $ic);
-        $IsComment=true;
         break;
       case 7: // /*
       case 8: // /* *
         $S=SubStr($S, 0, $ic);
-        $IsBlockComment=true;
-        $IsComment=true;
+        $Type='Comment/Block';
+        break;
+      case 9: // raw string
+        $Type='String/Raw';
+        break;
+      case 10: // Error
+        $Type='Error';
         break;
       }
     //echo $m,':';
       return Array(
         $S,
-        $IsComment, // IsComment
-        $IsBlockComment
+        $Type, // IsComment
       );
     }
     
@@ -189,158 +212,163 @@
       for($i=0; $i<$c; $i++)
       {
         $S=$C[$i];
+        
+        $AllowPreprocessor=false;
+        $LineMode=0; // Code
         switch($Mode)
         {
-        case 0: // Normal mode
-          [$S, $IsComment, $IsBlockComment]=$this->Check_Comments($i, $S);
-          if($IsBlockComment!==false)
-            $Mode=1; // IsBlockComment
-        
-          $S=Trim($S);
-          if(StrLen($S)===0)
-            continue;
-          $Line_Counter++;
-          if($IsComment===false)
-            if($this->Check_InlineCR($S))
-              $Mode=2; // IsInlineComment
-          //if(StrPos($S,'#')!==false)
-          //echo $S, "\n";
-          if(StrPos($S,'#')!==false && preg_match('/^#\s*(.+)$/', $S, $Match)===1)
-          {
-            $Sub=$Match[1];
-          //echo $Match[0], "\n";
-            if(preg_match('/^(\w+)\s*(\S*)\s*(.*)$/', $Sub, $Match)!==false)
-            {
-              $m1=$Match[1];
-              $m2=$Match[2];
-              $m3=$Match[3];
-              switch($m1)
-              {
-              case 'ifndef'  :
-                if($If_Level===0)
-                {
-                //echo $S,"\n";
-                  if($IfNDef_First==='' && 
-                     $Res_Fail === false &&
-                     $Line_Counter==1)
-                  {
-                    $IfNDef_First=$m2;
-                  //echo $S,"\n";
-                  //echo $m2,"\n";
-                    $Res_IfNDef=$i;
-                  }
-                  else
-                  {
-                  //echo $S,"\n";
-                    $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define);
-                  }
-                }
-                $If_Level++;
-                break;
-              case 'if'      :
-              case 'ifdef'   :
-                if($If_Level==0)
-                  $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define);
-                $If_Level++;
-                break;
-              case 'define'  :
-                if($If_Level===1)
-                {
-                /*
-                  if($IfNDef_First!==''  &&
-                     $Res_Fail === false &&
-                     $IfNDef_First===$m2 &&
-                     $Res_IfNDef!==false &&
-                     $Res_Define===false)
-                  echo $S,"\n";
-                */
-                  if($IfNDef_First!==''  &&
-                     $Res_Fail === false &&
-                     $IfNDef_First===$m2 &&
-                     $Res_IfNDef!==false &&
-                     $Res_Define===false)
-                  {
-                  //echo $S,"\n";
-                    $Res_Define=$i;
-                  }
-                }
-                break;
-              case 'endif'   :
-                $If_Level--;
-                if($If_Level===0 &&
-                   $Res_Fail   ===false &&
-                   $Res_IfNDef !==false &&
-                   $Res_Define !==false &&
-                   $Res_EndIf  ===false)
-                {
-                  $Res_EndIf=$i;
-                  $Res_Check=$Line_Counter;
-                //$IfNDef_First
-                }
-                break;
-              case 'else'    :
-              case 'elif'    :
-                if($If_Level==1)
-                  $IfNDef_First=' ';
-                break;
-              case 'pragma'  :
-              //echo GetType($m3),$m3,".\n";
-                if(StrLen($m3)!==0) break;
-                if($m2==='once')
-                {
-                  $Line_Counter--;
-                  if($Line_Counter>0)
-                    $this->Warning($i, 'Wrong place for #pragma once');
-                  $Res_PragmaOnce=$i;
-                  break;
-                }
-                break;
-              case 'include' :
-                if($m3!=='')
-                  $this->Warning($i, 'Stange include');
-                $this->AddInclude($m2, $i);
-              break;
-              case 'undef'   : break;
-              case 'warning' :
-              case 'error'   :
-                break;
-              default:
-                $this->Warning($i, 'Unknown preprocessor "'.$Sub.'"');
-              }
-              if(StrLen(Trim($m1))===0)
-                $this->Warning($i, 'Unknown error "'.$Sub.'"');
-              //echo $m1,"\n";
-            }
-          }
-          else
-          {
-            // Check Form
-            if(preg_match('/:\s+public\s+System::Windows::Forms::Form\s*(?:\\\\|{|$)/', $S, $Match)===1)
-              $this->HasForm=true;
-          }
-          break;
+        case 0: $AllowPreprocessor=true; break;
         case 1: // IsBlockComment
-        //echo $S,"\n";
-          $ice=strpos($S,'*/');
+          $ice=strpos($S, '*/');
           if($ice===false)
-            break;
+            continue 2;
           $Mode=0;
-          $S=Trim(SubStr($S, $ice+2));
-        //echo $S, "\n";
-          [$S, $IsComment, $IsBlockComment]=$this->Check_Comments($i, $S);
-          if($IsBlockComment!==false)
-            $Mode=1;
-          
-          if(StrLen($S)===0)
-            continue;
-          $Line_Counter++;
+          $S=SubStr($S, $ice+2);
           break;
         case 2: // IsInlineComment
-           $Mode=0;
-           $S=Trim($S);
-           if($this->Check_InlineCR($S))
-             $Mode=2;
+        case 3: // IsInlinePreprocessor
+          $S=Trim($S);
+          if(!$this->Check_InlineCR($S))
+            $Mode=0;
+          continue 2;
+        case 4: // Inline string
+          $LineMode=2; // str2
+          $Mode=0;
           break;
+        case 5: // Raw string
+          $ice=strpos($S, $this->EndRawString);
+          if($ice===false)
+            continue 2;
+          $Mode=0;
+          $S=SubStr($S, $ice+StrLen($this->EndRawString));
+          break;
+        }
+        [$S, $Type]=$this->Check_Line($i, $S, $LineMode);
+     // $this->Warning($i, 'Type: '.$Type);
+        if($Type==='Comment/Block' ) $Mode=1; else // IsBlockComment
+        if($Type==='Comment/Inline') $Mode=2; else // IsInlineComment
+        if($Type==='String/Slash'  ) $Mode=4; else // Inline string
+        if($Type==='String/Raw'    ) $Mode=5; // Raw string
+      
+        $S=Trim($S);
+        if(StrLen($S)===0)
+          continue;
+        $Line_Counter++;
+        
+        if($AllowPreprocessor && StrPos($S,'#')!==false && preg_match('/^#\s*(.+)$/', $S, $Match)===1)
+        {
+          $Sub=$Match[1];
+        //echo $Match[0], "\n";
+          if(preg_match('/^(\w+)\s*(\S*)\s*(.*)$/', $Sub, $Match)!==false)
+          {
+            $m1=$Match[1];
+            $m2=$Match[2];
+            $m3=$Match[3];
+            switch($m1)
+            {
+            case 'ifndef'  :
+              if($If_Level===0)
+              {
+              //echo $S,"\n";
+                if($IfNDef_First==='' && 
+                   $Res_Fail === false &&
+                   $Line_Counter==1)
+                {
+                  $IfNDef_First=$m2;
+                //echo $S,"\n";
+                //echo $m2,"\n";
+                  $Res_IfNDef=$i;
+                }
+                else
+                {
+                //echo $S,"\n";
+                  $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define);
+                }
+              }
+              $If_Level++;
+              break;
+            case 'if'      :
+            case 'ifdef'   :
+              if($If_Level==0)
+                $Res_Fail=$this->_Detect_Pragma_Once_Fail($Res_PragmaOnce, $Res_Fail, $Res_IfNDef, $Res_Define);
+              $If_Level++;
+              break;
+            case 'define'  :
+              if($If_Level===1)
+              {
+              /*
+                if($IfNDef_First!==''  &&
+                   $Res_Fail === false &&
+                   $IfNDef_First===$m2 &&
+                   $Res_IfNDef!==false &&
+                   $Res_Define===false)
+                echo $S,"\n";
+              */
+                if($IfNDef_First!==''  &&
+                   $Res_Fail === false &&
+                   $IfNDef_First===$m2 &&
+                   $Res_IfNDef!==false &&
+                   $Res_Define===false)
+                {
+                //echo $S,"\n";
+                  $Res_Define=$i;
+                }
+              }
+              break;
+            case 'endif'   :
+              $If_Level--;
+              if($If_Level===0 &&
+                 $Res_Fail   ===false &&
+                 $Res_IfNDef !==false &&
+                 $Res_Define !==false &&
+                 $Res_EndIf  ===false)
+              {
+                $Res_EndIf=$i;
+                $Res_Check=$Line_Counter;
+              //$IfNDef_First
+              }
+              break;
+            case 'else'    :
+            case 'elif'    :
+              if($If_Level==1)
+                $IfNDef_First=' ';
+              break;
+            case 'pragma'  :
+            //echo GetType($m3),$m3,".\n";
+              if(StrLen($m3)!==0) break;
+              if($m2==='once')
+              {
+                $Line_Counter--;
+                if($Line_Counter>0)
+                  $this->Warning($i, 'Wrong place for #pragma once');
+                $Res_PragmaOnce=$i;
+                break;
+              }
+              break;
+            case 'include' :
+              if($m3!=='')
+                $this->Warning($i, 'Stange include');
+              $this->AddInclude($m2, $i);
+            break;
+            case 'undef'   : break;
+            case 'warning' :
+            case 'error'   :
+              break;
+            default:
+              $this->Warning($i, 'Unknown preprocessor "'.$Sub.'"');
+            }
+            if(StrLen(Trim($m1))===0)
+              $this->Warning($i, 'Unknown error "'.$Sub.'"');
+            //echo $m1,"\n";
+            if($this->Check_InlineCR(Trim($m3)))
+              $Mode=3; // IsInlinePreprocessor
+          }
+        }
+        else
+        {
+          // Check Form
+          if(preg_match('/:\s+public\s+System::Windows::Forms::Form\s*(?:\\\\|{|$)/', $S, $Match)===1)
+            $this->HasForm=true;
         }
       }
       if($If_Level!==0)

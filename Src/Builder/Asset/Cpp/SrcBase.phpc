@@ -38,7 +38,7 @@
         $this->Info=$Vars;
         if(!$NoLog)
           ForEach($Vars['Warnings']As $Warning)
-            $this->Log('Warning', ...$Warning[1])->File($this->GetFullPath(), $Warning[0]);
+            $this->Log('Warning', ...$Warning[2])->File($this->GetFullPath(), $Warning[0], $Warning[1]);
         return $this->Info;
       }
       
