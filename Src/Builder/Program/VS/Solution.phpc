@@ -60,40 +60,56 @@
           .$Project['ProjectName'].'", "'
           .$Project['File'].'", "'
           .$Project['ProjectGUID'].'"'."\n";
+        if(false) // TODO:
+        {
+          $Res[]='	ProjectSection(ProjectDependencies) = postProject."\n";
+          $Res[]='		{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D} = {55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}."\n";
+          $Res[]='		{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1} = {B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}."\n";
+          $Res[]='	EndProjectSection'."\n";
+        }
         $Res[]='EndProject'."\n";
       }
       
-      $Res[]='Global'."\n";
+      $Global=[];
       
-      $Res[]='	GlobalSection(SolutionConfigurationPlatforms) = preSolution'."\n";
+      $List=[];
       ForEach($Vars['SortSolutions']As $Solution)
-        $Res[]='		'.$Solution['SlnSolution'].' = '.$Solution['SlnSolution']."\n";
-      $Res[]='	EndGlobalSection'."\n";
-
-      $Res[]='	GlobalSection(ProjectConfigurationPlatforms) = postSolution'."\n";
+        $List[$Solution['SlnSolution']]=$Solution['SlnSolution'];
+      $Global['SolutionConfigurationPlatforms']=['Type'=>'preSolution', 'List'=>$List];
+      
+      $List=[];
       ForEach($Vars['ProjectConfigurationPlatforms']As $PCP)
         ForEach($PCP['List'] As $Item)
         {
-          $Res[]='		'.$PCP['ProjectGUID'].'.'.$Item['SlnSolution'].'.ActiveCfg = '.$Item['Solution']."\n";
-          If($Item['HasBuild'])
-            $Res[]='		'.$PCP['ProjectGUID'].'.'.$Item['SlnSolution'].'.Build.0 = '.$Item['Solution']."\n";
+          $Key=$PCP['ProjectGUID'].'.'.$Item['SlnSolution'];
+          $List[$Key.'.ActiveCfg']=$Item['Solution'];
+          If($Item['HasBuild'])                                           
+            $List[$Key.'.Build.0']=$Item['Solution'];
         }
-      $Res[]='	EndGlobalSection'."\n";
-      $Res[]='	GlobalSection(SolutionProperties) = preSolution'."\n";
-      $Res[]='		HideSolutionNode = FALSE'."\n";
-      $Res[]='	EndGlobalSection'."\n";
+      $Global['ProjectConfigurationPlatforms']=['Type'=>'postSolution', 'List'=>$List];
+      
+      $Global['SolutionProperties']=['Type'=>'preSolution', 'List'=>[
+        'HideSolutionNode'=>'FALSE',
+      ]];
 
       if($this->Version>=12.0 && false) // TODO:
+        $Global['NestedProjects']=['Type'=>'preSolution', 'List'=>[
+          '{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}'=>'{716DAA61-511E-43E5-924A-923D93239FE9}',
+          '{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}'=>'{716DAA61-511E-43E5-924A-923D93239FE9}',
+        ]];
+
+      $Global['ExtensibilityGlobals']=['Type'=>'postSolution', 'List'=>[
+        'SolutionGuid'=>$Vars['SolutionGuid'],
+      ]];
+      
+      $Res[]='Global'."\n";
+      ForEach($Global As $Name=>['Type'=>$Type, 'List'=>$List])
       {
-        $Res[]='	GlobalSection(NestedProjects) = preSolution'."\n";
-        $Res[]='		{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1} = {716DAA61-511E-43E5-924A-923D93239FE9}'."\n";
-        $Res[]='		{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D} = {716DAA61-511E-43E5-924A-923D93239FE9}'."\n";
+        $Res[]='	GlobalSection('.$Name.') = '.$Type."\n";
+        ForEach($List As $Key=>$Value)
+          $Res[]='		'.$Key.' = '.$Value."\n";
         $Res[]='	EndGlobalSection'."\n";
       }
-
-      $Res[]='	GlobalSection(ExtensibilityGlobals) = postSolution'."\n";
-      $Res[]='		SolutionGuid = '.$Vars['SolutionGuid']."\n";
-      $Res[]='	EndGlobalSection'."\n";
       $Res[]='EndGlobal'."\n";
       return Implode($Res);
     }
