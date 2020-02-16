@@ -1,0 +1,278 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  class C_Builder_Program_VS_Solution extends C_Object
+  {
+    Var $Version  =11.0;
+  //Var $Version  =12.0;
+  //Var $Compiler ='Visual C++ Express 2010';
+    Var $Compiler ='Visual Studio 15';
+    Var $VisualStudioVersion        = '15.0.27130.2036';
+    Var $MinimumVisualStudioVersion = '10.0.40219.1';
+    
+    Var C_Builder_Program_VS_GUIDs $GUIDs;
+    Var C_Tmpl_Loader              $Template_Loader;
+
+    Var $Platforms =[];
+    Var $Configs   =[];
+    Var $Projects  =[];
+    
+    Var String $GUID_Key='';
+    
+    Function _Init(Array $Args)
+    {
+      $this->Platforms =$Args['Platforms' ]?? [];
+      $this->Configs   =$Args['Configs'   ]?? [];
+      $this->Projects  =$Args['Projects'  ]?? [];
+      $this->GUID_Key  =$Args['Name'      ]?? 'NoName';
+
+      $this->GUIDs=$this->Get_Singleton('/Builder/Program/VS/GUIDs');
+      $TLoader=$this->Create_Object('/Tmpl/Loader');
+      $Manager_Args=[
+        'Parser'=>[
+          'Tag_First' =>'{',
+          'Tag_Last'  =>'}',
+        ],
+      ];
+      $TLoader->Types['w2_cpp']=$this->Create_Object('/Tmpl/W2/Manager', $Manager_Args);
+      $TLoader->DefType='w2_cpp';
+      $this->Template_Loader=$TLoader;
+      Parent::_Init($Args);
+    }
+    
+    Function SaveToFiles($Vars)
+    {
+    //Debug($Vars);
+      $_Vars=[];
+      $Template =$this->Template_Loader->Load_Template($_Vars, $Vars['Template']);
+      $Output   =$Vars['FileName'];
+     
+      $Content = $Template->Exec_To_Str($Vars);
+          
+      CreatePath(ExtractFilePath($Output));
+          
+      $Content=str_replace("\r", '', $Content);
+      $Content=str_replace("\n", "\r\n", $Content);
+      file_put_contents($Output, $Content);
+      
+      ForEach($Vars['Projects']As $Project)
+      {
+        $Template =$this->Template_Loader->Load_Template   ($_Vars, '/NMake.vcxproj');
+        $Output   =$Project['OutFile'];
+       
+        $Content = $Template->Exec_To_Str($Project);
+  
+        $Content=str_replace("\r", '', $Content);
+        $Content=str_replace("\n", "\r\n", $Content);
+        file_put_contents($Output, $Content);
+      }
+    }
+    
+    Function ProcessSlnVars($Param)
+    {
+      $Res=$Param;
+      $Res['Template']='/v11.sln'; // TODO: Add another versions
+      $SlnOutDir=$Res['SlnOutDir']?? ''; if($SlnOutDir) $SlnOutDir.='/'  ;
+      $VcxOutDir=$Res['VcxOutDir']?? ''; if($VcxOutDir) $VcxOutDir.='/'  ;
+      $VcxRelDir=$Res['VcxRelDir']?? ''; if($VcxRelDir) $VcxRelDir.='\\' ;
+      $Res['FileName']=$SlnOutDir.$Res['Name'].'.sln';
+      $Res['CompilerSln']=Static::ProcessText($Res['CompilerSln'   ]??[]   );
+      $CustomProps       =Static::ProcessText($Res['CustomProps'   ]??[], 2);
+      $NMakeCompiler     =Static::ProcessText($Res['NMakeCompiler' ]??[], 2);
+      
+      $Res['Configs'   ]=$this->ProcessConfigs();
+      $Res['Platforms' ]=$this->ProcessPlatforms();
+      
+      $Solutions        =$this->ProcessSolutions($Res['Configs'], $Res['Platforms']);
+      $SortSolutions=$Solutions;
+      KSort($SortSolutions);
+      $Solutions     =Array_Values($Solutions     );
+      $SortSolutions =Array_Values($SortSolutions );
+      $Res['Solutions'    ]=$Solutions;
+      $Res['SortSolutions']=$SortSolutions;
+      $Projects =$this->ProcessProjects(
+        $Param['Type']?? 'C++',
+        $VcxRelDir,
+        $VcxOutDir,
+        $Solutions,
+        $CustomProps,
+        $NMakeCompiler
+      );
+      $Res['Projects'     ]=Array_Values($Projects);
+      $Res['SolutionGuid' ]=$this->GUIDs->Generate('SolutionGuid'.$this->GUID_Key);
+      
+      $ListConfig=[];
+      ForEach($Projects As $k=>$v)
+        $ListConfig[]=[
+          'ProjectGUID'=>$v['ProjectGUID'],
+          'List'=>$SortSolutions,
+        ];
+      $Res['ProjectConfigurationPlatforms']=$ListConfig;
+      
+      return $Res;
+    }
+    
+    Function ProcessConfigs()
+    {
+      $Res=[];
+      ForEach($this->Configs As $Name=>$Item)
+      {
+        if(Is_Int($Name))
+          $Name=$Item;
+  
+        if(Is_String($Item))
+          $Item=['Config'=>$Item];
+        
+                     if(IsSet($Item['Name'  ])) { $Name  =$Item['Name'  ]; UnSet($Item['Name'  ]); }
+        $Real=$Name; if(IsSet($Item['Real'  ])) { $Real  =$Item['Real'  ]; UnSet($Item['Real'  ]); }
+        $Props=  []; if(IsSet($Item['Props' ])) { $Props =$Item['Props' ]; UnSet($Item['Props' ]); }
+        
+        if($Item)
+          $this->Log('Error', 'Unknown parameters of config: ', Implode(', ', Array_Keys($Item)));
+        $Res[$Name]=[
+          'Name'  =>$Name  ,
+          'Real'  =>$Real  ,
+          'Props' =>$Props ,
+        ];
+      }
+      return $Res;
+    }
+    
+    Function ProcessProjects(
+       $DefType       ,
+       $VcxRelDir     ,
+       $VcxOutDir     ,
+       $Solutions     ,
+       $CustomProps   ,
+       $NMakeCompiler
+    )
+    {
+      $Res=[];
+      ForEach($this->Projects As $k=>$v)
+      {
+        $Dir=$VcxRelDir;
+        $v['Name'        ]=$k;
+        $v['ProjectName' ] ??=$v['Name'];
+        $v['File'        ]   =$Dir.($v['RelDir']??'').$v['Name'].'.vcxproj';
+        $v['OutFile'     ]   =$VcxOutDir.$v['Name'].'.vcxproj';
+        $v['Type'        ] ??=$DefType;
+      //$v['ProjectGUID' ]   =$this->GUID_Key.$v['Type'].$k;
+        $v['ProjectGUID' ]   =$this->GUIDs->Generate($this->GUID_Key.$v['Type'].$k);
+        $v['TypeGUID'    ]   =$this->GUIDs->Get($v['Type']);
+        $Res[$k]=$v;
+      }
+      ForEach($Res As $k=>$v)
+      {
+        $Depends=$v['Depends']?? [];
+        ForEach($Depends As $k2=>$v2)
+          $Depends[$k2]=$Res[$v2];
+        $v['Depends'       ]=Array_Values($Depends);
+        $v['Solutions'     ]=$Solutions;
+        $v['CustomProps'   ]=$CustomProps;
+        $v['NMakeCompiler' ]=IsSet($v['NMakeCompiler'])? Static::ProcessText($v['NMakeCompiler'], 2): $NMakeCompiler;
+        $Res[$k]=$v;
+      }
+      return Array_Values($Res);
+    }
+    
+    Function ProcessPlatforms()
+    {
+      //Platforms
+      $AllowPlatforms=[
+        'Win32'         =>1,
+        'x64'           =>1,
+        'arm'           =>1,
+        'Tegra-Android' =>1,
+      ];
+      
+      $Res=[];
+      ForEach($this->Platforms As $Name=>$Item)
+      {
+        if(Is_Int($Name))
+          $Name=$Item;
+  
+        if(Is_String($Item))
+          $v=['Platform'=>$Item];
+        
+                      if(IsSet($Item['Name'  ])) { $Name     =$Item['Name'  ]; UnSet($Item['Name'  ]); }
+        $Real =$Name; if(IsSet($Item['Real'  ])) { $Real     =$Item['Real'  ]; UnSet($Item['Real'  ]); }
+        $Prefix  =''; if(IsSet($Item['<'     ])) { $Prefix   =$Item['<'     ]; UnSet($Item['<'     ]); }
+        $Postfix =''; if(IsSet($Item['>'     ])) { $Postfix  =$Item['>'     ]; UnSet($Item['>'     ]); }
+        $Props   =[]; if(IsSet($Item['Props' ])) { $Props    =$Item['Props' ]; UnSet($Item['Props' ]); }
+        
+        if(!IsSet($AllowPlatforms[$Real]))
+          $this->Log('Error', 'Platform ', $Real, ' is not allowed');
+        if($Item)
+          $this->Log('Error', 'Unknown parameters of platform: ', Implode(', ', Array_Keys($Item)));
+        $Res[$Name]=[
+          'Name'    =>$Name    ,
+          'Real'    =>$Real    ,
+          'Prefix'  =>$Prefix  ,
+          'Postfix' =>$Postfix ,
+          'Props'   =>$Props   ,
+        ];
+      }
+      return $Res;
+    }
+    
+    Function ProcessSolutions(Array $Configs, Array $Platforms)
+    {
+      $Res=[];
+      ForEach($Configs As $Config)
+        ForEach($Platforms As $Platform)
+        {
+          $SlnSolution    =$Config['Name'].'|'.$Platform['Name'];
+          $SolutionConfig =$Platform['Prefix'].$Config['Real'].$Platform['Postfix'];
+          $SolutionConfig =StrTr($SolutionConfig, ' /\\', '___');
+          $SolutionName   =$SolutionConfig.'|'.$Platform['Real'];
+          $SolutionProps=[
+            'RealConfig'   => $Config   ['Name'],
+            'RealPlatform' => $Platform ['Name'],
+          ];
+          if(IsSet($Res[$SlnSolution]))
+            $this->Log('Error', 'Key ', $SlnSolution, ' already exists');
+          $Res[$SlnSolution]=[
+            'SlnSolution' =>$SlnSolution,
+            'Solution'    =>$SolutionName,
+            'Config'      =>$SolutionConfig,
+            'Platform'    =>$Platform['Real'],
+            'Condition'   =>'\'$(Configuration)|$(Platform)\'==\''.$SolutionName.'\'',
+            'Props'       =>$this->ProcessProps( 
+              $SolutionProps,
+              $Config   ['Props'],
+              $Platform ['Props']
+            ),
+            'HasBuild' =>true,
+          ];
+        }
+      UnSet($Platform);
+      return $Res;
+    }
+    
+    Function ProcessProps(...$PropsList)
+    {
+      $Res=[];
+      ForEach($PropsList As $Props)
+        ForEach($Props As $k=>$v)
+        {
+          if(Is_Bool($v)) $v=$v? 'true':'false';
+          if(StrPos($v, '{')!==false)
+            $v=$this->Template_Loader->String_Template($Res, $v)->Exec_To_Str($Res);
+          $Res[$k]=$v;
+        }
+      return $Res;
+    }
+    
+    Static Function ProcessText($Res, $Indent=0)
+    {
+      if(Is_Array($Res))
+        $Res=Implode("\n", $Res);
+      $Res=StrTr($Res, ["\r"=>'']);
+      $Res=Explode("\n", $Res);
+      $Tab=Str_Repeat(' ', $Indent);
+      $Res=Implode("\r\n".$Tab, $Res);
+      return StrLen($Res)? $Tab.$Res:'';
+    }
+    
+  }
+?>
