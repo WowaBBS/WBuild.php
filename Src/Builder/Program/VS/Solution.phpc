@@ -40,19 +40,78 @@
       Parent::_Init($Args);
     }
     
+    Function MakeStr($Vars)
+    {
+      $Res=[];
+      $Res[]="\xEF\xBB\xBF\n";
+      $Res[]='Microsoft Visual Studio Solution File, Format Version ';
+      $Version=(String)($this->Version*100);
+      $Res[]=SubStr($Version, 0, -2).'.'.SubStr($Version, -2)."\n";
+      $Res[]='# '.$this->Compiler."\n";
+      if($this->Version>=12.0)
+      {
+        $Res[]='VisualStudioVersion = '        .$this->VisualStudioVersion        ."\n";
+        $Res[]='MinimumVisualStudioVersion = ' .$this->MinimumVisualStudioVersion ."\n";
+      }
+      
+      ForEach($Vars['Projects']As $Project)
+      {
+        $Res[]='Project("'.$Project['TypeGUID'].'") = "'
+          .$Project['ProjectName'].'", "'
+          .$Project['File'].'", "'
+          .$Project['ProjectGUID'].'"'."\n";
+        $Res[]='EndProject'."\n";
+      }
+      
+      $Res[]='Global'."\n";
+      
+      $Res[]='	GlobalSection(SolutionConfigurationPlatforms) = preSolution'."\n";
+      ForEach($Vars['SortSolutions']As $Solution)
+        $Res[]='		'.$Solution['SlnSolution'].' = '.$Solution['SlnSolution']."\n";
+      $Res[]='	EndGlobalSection'."\n";
+
+      $Res[]='	GlobalSection(ProjectConfigurationPlatforms) = postSolution'."\n";
+      ForEach($Vars['ProjectConfigurationPlatforms']As $PCP)
+        ForEach($PCP['List'] As $Item)
+        {
+          $Res[]='		'.$PCP['ProjectGUID'].'.'.$Item['SlnSolution'].'.ActiveCfg = '.$Item['Solution']."\n";
+          If($Item['HasBuild'])
+            $Res[]='		'.$PCP['ProjectGUID'].'.'.$Item['SlnSolution'].'.Build.0 = '.$Item['Solution']."\n";
+        }
+      $Res[]='	EndGlobalSection'."\n";
+      $Res[]='	GlobalSection(SolutionProperties) = preSolution'."\n";
+      $Res[]='		HideSolutionNode = FALSE'."\n";
+      $Res[]='	EndGlobalSection'."\n";
+
+      if($this->Version>=12.0 && false) // TODO:
+      {
+        $Res[]='	GlobalSection(NestedProjects) = preSolution'."\n";
+        $Res[]='		{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1} = {716DAA61-511E-43E5-924A-923D93239FE9}'."\n";
+        $Res[]='		{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D} = {716DAA61-511E-43E5-924A-923D93239FE9}'."\n";
+        $Res[]='	EndGlobalSection'."\n";
+      }
+
+      $Res[]='	GlobalSection(ExtensibilityGlobals) = postSolution'."\n";
+      $Res[]='		SolutionGuid = '.$Vars['SolutionGuid']."\n";
+      $Res[]='	EndGlobalSection'."\n";
+      $Res[]='EndGlobal'."\n";
+      return Implode($Res);
+    }
+    
     Function SaveToFiles($Vars)
     {
     //Debug($Vars);
       $_Vars=[];
-      $Template =$this->Template_Loader->Load_Template($_Vars, $Vars['Template']);
-      $Output   =$Vars['FileName'];
-     
-      $Content = $Template->Exec_To_Str($Vars);
-          
-      CreatePath(ExtractFilePath($Output));
+      
+    //$Template =$this->Template_Loader->Load_Template($_Vars, $Vars['Template']);
+    //$Content = $Template->Exec_To_Str($Vars);
+      $Content = $this->MakeStr($Vars);
           
       $Content=str_replace("\r", '', $Content);
       $Content=str_replace("\n", "\r\n", $Content);
+
+      $Output   =$Vars['FileName'];
+      CreatePath(ExtractFilePath($Output));
       file_put_contents($Output, $Content);
       
       ForEach($Vars['Projects']As $Project)
@@ -245,7 +304,6 @@
             'HasBuild' =>true,
           ];
         }
-      UnSet($Platform);
       return $Res;
     }
     
