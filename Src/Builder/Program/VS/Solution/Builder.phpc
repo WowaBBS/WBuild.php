@@ -1,0 +1,155 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  class C_Builder_Program_VS_Solution_Builder extends C_Object implements ArrayAccess  //ArrayIterator
+  {
+    Var $Lines=["\xEF\xBB\xBF"];
+    Var $Tab='';
+    Var $Sections=[];
+  
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      if(IsSet($Args['Info']))
+        $this->Make($Args['Info'], $Args['Vars']?? []);
+    }
+    
+    Function WriteLn(... $List)
+    {
+      $this->Lines[]=$this->Tab.Implode($List);
+    }
+    
+    Function Section($Name, $Arg=null, $Value=null)
+    {
+      $Value =Is_Null($Value )? []:[' = ', $Value];
+      $Arg   =Is_Null($Arg   )? []:['(', $Arg, ')'];
+      $this($Name, ...$Arg, ...$Value);
+      $this->Sections[]=$Name;
+      $this->Tab.="\t";
+    }
+    
+    Function GlobalSection($Arg, $Value)
+    {
+      $this->Section('GlobalSection', $Arg, $Value);
+    }
+    
+    Function EndSection(?String $CheckName=null)
+    {
+      $this->Tab=SubStr($this->Tab, 0, -1);
+      $Name=Array_Pop($this->Sections);
+      if(!Is_Null($CheckName))
+        if($Name!==$CheckName)
+          $this->Log('Error', 'Section ', $Name, ' is different from ', $CheckName);
+      $this('End', $Name);
+    }
+
+  //****************************************************************
+  // Magic
+
+    Function __invoke(... $Args)
+    {
+      return $this->WriteLn(...$Args);
+    }
+    
+    Function __toString()
+    {
+      return Implode("\r\n", $this->Lines)."\r\n";
+    }
+    
+  //****************************************************************
+  // ArrayAccess interface
+    Function Error()
+    {
+      $this->Log('Fatal', 'Unaceptable behavior');
+    }
+
+    Public Function offsetExists     ($k):bool { return Error(); } 
+    Public Function offsetGet        ($k)      { return Error(); }
+    Public Function offsetSet        ($k ,$v)
+    {
+      if(!Is_Array($v))
+        $v=[$v];
+      if(Is_Null($k))
+      {
+        $this->WriteLn(...$v);
+      }
+      else
+      {
+        if(Is_Array($k))
+          $k=Implode('.', $k);
+        $this->WriteLn($k, ' = ', ...$v);
+      }
+    }
+    Public Function offsetUnset      ($k)      { Error(); }
+    
+  //****************************************************************
+  
+    Function Make(C_Builder_Program_VS_Solution $Info, $Vars)
+    {
+      $Res=$this;
+      $Res('Microsoft Visual Studio Solution File, Format Version ', $Info->GetVersionStr());
+      $Res('# ', $Info->Compiler);
+      if($Info->Version>=12.0)
+      {
+        $Res['VisualStudioVersion'        ]=$Info->VisualStudioVersion        ;
+        $Res['MinimumVisualStudioVersion' ]=$Info->MinimumVisualStudioVersion ;
+      }
+      
+      ForEach($Vars['Projects']As $Project)
+      {
+        $Res->Section('Project',
+          '"'.$Project['TypeGUID'].'"',
+          '"'.$Project['ProjectName'].'", "'.$Project['File'].'", "'.$Project['ProjectGUID'].'"'
+        );
+        if(false) // TODO:
+        {
+          $Res->Section('ProjectSection', 'ProjectDependencies', 'postProject');
+          $Res['{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}']='{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}';
+          $Res['{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}']='{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}';
+          $Res->EndSection();
+        }
+        $Res->EndSection();
+      }
+      
+      $Res->Section('Global');
+      
+      $Res->GlobalSection('SolutionConfigurationPlatforms', 'preSolution');
+      ForEach($Vars['SortSolutions']As $Solution)
+        $Res[$Solution['SlnSolution']]=$Solution['SlnSolution'];
+      $Res->EndSection();
+      
+      $Res->GlobalSection('ProjectConfigurationPlatforms', 'postSolution');
+      ForEach($Vars['ProjectConfigurationPlatforms']As $PCP)
+        ForEach($PCP['List'] As $Item)
+        {
+          $Key=$PCP['ProjectGUID'].'.'.$Item['SlnSolution'];
+          $Res[$Key.'.ActiveCfg']=$Item['Solution'];
+          If($Item['HasBuild'])                                           
+            $Res[$Key.'.Build.0']=$Item['Solution'];
+        }
+      $Res->EndSection();
+      
+      $Res->GlobalSection('SolutionProperties', 'preSolution');
+      $Res['HideSolutionNode']='FALSE';
+      $Res->EndSection();
+
+      if($Info->Version>=12.0 && false) // TODO: Folders
+      {
+        $Res->GlobalSection('NestedProjects', 'preSolution');
+        $Res['{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}']='{716DAA61-511E-43E5-924A-923D93239FE9}';
+        $Res['{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}']='{716DAA61-511E-43E5-924A-923D93239FE9}';
+        $Res->EndSection();
+      }
+
+      $Res->GlobalSection('ExtensibilityGlobals', 'postSolution');
+      $Res['SolutionGuid']=$Vars['SolutionGuid'];
+      $Res->EndSection();
+      
+      $Res->EndSection();
+      
+      return (String)$Res;
+    }
+    
+  //****************************************************************
+  }
+?>
