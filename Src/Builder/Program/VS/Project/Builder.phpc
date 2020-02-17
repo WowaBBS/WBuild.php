@@ -1,0 +1,138 @@
+<?
+  $Loader->Parent_Class('/XML/Builder');
+  
+  class C_Builder_Program_VS_Project_Builder extends C_XML_Builder  //implements ArrayAccess
+  {
+    Var $Result;
+  
+    Function _Init(Array $Args)
+    {
+      $Args[0]=$this->Result=$this->Create_Object('/Stream/Fifo');
+      $this->SelfCloseTag=' />';
+      Parent::_Init($Args);
+      if(IsSet($Args['Info']))
+        $this->Make($Args['Info'], $Args['Vars']?? []);
+    }
+    
+    Function ItemGroup($Label=null)
+    {
+      return $this->TagAttr('ItemGroup', ['Label'=>$Label]);
+    }
+
+    Function PropertyGroup($Label=null, $Condition=null, $Vars=null)
+    {
+      $this->TagAttr('PropertyGroup', ['Condition'=>$Condition, 'Label'=>$Label]);
+      if(!Is_Null($Vars))
+      {
+        ForEach($Vars As $k=>$v)
+          $this->Tag($k)->Text($v)->End();
+        if(!$Vars)
+          $this->Text("\n  ");
+        $this->End();
+      }
+      return $this;
+    }
+    
+    Function Import($File)
+    {
+      return $this->FullTagAttr('Import', ['Project'=>$File]);
+    }
+    
+  //****************************************************************
+  
+    Function Make(C_Builder_Program_VS_Solution $Info, $Vars)
+    {
+      $this->XML();
+      $this->TagAttr('Project', [
+        'DefaultTargets' =>'Build' ,
+        'ToolsVersion'   =>'4.0'   ,
+        'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
+      ]);
+      
+      $this->ItemGroup('ProjectConfigurations');
+      ForEach($Vars['Solutions']As $Solution)
+      {
+        $this->TagAttr('ProjectConfiguration', ['Include'=>$Solution['Solution']]);
+        $this->Tag('Configuration' )->Text($Solution['Config'   ])->End();
+        $this->Tag('Platform'      )->Text($Solution['Platform' ])->End();
+        $this->End();
+      } 
+      $this->End();
+      
+      $this->PropertyGroup('Globals',null,[
+        'ProjectGuid' =>$Vars['ProjectGUID'] ,
+        'Keyword'     =>'MakeFileProj'       ,
+        'ProjectName' =>$Vars['ProjectName'] ,
+      ]);
+      
+      $this->Import('$(VCTargetsPath)\Microsoft.Cpp.Default.props');
+      
+      ForEach($Vars['Solutions']As $Solution)
+        $this->PropertyGroup('Configuration', $Solution['Condition'], [
+          'ConfigurationType'=>'Makefile',
+          'UseDebugLibraries'=>'true',
+        ]+$Solution['Props']);
+      
+      $this->Raw($Vars['CustomProps']."\n\n");
+      $this->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
+      $this->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->Text("\n  ")->End();
+      ForEach($Vars['Solutions']As $Solution)
+        $this->Tag('ImportGroup')
+          ->Attr('Condition', $Solution['Condition'])
+          ->FullTagAttr('Import', [
+            'Project'   =>         '$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props',
+            'Condition' =>'exists(\'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props\')',
+            'Label'     =>'LocalAppDataPlatform',
+          ])
+        ->End();
+      
+      ForEach($Vars['Solutions']As $Solution)
+        $this->Tag('ImportGroup')
+          ->Attr('Label'     ,'PropertySheets')
+          ->Attr('Condition' ,$Solution['Condition'])
+          ->FullTagAttr('Import', [
+            'Project'   =>         '$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props',
+            'Condition' =>'exists(\'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props\')',
+            'Label'     =>'LocalAppDataPlatform',
+          ])
+        ->End();
+      
+      $this->PropertyGroup('UserMacros',null,[]);
+      $this->Raw($Vars['NMakeCompiler']."\n");
+
+      ForEach($Vars['Solutions']As $Solution)
+        $this->PropertyGroup(null, $Solution['Condition'], [
+          'NMakeBuildCommandLine'        =>'$(NMakeBuildCommandLine)'        ,
+          'NMakeOutput'                  =>'$(NMakeOutput)'                  ,
+          'NMakeCleanCommandLine'        =>'$(NMakeCleanCommandLine)'        ,
+          'NMakeReBuildCommandLine'      =>'$(NMakeReBuildCommandLine)'      ,
+        # 'NMakePreprocessorDefinitions' =>'$(NMakePreprocessorDefinitions)' ,
+        ]);
+        
+      $this->Tag('ItemDefinitionGroup')->Text("\n  ")->End();
+      
+      If(False)
+        $this->Tag('ItemGroup')
+          ->FullTagAttr('None', ['Include'=>'readme.txt'])
+          ->End();
+
+      $this->Import('$(VCTargetsPath)\Microsoft.Cpp.targets');
+      $this->Tag('ImportGroup')
+        ->Attr('Label', 'ExtensionTargets')
+        ->Text("\n  ")
+        ->End();
+      
+      $this->End('Project');
+    }
+    
+  //****************************************************************
+  // Magic
+
+    Function __toString()
+    {
+      return $this->Result->Get_Content();
+    }
+    
+  //****************************************************************
+  }
+?>

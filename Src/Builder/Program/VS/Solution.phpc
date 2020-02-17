@@ -56,10 +56,11 @@
       
       ForEach($Vars['Projects']As $Project)
       {
-        $Template =$this->Template_Loader->Load_Template   ($_Vars, '/NMake.vcxproj');
+      //$Template =$this->Template_Loader->Load_Template   ($_Vars, '/NMake.vcxproj');
         $Output   =$Project['OutFile'];
        
-        $Content = $Template->Exec_To_Str($Project);
+      //$Content = $Template->Exec_To_Str($Project);
+        $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Vars'=>$Project]);
   
         $Content=str_replace("\r", '', $Content);
         $Content=str_replace("\n", "\r\n", $Content);
