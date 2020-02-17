@@ -54,7 +54,7 @@
     Function LogChanging($Logger)
     {
       if(!$this->WasChanged) return;
-      $Log=$Logger->Log('Log', '  ', $this->GetKey(), ' ', $this->GetMyLogChangingType());
+      $Log=$Logger->Log('Debug', '  ', $this->GetKey(), ' ', $this->GetMyLogChangingType());
       ForEach($this->DepensOn As $Item)
         if($Item->WasChanged)
           $Log('    ', $Item->GetKey(), ' ', $Item->GetLogChangingType());

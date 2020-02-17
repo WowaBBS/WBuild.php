@@ -63,6 +63,7 @@
   
   if($LogFile!=='')
     $Loader->GetLogger()->Add($LogFile);
+  $Loader->GetLogger()->Get('Console')->SetLogLevel('Log');
 //var_dump($argv);
 //return;
  
