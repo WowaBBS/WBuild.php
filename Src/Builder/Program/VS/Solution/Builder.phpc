@@ -98,8 +98,8 @@
       ForEach($Vars['Projects']As $Project)
       {
         $Res->Section('Project',
-          '"'.$Project['TypeGUID'].'"',
-          '"'.$Project['ProjectName'].'", "'.$Project['File'].'", "'.$Project['ProjectGUID'].'"'
+          '"'.$Project->TypeGUID.'"',
+          '"'.$Project->Name.'", "'.$Project->RelFile().'", "'.$Project->GUID.'"'
         );
         if(false) // TODO:
         {
@@ -122,7 +122,7 @@
       ForEach($Vars['ProjectConfigurationPlatforms']As $PCP)
         ForEach($PCP['List'] As $Item)
         {
-          $Key=$PCP['ProjectGUID'].'.'.$Item['SlnSolution'];
+          $Key=$PCP['GUID'].'.'.$Item['SlnSolution'];
           $Res[$Key.'.ActiveCfg']=$Item['Solution'];
           If($Item['HasBuild'])                                           
             $Res[$Key.'.Build.0']=$Item['Solution'];

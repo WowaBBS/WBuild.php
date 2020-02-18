@@ -1,0 +1,11 @@
+<?
+  $Loader->Parent_Class('/Builder/Program/VS/Project/Base');
+  
+  class C_Builder_Program_VS_Project_Folder extends C_Builder_Program_VS_Project_Base
+  {
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+    }
+  }
+?>

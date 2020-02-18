@@ -1,0 +1,33 @@
+<?
+  $Loader->Parent_Class('/Builder/Program/VS/Project/Base');
+  
+  class C_Builder_Program_VS_Project_File extends C_Builder_Program_VS_Project_Base
+  {
+    protected Array $Depends=[];
+    Var $CustomProps   =''; // TODO:
+    Var $NMakeCompiler ='';
+    Var $RelDir        =''; // TODO: Remove
+  
+    Function _Init(Array $Args)
+    {
+      $this->Depends       =$Args['Depends'       ]?? [];
+      $this->CustomProps   =$Args['CustomProps'   ]?? '';
+      $this->RelDir        =$Args['RelDir'        ]?? ''; // TODO: Remove
+      $this->NMakeCompiler =C_Builder_Program_VS_Solution::ProcessText($Args['NMakeCompiler' ]?? [], 2);
+      Parent::_Init($Args);
+    }
+    
+    Function GetDepends()
+    {
+      $Res=[];
+      $Solution=$this->GetSolution();
+      ForEach($this->Depends As $Depends)
+        $Res[]=$Solution->GetProject($Depends);
+      return $Res;
+    }
+    
+    Function File() { return $this->Id.'.vcxproj'; } // TODO: Custom ext
+    Function RelFile() { return $this->GetSolution()->VcxRelDir.$this->RelDir.$this->File(); }
+    Function GetSolutions() { return $this->GetSolution()->GetSolutions(); }
+  }
+?>

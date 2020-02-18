@@ -1,0 +1,28 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  class C_Builder_Program_VS_Project_Base extends C_Object
+  {
+    Private $Solution;
+    Var $Id       ='';
+    Var $Name     ='';
+    Var $GUID     ='';
+    Var $Type     ='';
+    Var $TypeGUID ='';
+    
+    Function _Init(Array $Args)
+    {
+      $Solution=$Args['Solution'];
+      $GUIDs=$Solution->GUIDs;
+      $this->Solution =WeakReference::create($Solution);
+      $this->Id       =$Args['Id'   ];
+      $this->Name     =$Args['Name' ]?? $this->Id;
+      $this->Type     =$Args['Type' ];
+      $this->GUID     =$GUIDs->Generate($Solution->GUID_Key.$this->Type.$this->Id);
+      $this->TypeGUID =$GUIDs->Get($this->Type);
+      Parent::_Init($Args);
+    }
+    
+    Function GetSolution() { return $this->Solution->get(); }
+  }
+?>

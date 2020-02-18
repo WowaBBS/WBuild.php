@@ -40,8 +40,9 @@
     
   //****************************************************************
   
-    Function Make(C_Builder_Program_VS_Solution $Info, $Vars)
+    Function Make(C_Builder_Program_VS_Solution $Info, $Proj)
     {
+      $Solutions=$Proj->GetSolutions();
       $this->XML();
       $this->TagAttr('Project', [
         'DefaultTargets' =>'Build' ,
@@ -50,7 +51,7 @@
       ]);
       
       $this->ItemGroup('ProjectConfigurations');
-      ForEach($Vars['Solutions']As $Solution)
+      ForEach($Solutions As $Solution)
       {
         $this->TagAttr('ProjectConfiguration', ['Include'=>$Solution['Solution']]);
         $this->Tag('Configuration' )->Text($Solution['Config'   ])->End();
@@ -60,23 +61,24 @@
       $this->End();
       
       $this->PropertyGroup('Globals',null,[
-        'ProjectGuid' =>$Vars['ProjectGUID'] ,
-        'Keyword'     =>'MakeFileProj'       ,
-        'ProjectName' =>$Vars['ProjectName'] ,
+        'ProjectGuid' =>$Proj->GUID    ,
+        'Keyword'     =>'MakeFileProj' ,
+        'ProjectName' =>$Proj->Name    ,
       ]);
       
       $this->Import('$(VCTargetsPath)\Microsoft.Cpp.Default.props');
       
-      ForEach($Vars['Solutions']As $Solution)
+      ForEach($Solutions As $Solution)
         $this->PropertyGroup('Configuration', $Solution['Condition'], [
           'ConfigurationType'=>'Makefile',
           'UseDebugLibraries'=>'true',
         ]+$Solution['Props']);
       
-      $this->Raw($Vars['CustomProps']."\n\n");
+      $this->Raw($Proj->CustomProps."\n\n");
       $this->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
       $this->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->Text("\n  ")->End();
-      ForEach($Vars['Solutions']As $Solution)
+      if(false) // TODO: Remove
+      ForEach($Solutions As $Solution)
         $this->Tag('ImportGroup')
           ->Attr('Condition', $Solution['Condition'])
           ->FullTagAttr('Import', [
@@ -86,7 +88,7 @@
           ])
         ->End();
       
-      ForEach($Vars['Solutions']As $Solution)
+      ForEach($Solutions As $Solution)
         $this->Tag('ImportGroup')
           ->Attr('Label'     ,'PropertySheets')
           ->Attr('Condition' ,$Solution['Condition'])
@@ -98,9 +100,9 @@
         ->End();
       
       $this->PropertyGroup('UserMacros',null,[]);
-      $this->Raw($Vars['NMakeCompiler']."\n");
+      $this->Raw($Proj->NMakeCompiler."\n");
 
-      ForEach($Vars['Solutions']As $Solution)
+      ForEach($Solutions As $Solution)
         $this->PropertyGroup(null, $Solution['Condition'], [
           'NMakeBuildCommandLine'        =>'$(NMakeBuildCommandLine)'        ,
           'NMakeOutput'                  =>'$(NMakeOutput)'                  ,
@@ -114,7 +116,68 @@
       If(False)
         $this->Tag('ItemGroup')
           ->FullTagAttr('None', ['Include'=>'readme.txt'])
+/* TODO:
+  <ItemGroup>
+    <ProjectReference Include="..\Builder\SWEditor\PropertyGridEx\PropertyGridEx.csproj">
+      <Project>{b0bb47f2-21c4-41fc-b6e6-40757adfc4a1}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Builder\SWEditor\SortableBindingList\SortableBindingList.csproj">
+      <Project>{55d9acdb-5362-4faa-9f4d-a033dc0f096d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="FogTuner\FogTuner.vcxproj">
+      <Project>{e4d06f53-5d5a-4055-905f-2f08356e3964}</Project>
+      <Private>false</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="ScriptExtensions\ScriptExtensions.vcxproj">
+      <Project>{0ffcfee6-cf37-4462-a6d1-ee6a8812980d}</Project>
+      <Private>false</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="TerrainGenerator\TerrainGenerator.vcxproj">
+      <Project>{de987a43-cad8-4a38-9396-37aa24f74275}</Project>
+      <Private>false</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="TextureMixer\TextureMixer.vcxproj">
+      <Project>{59f3b680-1939-45ff-9241-c66a211c22d2}</Project>
+      <Private>false</Private>
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </ProjectReference>
+*/
           ->End();
+          
+/* TODO:
+  <ItemGroup>
+    <Reference Include="System">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Data.Linq" />
+    <Reference Include="System.Drawing">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Management" />
+    <Reference Include="System.Windows.Forms">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Xml">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+  </ItemGroup>
+*/
 
       $this->Import('$(VCTargetsPath)\Microsoft.Cpp.targets');
       $this->Tag('ImportGroup')

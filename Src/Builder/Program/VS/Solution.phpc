@@ -17,15 +17,17 @@
     Var $Configs   =[];
     Var $Projects  =[];
     
+    Var $DefaultProjectType='C++';
+    
     Var String $GUID_Key='';
+    
+    Var $CustomProps   =''; // TODO:
+    Var $NMakeCompiler =''; // TODO:
+    Var $VcxRelDir     =''; // TODO: Remove
+    Var $VcxOutDir     =''; // TODO: Remove
     
     Function _Init(Array $Args)
     {
-      $this->Platforms =$Args['Platforms' ]?? [];
-      $this->Configs   =$Args['Configs'   ]?? [];
-      $this->Projects  =$Args['Projects'  ]?? [];
-      $this->GUID_Key  =$Args['Name'      ]?? 'NoName';
-
       $this->GUIDs=$this->Get_Singleton('/Builder/Program/VS/GUIDs');
       $TLoader=$this->Create_Object('/Tmpl/Loader');
       $Manager_Args=[
@@ -37,6 +39,16 @@
       $TLoader->Types['w2_cpp']=$this->Create_Object('/Tmpl/W2/Manager', $Manager_Args);
       $TLoader->DefType='w2_cpp';
       $this->Template_Loader=$TLoader;
+      
+      $this->Platforms     =$Args['Platforms' ]?? [];
+      $this->Configs       =$Args['Configs'   ]?? [];
+      $this->GUID_Key      =$Args['Name'      ]?? 'NoName';
+      $this->CustomProps   =Static::ProcessText($Args['CustomProps'   ]?? [], 2);
+      $this->NMakeCompiler =$Args['NMakeCompiler' ]?? [];
+      $this->VcxRelDir     =$Args['VcxRelDir']?? ''; if($this->VcxRelDir) $this->VcxRelDir.='\\' ; // TODO: Remove
+      $this->VcxOutDir     =$Args['VcxOutDir']?? ''; if($this->VcxOutDir) $this->VcxOutDir.='\\' ; // TODO: Remove
+      $this->AddProjects(   $Args['Projects'  ]?? []);
+
       Parent::_Init($Args);
     }
     
@@ -44,6 +56,26 @@
     {
       $Res=(String)($this->Version*100);
       return SubStr($Res, 0, -2).'.'.SubStr($Res, -2);
+    }
+    
+    Function AddProjects($List)
+    {
+      ForEach($List As $Id=>$Project)
+        $this->AddProject($Id, $Project);
+    }
+    
+    Function AddProject($Id, $Args)
+    {
+      $Args['Solution'      ]   = $this ;
+      $Args['Id'            ] ??= $Id;
+      $Args['Type'          ] ??= $this->DefaultProjectType ;
+      $Args['CustomProps'   ] ??= $this->CustomProps   ;
+      $Args['NMakeCompiler' ] ??= $this->NMakeCompiler ;
+      $Res=$this->Create_Object('/Builder/Program/VS/Project/File', $Args);
+      If(IsSet($this->Projects[$Id]))
+        $this->Log('Error', 'Project ', $Id, ' already exists');
+      $this->Projects[$Id]=$Res;
+      return $Res;
     }
     
     Function SaveToFiles($Vars)
@@ -57,7 +89,7 @@
       ForEach($Vars['Projects']As $Project)
       {
       //$Template =$this->Template_Loader->Load_Template   ($_Vars, '/NMake.vcxproj');
-        $Output   =$Project['OutFile'];
+        $Output   =$this->VcxOutDir.$Project->File();
        
       //$Content = $Template->Exec_To_Str($Project);
         $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Vars'=>$Project]);
@@ -68,17 +100,25 @@
       }
     }
     
+    Function _GetSolutions()
+    {
+      $Configs   =$this->ProcessConfigs(); // TODO: Remove
+      $Platforms =$this->ProcessPlatforms(); // TODO: Remove
+      $Solutions =$this->ProcessSolutions($Configs, $Platforms);
+      return $Solutions;
+    }
+    
+    Function GetSolutions()
+    {
+      return Array_Values($this->_GetSolutions());
+    }
+    
     Function ProcessSlnVars($Param)
     {
       $Res=$Param;
-      $Res['Template']='/v11.sln'; // TODO: Add another versions
-      $SlnOutDir=$Res['SlnOutDir']?? ''; if($SlnOutDir) $SlnOutDir.='/'  ;
-      $VcxOutDir=$Res['VcxOutDir']?? ''; if($VcxOutDir) $VcxOutDir.='/'  ;
-      $VcxRelDir=$Res['VcxRelDir']?? ''; if($VcxRelDir) $VcxRelDir.='\\' ;
+      $SlnOutDir=$Res['SlnOutDir']?? ''; if($SlnOutDir) $SlnOutDir.='/'  ;       
       $Res['FileName']=$SlnOutDir.$Res['Name'].'.sln';
       $Res['CompilerSln']=Static::ProcessText($Res['CompilerSln'   ]??[]   );
-      $CustomProps       =Static::ProcessText($Res['CustomProps'   ]??[], 2);
-      $NMakeCompiler     =Static::ProcessText($Res['NMakeCompiler' ]??[], 2);
       
       $Res['Configs'   ]=$this->ProcessConfigs();
       $Res['Platforms' ]=$this->ProcessPlatforms();
@@ -90,21 +130,13 @@
       $SortSolutions =Array_Values($SortSolutions );
       $Res['Solutions'    ]=$Solutions;
       $Res['SortSolutions']=$SortSolutions;
-      $Projects =$this->ProcessProjects(
-        $Param['Type']?? 'C++',
-        $VcxRelDir,
-        $VcxOutDir,
-        $Solutions,
-        $CustomProps,
-        $NMakeCompiler
-      );
-      $Res['Projects'     ]=Array_Values($Projects);
+      $Res['Projects'     ]=Array_Values($this->Projects);
       $Res['SolutionGuid' ]=$this->GUIDs->Generate('SolutionGuid'.$this->GUID_Key);
       
       $ListConfig=[];
-      ForEach($Projects As $k=>$v)
+      ForEach($this->Projects As $k=>$v)
         $ListConfig[]=[
-          'ProjectGUID'=>$v['ProjectGUID'],
+          'GUID'=>$v->GUID,
           'List'=>$SortSolutions,
         ];
       $Res['ProjectConfigurationPlatforms']=$ListConfig;
@@ -136,43 +168,6 @@
         ];
       }
       return $Res;
-    }
-    
-    Function ProcessProjects(
-       $DefType       ,
-       $VcxRelDir     ,
-       $VcxOutDir     ,
-       $Solutions     ,
-       $CustomProps   ,
-       $NMakeCompiler
-    )
-    {
-      $Res=[];
-      ForEach($this->Projects As $k=>$v)
-      {
-        $Dir=$VcxRelDir;
-        $v['Name'        ]=$k;
-        $v['ProjectName' ] ??=$v['Name'];
-        $v['File'        ]   =$Dir.($v['RelDir']??'').$v['Name'].'.vcxproj';
-        $v['OutFile'     ]   =$VcxOutDir.$v['Name'].'.vcxproj';
-        $v['Type'        ] ??=$DefType;
-      //$v['ProjectGUID' ]   =$this->GUID_Key.$v['Type'].$k;
-        $v['ProjectGUID' ]   =$this->GUIDs->Generate($this->GUID_Key.$v['Type'].$k);
-        $v['TypeGUID'    ]   =$this->GUIDs->Get($v['Type']);
-        $Res[$k]=$v;
-      }
-      ForEach($Res As $k=>$v)
-      {
-        $Depends=$v['Depends']?? [];
-        ForEach($Depends As $k2=>$v2)
-          $Depends[$k2]=$Res[$v2];
-        $v['Depends'       ]=Array_Values($Depends);
-        $v['Solutions'     ]=$Solutions;
-        $v['CustomProps'   ]=$CustomProps;
-        $v['NMakeCompiler' ]=IsSet($v['NMakeCompiler'])? Static::ProcessText($v['NMakeCompiler'], 2): $NMakeCompiler;
-        $Res[$k]=$v;
-      }
-      return Array_Values($Res);
     }
     
     Function ProcessPlatforms()
