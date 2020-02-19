@@ -11,7 +11,7 @@
     {
       Parent::_Init($Args);
       if(IsSet($Args['Info']))
-        $this->Make($Args['Info'], $Args['Vars']?? []);
+        $this->Make($Args['Info']);
     }
     
     Function WriteLn(... $List)
@@ -84,7 +84,7 @@
     
   //****************************************************************
   
-    Function Make(C_Builder_Program_VS_Solution $Info, $Vars)
+    Function Make(C_Builder_Program_VS_Solution $Info)
     {
       $Res=$this;
       $Res('Microsoft Visual Studio Solution File, Format Version ', $Info->GetVersionStr());
@@ -95,7 +95,7 @@
         $Res['MinimumVisualStudioVersion' ]=$Info->MinimumVisualStudioVersion ;
       }
       
-      ForEach($Vars['Projects']As $Project)
+      ForEach($Info->GetProjects() As $Project)
       {
         $Res->Section('Project',
           '"'.$Project->TypeGUID.'"',
@@ -114,15 +114,15 @@
       $Res->Section('Global');
       
       $Res->GlobalSection('SolutionConfigurationPlatforms', 'preSolution');
-      ForEach($Vars['SortSolutions']As $Solution)
+      ForEach($Info->GetSortSolutions() As $Solution)
         $Res[$Solution['SlnSolution']]=$Solution['SlnSolution'];
       $Res->EndSection();
       
       $Res->GlobalSection('ProjectConfigurationPlatforms', 'postSolution');
-      ForEach($Vars['ProjectConfigurationPlatforms']As $PCP)
-        ForEach($PCP['List'] As $Item)
+      ForEach($Info->GetProjects() As $Project)
+        ForEach($Project->GetSortSolutions() As $Item)
         {
-          $Key=$PCP['GUID'].'.'.$Item['SlnSolution'];
+          $Key=$Project->GUID.'.'.$Item['SlnSolution'];
           $Res[$Key.'.ActiveCfg']=$Item['Solution'];
           If($Item['HasBuild'])                                           
             $Res[$Key.'.Build.0']=$Item['Solution'];
@@ -142,7 +142,7 @@
       }
 
       $Res->GlobalSection('ExtensibilityGlobals', 'postSolution');
-      $Res['SolutionGuid']=$Vars['SolutionGuid'];
+      $Res['SolutionGuid']=$Info->GUID;
       $Res->EndSection();
       
       $Res->EndSection();

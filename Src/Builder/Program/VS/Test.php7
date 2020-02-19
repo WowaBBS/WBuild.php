@@ -1,0 +1,64 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+  
+  $Data=[
+    'SlnOutDir'=>'Res', // ..
+    'VcxOutDir'=>'Res', // ..
+    'VcxRelDir'=>'Builder\Build\VStudio', // ..
+    'CustomProps'=>[
+      ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Release\'', 'Label'=>'Configuration_d',
+        ['_d', ''],
+      ],
+      ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Debug\'', 'Label'=>'Configuration_d',
+        ['_d', '_d'],
+      ],
+    ],
+    'NMakeCompiler'=>[],
+    'Name'=>'MySolution',
+    'Type'=>'C++',
+  //'ProjectFile'=> $Dir.$Name.'sln',
+    'Platforms'=>[
+      'Win32'   =>[                 'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}32'       ]],
+      'Win64'   =>[                 'Real'=>'x64'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}'         ]],
+      'WinArm'  =>[                 'Real'=>'arm'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_Arm'     ]],
+      'Linux'   =>['>'=>'_Linux'   ,'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_Linux'   ]],
+      'MSBuild' =>['<'=>'MSBuild ' ,'Real'=>'Win32' ,'Props'=>['WUse'=>'MSBuild' ,'ConfigPath'=>'{Var:ConfigPath}_MSBuild' ]],
+      'DoxyGen' =>['<'=>'DoxyGen ' ,'Real'=>'Win32' ,'Props'=>['WUse'=>'DoxyGen' ,'ConfigPath'=>'{Var:ConfigPath}_DoxyGen' ]],
+    ],
+    'Configs'=>[
+      'Development' =>['Props'=>['SimpleConfig'=>'Release' ,'ConfigPath'=>'Development' ]],
+      'Debug'       =>['Props'=>['SimpleConfig'=>'Debug'   ,'ConfigPath'=>'Debug'       ]],
+      'Full Debug'  =>['Props'=>['SimpleConfig'=>'Debug'   ,'ConfigPath'=>'FullDebug'   ]],
+      'Fast Debug'  =>['Props'=>['SimpleConfig'=>'Release' ,'ConfigPath'=>'FastDebug'   ]],
+      'Shipping'    =>['Props'=>['SimpleConfig'=>'Release' ,'ConfigPath'=>'Shipping'    ]],
+    ],
+    'Projects'=>[
+      'Project1'=>[
+        'NMakeCompiler'=>['Import', 'Project'=>'$(ProjectDir)\Project1.vcxproj.compiler'],
+      ],
+      'Project2'=>[
+        'NMakeCompiler'=>['Import', 'Project'=>'$(ProjectDir)\Project2.vcxproj.compiler'],
+      ],
+      'SubProject1'=>[
+        'Name'=>'z-Filder-SubProject1',
+        'Depends'=>['Project2', 'SubProject2'],
+        'RelDir'=>'Filder\\',
+      ],
+      'SubProject2'=>[
+        'Name'=>'z-Depends-SubProject2',
+        'Depends'=>['Project2'],
+        'RelDir'=>'Filder\\',
+      ],
+      'SubProject3'=>[
+        'Name'=>'z-Depends-SubProject3',
+        'Type'=>'C++',
+        'Depends'=>['cAudio'],
+        'RelDir'=>'Filder\\',
+      ],
+    ],
+  ];
+
+  $Loader->GetLogger()->Add('Make.log');
+  $Solution=$Loader->Create_Object('/Builder/Program/VS/Solution', $Data);
+  $Solution->SaveToFiles();
+?>

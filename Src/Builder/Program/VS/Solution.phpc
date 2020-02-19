@@ -16,15 +16,19 @@
     Var $Platforms =[];
     Var $Configs   =[];
     Var $Projects  =[];
+    Protected $Solutions     =[];
+    Protected $SortSolutions =[];
     
     Var $DefaultProjectType='C++';
     
     Var String $GUID_Key='';
     
-    Var $CustomProps   =''; // TODO:
-    Var $NMakeCompiler =''; // TODO:
+    Var $CustomProps   =[]; // TODO:
+    Var $NMakeCompiler =[]; // TODO:
     Var $VcxRelDir     =''; // TODO: Remove
     Var $VcxOutDir     =''; // TODO: Remove
+    Var $SlnOutDir     =''; // TODO: Remove
+    Var $FileName      =''; // TODO: Remove
     
     Function _Init(Array $Args)
     {
@@ -37,17 +41,21 @@
         ],
       ];
       $TLoader->Types['w2_cpp']=$this->Create_Object('/Tmpl/W2/Manager', $Manager_Args);
+      $TLoader->Types['w2_cpp']->Cache=''; // Disable Cache
       $TLoader->DefType='w2_cpp';
       $this->Template_Loader=$TLoader;
       
-      $this->Platforms     =$Args['Platforms' ]?? [];
-      $this->Configs       =$Args['Configs'   ]?? [];
-      $this->GUID_Key      =$Args['Name'      ]?? 'NoName';
-      $this->CustomProps   =Static::ProcessText($Args['CustomProps'   ]?? [], 2);
+      $this->GUID_Key      =$Args['Name'          ]?? 'NoName';
+      $this->CustomProps   =$Args['CustomProps'   ]?? [];
       $this->NMakeCompiler =$Args['NMakeCompiler' ]?? [];
-      $this->VcxRelDir     =$Args['VcxRelDir']?? ''; if($this->VcxRelDir) $this->VcxRelDir.='\\' ; // TODO: Remove
-      $this->VcxOutDir     =$Args['VcxOutDir']?? ''; if($this->VcxOutDir) $this->VcxOutDir.='\\' ; // TODO: Remove
-      $this->AddProjects(   $Args['Projects'  ]?? []);
+      $this->VcxRelDir     =$Args['VcxRelDir'     ]?? ''; if($this->VcxRelDir) $this->VcxRelDir.='\\' ; // TODO: Remove
+      $this->VcxOutDir     =$Args['VcxOutDir'     ]?? ''; if($this->VcxOutDir) $this->VcxOutDir.='\\' ; // TODO: Remove
+      $this->SlnOutDir     =$Args['SlnOutDir'     ]?? ''; if($this->SlnOutDir) $this->SlnOutDir.='\\' ; // TODO: Remove
+      $this->GUID          =$this->GUIDs->Generate('SolutionGuid'.$this->GUID_Key);
+      $this->SetPlatforms  ($Args['Platforms'     ]?? []);
+      $this->SetConfigs    ($Args['Configs'       ]?? []);
+      $this->AddProjects(   $Args['Projects'      ]?? []);
+      $this->FileName      =$this->SlnOutDir.$Args['Name'].'.sln';
 
       Parent::_Init($Args);
     }
@@ -78,21 +86,16 @@
       return $Res;
     }
     
-    Function SaveToFiles($Vars)
+    Function SaveToFiles()
     {
-      $_Vars=[];
-      
-      $Output   =$Vars['FileName'];
+      $Output   =$this->FileName;
       CreatePath(ExtractFilePath($Output));
-      file_put_contents($Output, $this->Create_Object('/Builder/Program/VS/Solution/Builder', ['Info'=>$this, 'Vars'=>$Vars]));
+      file_put_contents($Output, $this->Create_Object('/Builder/Program/VS/Solution/Builder', ['Info'=>$this]));
       
-      ForEach($Vars['Projects']As $Project)
+      ForEach($this->GetProjects() As $Project)
       {
-      //$Template =$this->Template_Loader->Load_Template   ($_Vars, '/NMake.vcxproj');
         $Output   =$this->VcxOutDir.$Project->File();
-       
-      //$Content = $Template->Exec_To_Str($Project);
-        $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Vars'=>$Project]);
+        $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Project'=>$Project]);
   
         $Content=str_replace("\r", '', $Content);
         $Content=str_replace("\n", "\r\n", $Content);
@@ -100,54 +103,23 @@
       }
     }
     
-    Function _GetSolutions()
+    Function InvelidateSolutions()
     {
-      $Configs   =$this->ProcessConfigs(); // TODO: Remove
-      $Platforms =$this->ProcessPlatforms(); // TODO: Remove
-      $Solutions =$this->ProcessSolutions($Configs, $Platforms);
-      return $Solutions;
+      $this->Solutions     =[];
+      $this->SortSolutions =[];
     }
+
+    Function _GetSolutions() { return $this->Solutions?: $this->ProcessSolutions(); }
+    Function GetSolutions() { return $this->_GetSolutions(); }
+    Function _GetSortSolutions() { $Res=$this->_GetSolutions(); KSort($Res); return $Res; }
+//  Function GetSortSolutions() { return $this->SortSolutions ??= $this->_GetSortSolutions(); }
+    Function GetSortSolutions() { return $this->SortSolutions ?: $this->SortSolutions=$this->_GetSortSolutions(); }
+    Function GetProjects() { return $this->Projects; }
     
-    Function GetSolutions()
-    {
-      return Array_Values($this->_GetSolutions());
-    }
-    
-    Function ProcessSlnVars($Param)
-    {
-      $Res=$Param;
-      $SlnOutDir=$Res['SlnOutDir']?? ''; if($SlnOutDir) $SlnOutDir.='/'  ;       
-      $Res['FileName']=$SlnOutDir.$Res['Name'].'.sln';
-      $Res['CompilerSln']=Static::ProcessText($Res['CompilerSln'   ]??[]   );
-      
-      $Res['Configs'   ]=$this->ProcessConfigs();
-      $Res['Platforms' ]=$this->ProcessPlatforms();
-      
-      $Solutions        =$this->ProcessSolutions($Res['Configs'], $Res['Platforms']);
-      $SortSolutions=$Solutions;
-      KSort($SortSolutions);
-      $Solutions     =Array_Values($Solutions     );
-      $SortSolutions =Array_Values($SortSolutions );
-      $Res['Solutions'    ]=$Solutions;
-      $Res['SortSolutions']=$SortSolutions;
-      $Res['Projects'     ]=Array_Values($this->Projects);
-      $Res['SolutionGuid' ]=$this->GUIDs->Generate('SolutionGuid'.$this->GUID_Key);
-      
-      $ListConfig=[];
-      ForEach($this->Projects As $k=>$v)
-        $ListConfig[]=[
-          'GUID'=>$v->GUID,
-          'List'=>$SortSolutions,
-        ];
-      $Res['ProjectConfigurationPlatforms']=$ListConfig;
-      
-      return $Res;
-    }
-    
-    Function ProcessConfigs()
+    Function SetConfigs($Configs)
     {
       $Res=[];
-      ForEach($this->Configs As $Name=>$Item)
+      ForEach( $Configs As $Name=>$Item)
       {
         if(Is_Int($Name))
           $Name=$Item;
@@ -167,10 +139,11 @@
           'Props' =>$Props ,
         ];
       }
-      return $Res;
+      $this->Configs=$Res;
+      $this->InvelidateSolutions();
     }
     
-    Function ProcessPlatforms()
+    Function SetPlatforms($Platforms)
     {
       //Platforms
       $AllowPlatforms=[
@@ -181,7 +154,7 @@
       ];
       
       $Res=[];
-      ForEach($this->Platforms As $Name=>$Item)
+      ForEach($Platforms As $Name=>$Item)
       {
         if(Is_Int($Name))
           $Name=$Item;
@@ -207,14 +180,15 @@
           'Props'   =>$Props   ,
         ];
       }
-      return $Res;
+      $this->Platforms=$Res;
+      $this->InvelidateSolutions();
     }
     
-    Function ProcessSolutions(Array $Configs, Array $Platforms)
+    Function ProcessSolutions()
     {
       $Res=[];
-      ForEach($Configs As $Config)
-        ForEach($Platforms As $Platform)
+      ForEach($this->Configs As $Config)
+        ForEach($this->Platforms As $Platform)
         {
           $SlnSolution    =$Config['Name'].'|'.$Platform['Name'];
           $SolutionConfig =$Platform['Prefix'].$Config['Real'].$Platform['Postfix'];
@@ -240,7 +214,7 @@
             'HasBuild' =>true,
           ];
         }
-      return $Res;
+      return $this->Solutions=$Res;
     }
     
     Function ProcessProps(...$PropsList)
@@ -256,17 +230,5 @@
         }
       return $Res;
     }
-    
-    Static Function ProcessText($Res, $Indent=0)
-    {
-      if(Is_Array($Res))
-        $Res=Implode("\n", $Res);
-      $Res=StrTr($Res, ["\r"=>'']);
-      $Res=Explode("\n", $Res);
-      $Tab=Str_Repeat(' ', $Indent);
-      $Res=Implode("\r\n".$Tab, $Res);
-      return StrLen($Res)? $Tab.$Res:'';
-    }
-    
   }
 ?>

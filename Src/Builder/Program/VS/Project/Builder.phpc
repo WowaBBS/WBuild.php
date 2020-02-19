@@ -11,17 +11,17 @@
       $this->SelfCloseTag=' />';
       Parent::_Init($Args);
       if(IsSet($Args['Info']))
-        $this->Make($Args['Info'], $Args['Vars']?? []);
+        $this->Make($Args['Info'], $Args['Project']?? []);
     }
     
     Function ItemGroup($Label=null)
     {
-      return $this->TagAttr('ItemGroup', ['Label'=>$Label]);
+      return $this->Tag('ItemGroup')->AttrMap(['Label'=>$Label]);
     }
 
     Function PropertyGroup($Label=null, $Condition=null, $Vars=null)
     {
-      $this->TagAttr('PropertyGroup', ['Condition'=>$Condition, 'Label'=>$Label]);
+      $this->Tag('PropertyGroup')->AttrMap(['Condition'=>$Condition, 'Label'=>$Label]);
       if(!Is_Null($Vars))
       {
         ForEach($Vars As $k=>$v)
@@ -35,7 +35,7 @@
     
     Function Import($File)
     {
-      return $this->FullTagAttr('Import', ['Project'=>$File]);
+      return $this->Tag('Import')->AttrMap(['Project'=>$File])->End();
     }
     
   //****************************************************************
@@ -44,7 +44,7 @@
     {
       $Solutions=$Proj->GetSolutions();
       $this->XML();
-      $this->TagAttr('Project', [
+      $this->Tag('Project')->AttrMap([
         'DefaultTargets' =>'Build' ,
         'ToolsVersion'   =>'4.0'   ,
         'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
@@ -53,7 +53,7 @@
       $this->ItemGroup('ProjectConfigurations');
       ForEach($Solutions As $Solution)
       {
-        $this->TagAttr('ProjectConfiguration', ['Include'=>$Solution['Solution']]);
+        $this->Tag('ProjectConfiguration')->AttrMap(['Include'=>$Solution['Solution']]);
         $this->Tag('Configuration' )->Text($Solution['Config'   ])->End();
         $this->Tag('Platform'      )->Text($Solution['Platform' ])->End();
         $this->End();
@@ -74,33 +74,24 @@
           'UseDebugLibraries'=>'true',
         ]+$Solution['Props']);
       
-      $this->Raw($Proj->CustomProps."\n\n");
+      $this->TagTree($Proj->CustomProps);
       $this->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
       $this->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->Text("\n  ")->End();
-      if(false) // TODO: Remove
-      ForEach($Solutions As $Solution)
-        $this->Tag('ImportGroup')
-          ->Attr('Condition', $Solution['Condition'])
-          ->FullTagAttr('Import', [
-            'Project'   =>         '$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props',
-            'Condition' =>'exists(\'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props\')',
-            'Label'     =>'LocalAppDataPlatform',
-          ])
-        ->End();
       
       ForEach($Solutions As $Solution)
         $this->Tag('ImportGroup')
           ->Attr('Label'     ,'PropertySheets')
           ->Attr('Condition' ,$Solution['Condition'])
-          ->FullTagAttr('Import', [
+          ->Tag('Import')->AttrMap([
             'Project'   =>         '$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props',
             'Condition' =>'exists(\'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props\')',
             'Label'     =>'LocalAppDataPlatform',
           ])
+          ->End()
         ->End();
       
       $this->PropertyGroup('UserMacros',null,[]);
-      $this->Raw($Proj->NMakeCompiler."\n");
+      $this->TagTree($Proj->NMakeCompiler);
 
       ForEach($Solutions As $Solution)
         $this->PropertyGroup(null, $Solution['Condition'], [
@@ -115,7 +106,7 @@
       
       If(False)
         $this->Tag('ItemGroup')
-          ->FullTagAttr('None', ['Include'=>'readme.txt'])
+          ->Tag('None')->AttrMap(['Include'=>'readme.txt'])->End()
 /* TODO:
   <ItemGroup>
     <ProjectReference Include="..\Builder\SWEditor\PropertyGridEx\PropertyGridEx.csproj">

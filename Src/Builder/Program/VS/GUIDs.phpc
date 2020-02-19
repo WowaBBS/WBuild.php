@@ -51,7 +51,7 @@
     }
       
   
-    Function Get($Id)
+    Function GetType($Id)
     {
       return $this->ToGUID[$Id]?? $this->ToGUID[StrToLower($Id)]?? $this->_GetError($Id);
     }
