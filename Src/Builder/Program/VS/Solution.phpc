@@ -21,14 +21,13 @@
     
     Var $DefaultProjectType='C++';
     
-    Var String $GUID_Key='';
+    Var       String $Name     ='';
+    Var       String $GUID_Key ='';
     
-    Var $CustomProps   =[]; // TODO:
-    Var $NMakeCompiler =[]; // TODO:
-    Var $VcxRelDir     =''; // TODO: Remove
-    Var $VcxOutDir     =''; // TODO: Remove
-    Var $SlnOutDir     =''; // TODO: Remove
-    Var $FileName      =''; // TODO: Remove
+    Var       Array  $CustomProps   =[]; // TODO:
+    Var       Array  $NMakeCompiler =[]; // TODO:
+    Protected String $AbsPath       ='';
+    Protected String $VcxAbsPath    ='';
     
     Function _Init(Array $Args)
     {
@@ -45,17 +44,16 @@
       $TLoader->DefType='w2_cpp';
       $this->Template_Loader=$TLoader;
       
-      $this->GUID_Key      =$Args['Name'          ]?? 'NoName';
+      $this->Name          =$Args['Name'          ]?? 'NoName';
+      $this->GUID_Key      =$Args['GUID_Key'      ]?? $this->Name;
       $this->CustomProps   =$Args['CustomProps'   ]?? [];
       $this->NMakeCompiler =$Args['NMakeCompiler' ]?? [];
-      $this->VcxRelDir     =$Args['VcxRelDir'     ]?? ''; if($this->VcxRelDir) $this->VcxRelDir.='\\' ; // TODO: Remove
-      $this->VcxOutDir     =$Args['VcxOutDir'     ]?? ''; if($this->VcxOutDir) $this->VcxOutDir.='\\' ; // TODO: Remove
-      $this->SlnOutDir     =$Args['SlnOutDir'     ]?? ''; if($this->SlnOutDir) $this->SlnOutDir.='\\' ; // TODO: Remove
+      $this->AbsPath       =NormPath($Args['AbsPath'    ]?? './', true);
+      $this->VcxAbsPath    =NormPath($Args['VcxAbsPath' ]?? './', true);
       $this->GUID          =$this->GUIDs->Generate('SolutionGuid'.$this->GUID_Key);
       $this->SetPlatforms  ($Args['Platforms'     ]?? []);
       $this->SetConfigs    ($Args['Configs'       ]?? []);
       $this->AddProjects(   $Args['Projects'      ]?? []);
-      $this->FileName      =$this->SlnOutDir.$Args['Name'].'.sln';
 
       Parent::_Init($Args);
     }
@@ -66,10 +64,34 @@
       return SubStr($Res, 0, -2).'.'.SubStr($Res, -2);
     }
     
+    Function AbsPath():String { return $this->AbsPath; }
+    
+    Function CalcRelPath($BaseDir, $File)
+    {
+    //echo $BaseDir[1], ';', StrToLower(SubStr($BaseDir, 0, 2)), ';', StrToLower(SubStr($File, 0, 2)), "\n";
+      if(StrLen($BaseDir)!==0 && $BaseDir[1]!==':' || StrToLower(SubStr($BaseDir, 0, 2))===StrToLower(SubStr($File, 0, 2)))
+      {
+        $BaseDir=TPath::Create($BaseDir);
+        $File=TPath::Create($File);
+        $File->PathFrom($BaseDir);
+        $FileStr=$File->ToString();
+      }
+      else
+        $FileStr=$File;
+      return StrTr($FileStr, '/', '\\');
+    }
+    
     Function AddProjects($List)
     {
+      $Res=[];
       ForEach($List As $Id=>$Project)
-        $this->AddProject($Id, $Project);
+      {
+        if(Is_String($Id) && StrLen($Id)>1 && $Id[0]==='/')
+          $Res[$Id]=$this->AddFolder(SubStr($Id, 1), $Project);
+        else
+          $Res[$Id]=$this->AddProject($Id, $Project);
+      }
+      return $Res;
     }
     
     Function AddProject($Id, $Args)
@@ -79,6 +101,7 @@
       $Args['Type'          ] ??= $this->DefaultProjectType ;
       $Args['CustomProps'   ] ??= $this->CustomProps   ;
       $Args['NMakeCompiler' ] ??= $this->NMakeCompiler ;
+      $Args['AbsPath'       ] ??= $this->VcxAbsPath    ;
       $Res=$this->Create_Object('/Builder/Program/VS/Project/File', $Args);
       If(IsSet($this->Projects[$Id]))
         $this->Log('Error', 'Project ', $Id, ' already exists');
@@ -86,21 +109,45 @@
       return $Res;
     }
     
-    Function SaveToFiles()
+    Function AddFolder($Id, $Args)
     {
-      $Output   =$this->FileName;
+      $Args['Solution'      ]   = $this ;
+      $Args['Id'            ] ??= $Id;
+    # $Args['CustomProps'   ] ??= $this->CustomProps   ;
+    # $Args['NMakeCompiler' ] ??= $this->NMakeCompiler ;
+    # $Args['AbsPath'       ] ??= $this->VcxAbsPath    ;
+      $Res=$this->Create_Object('/Builder/Program/VS/Project/Folder', $Args);
+      If(IsSet($this->Projects[$Id]))
+        $this->Log('Error', 'Project ', $Id, ' already exists');
+      $this->Projects[$Id]=$Res;
+      return $Res;
+    }
+    
+    Function GetProject($Id)
+    {
+      if(!IsSet($this->Projects[$Id]))
+        $this->Log('Error', 'Project ', $Id, ' not found in ',Array_Keys($this->Projects));
+      return $this->Projects[$Id];
+    }
+    
+    Function SaveToFiles(String $SlnOutDir, String $ProjDir)
+    {
+      $Output=$SlnOutDir.$this->Name.'.sln';
       CreatePath(ExtractFilePath($Output));
-      file_put_contents($Output, $this->Create_Object('/Builder/Program/VS/Solution/Builder', ['Info'=>$this]));
+      File_Put_Contents($Output, $this->Create_Object('/Builder/Program/VS/Solution/Builder', ['Info'=>$this]));
       
       ForEach($this->GetProjects() As $Project)
-      {
-        $Output   =$this->VcxOutDir.$Project->File();
-        $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Project'=>$Project]);
-  
-        $Content=str_replace("\r", '', $Content);
-        $Content=str_replace("\n", "\r\n", $Content);
-        file_put_contents($Output, $Content);
-      }
+        if(!$Project->IsFolder())
+        {
+          $Output   =$ProjDir.$Project->File();
+          CreatePath(ExtractFilePath($Output));
+          
+          $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Project'=>$Project]);
+    
+          $Content=str_replace("\r", '', $Content);
+          $Content=str_replace("\n", "\r\n", $Content);
+          File_Put_Contents($Output, $Content);
+        }
     }
     
     Function InvelidateSolutions()

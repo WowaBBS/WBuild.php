@@ -87,25 +87,51 @@
     Function Make(C_Builder_Program_VS_Solution $Info)
     {
       $Res=$this;
+      $Projects=$Info->GetProjects();
+      $Is12=$Info->Version>=12.0;
+      $HasFolders=false;
+      
       $Res('Microsoft Visual Studio Solution File, Format Version ', $Info->GetVersionStr());
       $Res('# ', $Info->Compiler);
-      if($Info->Version>=12.0)
+      if($Is12)
       {
         $Res['VisualStudioVersion'        ]=$Info->VisualStudioVersion        ;
         $Res['MinimumVisualStudioVersion' ]=$Info->MinimumVisualStudioVersion ;
       }
       
-      ForEach($Info->GetProjects() As $Project)
+      $AbsPath=$Info->AbsPath();
+      ForEach($Projects As $Project)
       {
+        $Name=$Project->GetName($Is12? null:'-');
+        if($Project->IsFolder())
+        {
+          if($Is12)
+          {
+            $Path=$Name;
+            $HasFolders=true;
+          }
+          else
+            continue;
+        }
+        else
+          $Path=$Project->RelFilePath($AbsPath);
+        
         $Res->Section('Project',
           '"'.$Project->TypeGUID.'"',
-          '"'.$Project->Name.'", "'.$Project->RelFile().'", "'.$Project->GUID.'"'
+          '"'.$Name.'", "'.$Path.'", "'.$Project->GUID.'"'
         );
-        if(false) // TODO:
+        if($Is12)
         {
           $Res->Section('ProjectSection', 'ProjectDependencies', 'postProject');
-          $Res['{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}']='{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}';
-          $Res['{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}']='{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}';
+          ForEach($Project->GetDepends() As $Depends)
+          {
+            $DepProj=$Depends['Proj'];
+            if($Folder=$DepProj->GetFolder())
+            {
+              $GUID=$DepProj->GUID;
+              $Res[$GUID]=$GUID;
+            }
+          }
           $Res->EndSection();
         }
         $Res->EndSection();
@@ -119,25 +145,27 @@
       $Res->EndSection();
       
       $Res->GlobalSection('ProjectConfigurationPlatforms', 'postSolution');
-      ForEach($Info->GetProjects() As $Project)
-        ForEach($Project->GetSortSolutions() As $Item)
-        {
-          $Key=$Project->GUID.'.'.$Item['SlnSolution'];
-          $Res[$Key.'.ActiveCfg']=$Item['Solution'];
-          If($Item['HasBuild'])                                           
-            $Res[$Key.'.Build.0']=$Item['Solution'];
-        }
+      ForEach($Projects As $Project)
+        if(!$Project->IsFolder())
+          ForEach($Project->GetSortSolutions() As $Item)
+          {
+            $Key=$Project->GUID.'.'.$Item['SlnSolution'];
+            $Res[$Key.'.ActiveCfg']=$Item['Solution'];
+            If($Item['HasBuild'])
+              $Res[$Key.'.Build.0']=$Item['Solution'];
+          }
       $Res->EndSection();
       
       $Res->GlobalSection('SolutionProperties', 'preSolution');
       $Res['HideSolutionNode']='FALSE';
       $Res->EndSection();
 
-      if($Info->Version>=12.0 && false) // TODO: Folders
+      if($HasFolders)
       {
         $Res->GlobalSection('NestedProjects', 'preSolution');
-        $Res['{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}']='{716DAA61-511E-43E5-924A-923D93239FE9}';
-        $Res['{55D9ACDB-5362-4FAA-9F4D-A033DC0F096D}']='{716DAA61-511E-43E5-924A-923D93239FE9}';
+        ForEach($Projects As $Project)
+          if($Folder=$Project->GetFolder())
+            $Res[$Project->GUID]=$Folder->GUID;
         $Res->EndSection();
       }
 

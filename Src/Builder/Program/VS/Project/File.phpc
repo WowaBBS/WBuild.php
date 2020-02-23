@@ -3,31 +3,74 @@
   
   class C_Builder_Program_VS_Project_File extends C_Builder_Program_VS_Project_Base
   {
-    protected Array $Depends=[];
-    Var $CustomProps   =[]; // TODO:
-    Var $NMakeCompiler =[];
-    Var $RelDir        =''; // TODO: Remove
+    protected Array  $Depends       =[];
+    Var       Array  $CustomProps   =[];
+    Var       Array  $NMakeCompiler =[];
+    Var       String $AbsPath       ='';
   
     Function _Init(Array $Args)
     {
-      $this->Depends       =$Args['Depends'       ]?? [];
       $this->CustomProps   =$Args['CustomProps'   ]?? [];
-      $this->RelDir        =$Args['RelDir'        ]?? ''; // TODO: Remove
+      $this->AbsPath       =NormPath($Args['AbsPath' ]?? './', true);
       $this->NMakeCompiler =$Args['NMakeCompiler' ]?? [];
+      $this->SetDepends    ($Args['Depends'       ]?? []);
       Parent::_Init($Args);
+    }
+    
+    Function SetDepends($List)
+    {
+      $Res=[];
+      static $Def=['Param'=>[]];
+      ForEach($List As $k=>$v)
+      {
+        if(Is_Object($v))
+        {
+          $k=$v->Id;
+          $v=$Def;
+        }
+        elseIf(Is_String($v))
+        {
+          $k=$v;
+          $v=$Def;
+        }
+        elseIf(Is_Array($v) && Is_String($k))
+        {
+          $v=['Param'=>$v];
+        }
+        else
+        {
+          $this->Log('Error', 'Unknown format of depends')->Debug([$k=>$v]);
+          continue;
+        }
+        
+        $Res[$k]=$v;
+      } 
+      $this->Depends=$Res;
     }
     
     Function GetDepends()
     {
       $Res=[];
       $Solution=$this->GetSolution();
-      ForEach($this->Depends As $Depends)
-        $Res[]=$Solution->GetProject($Depends);
+      ForEach($this->Depends As $k=>$Depends)
+      {
+        $Item=$Depends;
+        $Item['Proj']=$Solution->GetProject($k);
+        $Res[]=$Item;
+      }
       return $Res;
     }
     
     Function File() { return $this->Id.'.vcxproj'; } // TODO: Custom ext
-    Function RelFile() { return $this->GetSolution()->VcxRelDir.$this->RelDir.$this->File(); }
+    
+    Function AbsFilePath() { return $this->AbsPath.$this->File(); }
+    Function AbsPath() { return $this->AbsPath; }
+    
+    Function RelFilePath($From)
+    {
+      return $this->GetSolution()->CalcRelPath($From, $this->AbsFilePath());
+    }
+    
     Function GetSolutions() { return $this->GetSolution()->GetSolutions(); }
     Function GetSortSolutions() { return $this->GetSolution()->GetSortSolutions(); }
   }

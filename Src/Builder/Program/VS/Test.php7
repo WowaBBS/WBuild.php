@@ -1,10 +1,12 @@
 <?
   for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+
+  $SlnOutDir='Res/'; // ..
+  $VcxOutDir='Res/'; // ..
   
   $Data=[
-    'SlnOutDir'=>'Res', // ..
-    'VcxOutDir'=>'Res', // ..
-    'VcxRelDir'=>'Builder\Build\VStudio', // ..
+    'AbsPath'   =>'SlnDir/',
+    'VcxAbsPath'=>'VcxDir/', // 'Builder/Build/VStudio', // ..
     'CustomProps'=>[
       ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Release\'', 'Label'=>'Configuration_d',
         ['_d', ''],
@@ -39,26 +41,27 @@
       'Project2'=>[
         'NMakeCompiler'=>['Import', 'Project'=>'$(ProjectDir)\Project2.vcxproj.compiler'],
       ],
-      'SubProject1'=>[
-        'Name'=>'z-Filder-SubProject1',
-        'Depends'=>['Project2', 'SubProject2'],
-        'RelDir'=>'Filder\\',
-      ],
-      'SubProject2'=>[
-        'Name'=>'z-Depends-SubProject2',
-        'Depends'=>['Project2'],
-        'RelDir'=>'Filder\\',
-      ],
-      'SubProject3'=>[
-        'Name'=>'z-Depends-SubProject3',
-        'Type'=>'C++',
-        'Depends'=>['cAudio'],
-        'RelDir'=>'Filder\\',
+      '/Folder'=>[
+        'Projects'=>[
+          'SubProject1'=>[
+            'Depends'=>['Project2', 'SubProject2'],
+            'AbsDir'=>'Folder',
+          ],
+          'SubProject2'=>[
+            'Depends'=>['Project2'],
+            'AbsDir'=>'Folder',
+          ],
+          'SubProject3'=>[
+            'Type'=>'C++',
+            'Depends'=>['SubProject2'],
+            'AbsDir'=>'Folder',
+          ],
+        ],
       ],
     ],
   ];
 
   $Loader->GetLogger()->Add('Make.log');
   $Solution=$Loader->Create_Object('/Builder/Program/VS/Solution', $Data);
-  $Solution->SaveToFiles();
+  $Solution->SaveToFiles($SlnOutDir, $VcxOutDir);
 ?>

@@ -42,44 +42,45 @@
   
     Function Make(C_Builder_Program_VS_Solution $Info, $Proj)
     {
+      $Res=$this;
       $Solutions=$Proj->GetSolutions();
-      $this->XML();
-      $this->Tag('Project')->AttrMap([
+      $Res->XML();
+      $Res->Tag('Project')->AttrMap([
         'DefaultTargets' =>'Build' ,
         'ToolsVersion'   =>'4.0'   ,
         'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
       ]);
       
-      $this->ItemGroup('ProjectConfigurations');
-      ForEach($Solutions As $Solution)
+      $Res->ItemGroup('ProjectConfigurations');
+      ForEach($Solutions As $Solution) 
       {
-        $this->Tag('ProjectConfiguration')->AttrMap(['Include'=>$Solution['Solution']]);
-        $this->Tag('Configuration' )->Text($Solution['Config'   ])->End();
-        $this->Tag('Platform'      )->Text($Solution['Platform' ])->End();
-        $this->End();
+        $Res->Tag('ProjectConfiguration')->AttrMap(['Include'=>$Solution['Solution']]);
+        $Res->Tag('Configuration' )->Text($Solution['Config'   ])->End();
+        $Res->Tag('Platform'      )->Text($Solution['Platform' ])->End();
+        $Res->End();
       } 
-      $this->End();
+      $Res->End();
       
-      $this->PropertyGroup('Globals',null,[
+      $Res->PropertyGroup('Globals',null,[
         'ProjectGuid' =>$Proj->GUID    ,
         'Keyword'     =>'MakeFileProj' ,
         'ProjectName' =>$Proj->Name    ,
       ]);
       
-      $this->Import('$(VCTargetsPath)\Microsoft.Cpp.Default.props');
+      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.Default.props');
       
       ForEach($Solutions As $Solution)
-        $this->PropertyGroup('Configuration', $Solution['Condition'], [
+        $Res->PropertyGroup('Configuration', $Solution['Condition'], [
           'ConfigurationType'=>'Makefile',
           'UseDebugLibraries'=>'true',
         ]+$Solution['Props']);
       
-      $this->TagTree($Proj->CustomProps);
-      $this->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
-      $this->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->Text("\n  ")->End();
+      $Res->TagTree($Proj->CustomProps);
+      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
+      $Res->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->Text("\n  ")->End();
       
       ForEach($Solutions As $Solution)
-        $this->Tag('ImportGroup')
+        $Res->Tag('ImportGroup')
           ->Attr('Label'     ,'PropertySheets')
           ->Attr('Condition' ,$Solution['Condition'])
           ->Tag('Import')->AttrMap([
@@ -90,11 +91,11 @@
           ->End()
         ->End();
       
-      $this->PropertyGroup('UserMacros',null,[]);
-      $this->TagTree($Proj->NMakeCompiler);
+      $Res->PropertyGroup('UserMacros',null,[]);
+      $Res->TagTree($Proj->NMakeCompiler);
 
       ForEach($Solutions As $Solution)
-        $this->PropertyGroup(null, $Solution['Condition'], [
+        $Res->PropertyGroup(null, $Solution['Condition'], [
           'NMakeBuildCommandLine'        =>'$(NMakeBuildCommandLine)'        ,
           'NMakeOutput'                  =>'$(NMakeOutput)'                  ,
           'NMakeCleanCommandLine'        =>'$(NMakeCleanCommandLine)'        ,
@@ -102,45 +103,36 @@
         # 'NMakePreprocessorDefinitions' =>'$(NMakePreprocessorDefinitions)' ,
         ]);
         
-      $this->Tag('ItemDefinitionGroup')->Text("\n  ")->End();
+      $Res->Tag('ItemDefinitionGroup')->Text("\n  ")->End();
       
-      If(False)
-        $this->Tag('ItemGroup')
+      If(False) // Files
+        $Res->Tag('ItemGroup')
           ->Tag('None')->AttrMap(['Include'=>'readme.txt'])->End()
-/* TODO:
-  <ItemGroup>
-    <ProjectReference Include="..\Builder\SWEditor\PropertyGridEx\PropertyGridEx.csproj">
-      <Project>{b0bb47f2-21c4-41fc-b6e6-40757adfc4a1}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\Builder\SWEditor\SortableBindingList\SortableBindingList.csproj">
-      <Project>{55d9acdb-5362-4faa-9f4d-a033dc0f096d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="FogTuner\FogTuner.vcxproj">
-      <Project>{e4d06f53-5d5a-4055-905f-2f08356e3964}</Project>
-      <Private>false</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="ScriptExtensions\ScriptExtensions.vcxproj">
-      <Project>{0ffcfee6-cf37-4462-a6d1-ee6a8812980d}</Project>
-      <Private>false</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="TerrainGenerator\TerrainGenerator.vcxproj">
-      <Project>{de987a43-cad8-4a38-9396-37aa24f74275}</Project>
-      <Private>false</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </ProjectReference>
-    <ProjectReference Include="TextureMixer\TextureMixer.vcxproj">
-      <Project>{59f3b680-1939-45ff-9241-c66a211c22d2}</Project>
-      <Private>false</Private>
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </ProjectReference>
-*/
           ->End();
+      
+      if($DependsList=$Proj->GetDepends())
+      {
+        $Res->Tag('ItemGroup');
+        $AbsPath=$Proj->AbsPath();
+        ForEach($DependsList As $Depends)
+        {
+          $DepProj=$Depends['Proj'];
+          $Res->Tag('ProjectReference')->Attr('Include', $DepProj->RelFilePath($AbsPath));
+            $Res->TagTree(['Project'                      ,$DepProj->GUID  ]);
+            ForEach($Depends['Param'] As $k=>$v)
+              $Res->TagTree([$k ,$v]);
+          #?$Res->TagTree(['Name'                         ,'ProjectA'      ]);
+          # $Res->TagTree(['Private'                      ,'false'         ]);
+          # $Res->TagTree(['CopyLocalSatelliteAssemblies' ,'true'          ]);
+          # $Res->TagTree(['ReferenceOutputAssembly'      ,'true'          ]);
+          #?$Res->TagTree(['LinkLibraryDependencies'      ,'true'          ]);
+          #?$Res->TagTree(['UseLibraryDependencyInputs'   ,'false'         ]);
+          #?$Res->TagTree(['OutputItemType'               ,'Content'       ]);
+          #?$Res->TagTree(['CopyToOutputDirectory'        ,'PreserveNewest']);
+          $Res->End('ProjectReference');
+        }
+        $Res->End('ItemGroup');
+      }
           
 /* TODO:
   <ItemGroup>
@@ -170,13 +162,13 @@
   </ItemGroup>
 */
 
-      $this->Import('$(VCTargetsPath)\Microsoft.Cpp.targets');
-      $this->Tag('ImportGroup')
+      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.targets');
+      $Res->Tag('ImportGroup')
         ->Attr('Label', 'ExtensionTargets')
         ->Text("\n  ")
         ->End();
       
-      $this->End('Project');
+      $Res->End('Project');
     }
     
   //****************************************************************

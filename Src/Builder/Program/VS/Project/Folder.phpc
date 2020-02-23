@@ -3,9 +3,42 @@
   
   class C_Builder_Program_VS_Project_Folder extends C_Builder_Program_VS_Project_Base
   {
+    Protected Array $Projects=[];
+  
     Function _Init(Array $Args)
     {
+      $Args['Type' ]??='Solution Folder';
       Parent::_Init($Args);
+      $this->AddProjects($Args['Projects' ]??[]);
+    }
+    
+    Function GetProjects()
+    {
+      $Solution=$this->GetSolution();
+      $Res=[];
+      ForEach($this->Projects As $Project)
+        $Res[]=$Solution->GetProject($Project);
+      return $Res;
+    }
+    
+    Function AddProjects($List)
+    {
+      $Res=$this->GetSolution()->AddProjects($List);
+      ForEach($Res As $Id=>$Proj)
+        $Proj->SetFolder($this);
+      return $Res;
+    }
+
+    Function IsFolder() { return true; }
+
+    Function _AddProject($Item)
+    {
+      $this->Projects[$Item->Id]=$Item->Id;
+    }
+
+    Function _RemoveProject($Item)
+    {
+      UnSet($this->Projects[$Item->Id]);
     }
   }
 ?>

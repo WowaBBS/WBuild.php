@@ -9,6 +9,7 @@
     Var $GUID     ='';
     Var $Type     ='';
     Var $TypeGUID ='';
+    Var $Folder   =null;
     
     Function _Init(Array $Args)
     {
@@ -18,11 +19,29 @@
       $this->Id       =$Args['Id'   ];
       $this->Name     =$Args['Name' ]?? $this->Id;
       $this->Type     =$Args['Type' ];
-      $this->GUID     =$GUIDs->Generate($Solution->GUID_Key.$this->Type.$this->Id);
+      $this->GUID     =$Args['GUID' ]?? $GUIDs->Generate($Solution->GUID_Key.$this->Type.$this->Id);
       $this->TypeGUID =$GUIDs->GetType($this->Type);
       Parent::_Init($Args);
     }
     
+    Function GetName(?String $WithFolder=null)
+    {
+      if(!Is_Null($WithFolder) && $this->Folder)
+        return $this->Folder->GetName($WithFolder).$WithFolder.$this->Name;
+      return $this->Name;
+    }
+    
     Function GetSolution() { return $this->Solution->get(); }
+    
+    Function SetFolder(?C_Builder_Program_VS_Project_Folder $v=null)
+    {
+      if($this->Folder)
+        $this->Folder->_RemoveProject($this);
+      $this->Folder=$v;
+      if($this->Folder)
+        $this->Folder->_AddProject($this);
+    }
+    
+    Function IsFolder() { return false; }
   }
 ?>
