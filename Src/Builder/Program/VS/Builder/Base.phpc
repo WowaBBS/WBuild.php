@@ -1,0 +1,24 @@
+<?
+  $this->Parent_Class('/Object');
+  
+  class C_Builder_Program_VS_Builder_Base extends C_Object
+  {
+    Var $Manager;
+  
+    Function _Init(Array $Args)
+    {
+      $this->Manager=$Args['Manager'];
+      Parent::_Init($Args);
+    }
+    
+    Function GetFolder($Module)
+    {
+      return $this->Manager->GetFolder($Module);
+    }
+  
+    Function GetModule($Module)
+    {
+      return $this->Manager->GetModule($Module);
+    }
+  }
+?>

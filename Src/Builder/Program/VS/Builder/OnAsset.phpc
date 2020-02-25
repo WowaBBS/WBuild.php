@@ -1,0 +1,84 @@
+<?
+  $this->Parent_Class('/Builder/Program/VS/Builder/Base');
+  
+  class C_Builder_Program_VS_Builder_OnAsset extends C_Builder_Program_VS_Builder_Base
+  {
+    Var $Assets=[];
+  
+    Function __invoke($Owner, $Event, ...$Args)
+    {
+      $this->Assets[]=[$Owner, $Event, $Args];
+    }
+    
+    Function Process()
+    {
+      ForEach($this->Assets As [$Owner, $Event, $Args])
+        $this->Process_Asset($Owner, $Event, $Args);
+      $this->Assets=[];
+    }
+    
+    Function Process_Asset($Owner, $Event, $Args)
+    {
+      $Module=$this->GetModule($Owner->GetModule());
+      switch($Event)
+      {
+      case 'Created':
+        $Created=$Args[0];
+        if($Created->HasKey('External'))
+          return;
+        $Type=$Created->Asset_Info->Type;
+      //$Class=Get_Class($Created);
+        switch($Type)
+        {
+        case 'Bin/Cmd'          : $Module->Add('None'             ,$Created); break;
+        case 'Cpp/Def'          : $Module->Add('None'             ,$Created); break;
+        case 'Cpp/Manifest'     : break; // TODO?
+        case 'Cpp/RcInclude'    : $Module->AddInclude             ($Created); break;
+        case 'Cpp/Rc'           : $Module->Add('ResourceCompile'  ,$Created); break;
+        case 'Cpp/ResX'         : $Module->AddResX                ($Created); break;
+        case 'Cpp/Src'          : $Module->Add('ClCompile'        ,$Created); break;
+        case 'Cpp/Include'      : $Module->AddInclude             ($Created); break;
+        case 'Cpp/UsingPath'    : $Module->AddUsingPath           ($Created); break;
+        case 'Cpp/Using'        : $Module->AddUsing               ($Created); break;
+        case 'Cpp/NatVis'       : $Module->Add('None'             ,$Created); break;
+        case 'Exec/Php'         : $Module->Add('None'             ,$Created); break;
+        case 'Module/Depends'   : $Module->AddDepends             ($Created); break;
+        
+        case 'Asset/Include'    : break;
+        case 'Asset/Path'       : break;
+        case 'Bin/Dll'          : break;
+        case 'Bin/Path'         : break;
+        case 'Bin/Exe'          : break;
+        case 'Cpp/Header'       : break;
+        case 'Cpp/Compiler'     : break;
+        case 'Cpp/DefPath'      : break;
+        case 'Cpp/Define'       : $Module->AddDefine($Created); break;
+        case 'Cpp/Obj'          : break;
+        case 'Cpp/LibPath'      : break;
+        case 'Cpp/Lib'          : break;
+        case 'Cpp/RcPath'       : break;
+        case 'Cpp/Res'          : break;
+        case 'Cpp/ObjPath'      : break;
+        case 'Cpp/SrcPath'      : break;
+        case 'Cpp/Resources'    : break;
+        case 'Cpp/Pch'          : break;
+        case 'Cpp/NatVis'       : break;
+        case 'Exec/Option'      : break;
+        case 'FS/Path'          : break;
+        case 'FS/File'          : break;
+        case 'List'             : break;
+        case 'Module/Conflict'  : break;
+        case 'Module/Define'    : break;
+        case 'Module/Path'      : break;
+        case 'Target/Copy'      : break;
+        case 'Target/File'      : break;
+        case 'Target/Dir'       : break;
+        default: echo 'Created unknown \'', $Type, "'\n";
+          UnSupported(); // TODO: Log without falling
+        }
+        break;
+      default: echo 'Event ', $Event, "\n";
+      }
+    }
+  }
+?>

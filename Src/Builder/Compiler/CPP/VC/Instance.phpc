@@ -1,6 +1,5 @@
 <?
   $Loader->Load_Lib('/FS/Utils');
-  $Loader->Load_Lib('/FS/My');
   $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Instance');
 
   class C_Builder_Compiler_CPP_VC_Instance extends C_Builder_Compiler_CPP_Base_Instance

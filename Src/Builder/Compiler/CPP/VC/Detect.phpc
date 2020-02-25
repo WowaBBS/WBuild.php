@@ -131,7 +131,7 @@
             ];
             $Tools[$ToolItem]=$Tool;
           }
-          FS_File_Put_Contents($FileBat, implode($Cmd));
+          File_Put_Contents($FileBat, implode($Cmd));
           $Exec=$this->Create_Object('/System/Exec');
           $Exec->Env=$CurrEnv->GetMap();
           $Exec->Command=$FileBat.'>nul';
@@ -162,7 +162,7 @@
           if(!File_Exists($FileObj))
             continue;
    
-          $Obj_Bin=FS_File_Get_Contents($FileObj);
+          $Obj_Bin=File_Get_Contents($FileObj);
           $PreDef=[];
           preg_match_all('/>>>(.+):(.+);<<</', $Obj_Bin, $Matches, PREG_SET_ORDER);
           foreach($Matches as $Match)

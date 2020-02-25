@@ -46,7 +46,7 @@
             'cl /nologo -c ',$FileSrc,' /Fo',$FileObj,"\r\n",
             'link /nologo ',$FileObj,' /OUT:',$FileExe,"\r\n",
           ];
-          FS_File_Put_Contents($FileBat, implode($Res));
+          File_Put_Contents($FileBat, implode($Res));
           exec($FileBat);
           
           // Begin Env
@@ -57,7 +57,7 @@
           $ItemEnv->Minus($CurrEnv);
           // End Env
    
-          $Obj_Bin=FS_File_Get_Contents($FileObj);
+          $Obj_Bin=File_Get_Contents($FileObj);
           $PreDef=[];
           preg_match_all('/>>>(.+):(.+);<<</', $Obj_Bin, $Matches, PREG_SET_ORDER);
           foreach($Matches as $Item)
@@ -70,7 +70,7 @@
             'Env'=>$ItemEnv->Map,
           ];
           $OutEnv="<?\n  return\n".Var_Export($Info, true).";\n?>";
-          FS_File_Put_Contents('info/'.$k.'.php', $OutEnv);
+          File_Put_Contents('info/'.$k.'.php', $OutEnv);
         }
       }
       ChDir($SaveDir);

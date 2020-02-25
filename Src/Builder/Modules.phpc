@@ -16,14 +16,14 @@
       parent::_Init($Args);
       $this->CacheDir=$Args['CacheDir']??$this->CacheDir;
       $this->Manager=$Args['Manager'];
-      if(IsSet($Args[0]))
+      $File=$Args[0]?? $Args['Path']?? '';
+      if($File)
       {
-        $File=$Args[0];
         if(Is_Dir($File))
           $this->SearchDir($File);
         elseif(Is_File($File))
         {
-          $Param=include $Args[0];
+          $Param=include $File;
           $this->_Init_Param($Param);
         }
       }
