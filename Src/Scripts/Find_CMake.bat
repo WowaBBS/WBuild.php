@@ -22,8 +22,8 @@ set CMakeZip=%~dp0CMake.zip
 set CMakeTmp=%~dp0CMake
 set UrlCMake=https://github.com/Kitware/CMake/releases/download/v3.15.2/cmake-3.15.2-win64-x64.zip
 
-call DownloadFile.bat "%UrlCMake%" "%CMakeZip%"
-call UnZipFile.bat "%CMakeZip%" "%CMakeTmp%"
+call "%~dp0DownloadFile.bat" "%UrlCMake%" "%CMakeZip%"
+call "%~dp0UnZipFile.bat" "%CMakeZip%" "%CMakeTmp%"
 RmDir "%CMakeDir%" 2>nul
 move "%CMakeTmp%/cmake-3.15.2-win64-x64" "%CMakeDir%" 2>nul
 RmDir "%CMakeTmp%" 2>nul

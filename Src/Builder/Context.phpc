@@ -14,12 +14,12 @@
   
     Var $InitAssets    =[];
     Var $InitConfig    ;
-    Var $Assets        =[];
+    Var $Assets        =[]; // TODO: Remove, use T_Builder_Config
     Var $Config        ;
     Var $Configuration ='Release';
     Var $Platform      ='Win32';
-    Var $ConfigMap     =[];
-    Var $SimpleName    ='Undefined';
+    Var $ConfigMap     =[]; // TODO: Remove, use T_Builder_Config
+    Var $SimpleName    ='Undefined'; // TODO: Remove, use T_Builder_Config
     
     Private $InitId ;
     Private $ContextId ; //< TODO: Remove?
@@ -42,15 +42,8 @@
       ];
     }
  
-    Function GetContextId() //< TODO: Remove?
-    {
-      return $this->ContextId;
-    }
- 
-    Function GetInitId()
-    {
-      return $this->InitId;
-    }
+    Function GetContextId() { return $this->ContextId; } //< TODO: Remove?
+    Function GetInitId() { return $this->InitId; }
  
     Protected Function _Init(Array $Args)
     {
@@ -60,31 +53,38 @@
       $this->Configuration =$Args['Configuration' ]?? $this->Configuration ;
       $this->Platform      =$Args['Platform'      ]?? $this->Platform      ;
       
-      $Res=[
-        'Config'=>[],
-        'Assets'=>[],
-        'ConfigMap'=>[],
-        'SimpleName'=>[],
-      ];
       $Cs=$this->Manager->Configurations;
-      $this->Configuration =$this->_Load($Res, $Cs['Configuration' ], $this->Configuration ,'Configuration' );
-      $this->Platform      =$this->_Load($Res, $Cs['Platform'      ], $this->Platform      ,'Platform'      );
+      $Configuration =$Cs['Configuration' ][$this->Configuration ]; $this->Configuration =$Configuration ->Name;
+      $Platform      =$Cs['Platform'      ][$this->Platform      ]; $this->Platform      =$Platform      ->Name;
       
-      $Res['Assets'][]=$this->InitAssets;
-      $Res['Config'][]=$Args['Config']?? [];
+      $Res=new T_Builder_Config();
+      $Res->MergeLeft($Configuration)->MergeLeft($Platform)->MergeContext($this->InitAssets, $Args['Config']?? []);
+    //$Res=(clone $Platform)->MergeWith($Configuration)->MergeContext($this->InitAssets, $Args['Config']?? []);
+      if(false)
+      {
+        $ResDeb=(Array)$Res;
+      //UnSet($ResDeb['VS']);
+        UnSet($ResDeb['Type']);
+        UnSet($ResDeb['Name']);
+        UnSet($ResDeb['Abstract']);
+        UnSet($ResDeb['Hidden']);
+        UnSet($ResDeb['Depends']);
+        $this->Debug(['Context_Init('.$this->Configuration.','.$this->Platform.')'=>$ResDeb]);
+      //$this->Debug(['Context_Init', 'Platform'=>$Platform, 'Configuration'=>$Configuration, 'Res'=>$Res]);
+      }
       
-      $this->ConfigMap=$Res['ConfigMap'];
-      $this->Assets=Array_Merge(...$Res['Assets']);
-      $Res['Config']=Array_Merge(...$Res['Config']);
-      $this->SimpleName=Implode('', $Res['SimpleName']);
+      $this->ConfigMap  =$Res->ConfigMap ;
+      $this->Assets     =$Res->Assets    ;
+      $this->SimpleName =$Res->SimpleName;
       
     //$this->Modules=$Args['Modules'];
     //$this->Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);
       $this->InitConfig=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Args['Config']??[]]);
       $this->Config=$this->Create_Object('/Builder/Config/Set');
-    # ForEach($Res['Config']As $Config)
+    # ForEach($Res->Config As $Config)
     #   $this->Config->Set($Config);
-      $this->Config->Set($Res['Config']);
+      $this->Config->Set($Res->Config);
+    //$this->Debug(['Context_Init('.$this->Configuration.','.$this->Platform.').Debug'=>$this->Config->Value['Debug']]);
       $this->ContextId=$this->_GetContextId(); //< TODO: Remove?
       $this->InitId=$this->_GetInitId();
       
@@ -96,38 +96,13 @@
     # ]);
     }
     
-    Protected Function _Load(&$Res, $List, $Name, $Type)
-    {
-      $R=$List[$Name]?? False;
-      If($R===False)
-         $this->Log('Fatal', 'Context ', $Type, ' ', $this->Platform, ' not found');
-      if(Is_String($R))
-        return $this->_Load($Res, $List, $R, $Type);
-      $v=$R['Depends'       ]?? False; if($v!==False) $this->_Load($Res, $List, $v, $Type);
-      $v=$R['Config'        ]?? False; if($v!==False) $Res['Config'][]=$v;
-      $v=$R['Assets'        ]?? False; if($v!==False) $Res['Assets'][]=$v;
-      $v=$R['Configuration' ]?? False; if($v!==False) $Res['ConfigMap']=$v+$Res['ConfigMap'];
-      $Res['SimpleName'][$Type]=$R['SimpleName']?? $Name;
-      return $Name;
-    }
-    
-    Function GetAssets()
-    {
-      return $this->Assets;
-    }
-
-    Function IsDebug()
-    {
-      return $this->Config->Value['Debug'];
-    }
-
-    Function IsStatic()
-    {
-      return $this->Config->Value['Static'];
-    }
+    Function GetAssets() { return $this->Assets; }
+    Function IsDebug() { return $this->Config->Value['Debug']; }
+    Function IsStatic() { return $this->Config->Value['Static']; }
     
     Function Get_Context($Context)
     {
+    //$this->Debug(['Get_Context', $Context, $this->ConfigMap]);
       if(!Is_Array($Context))
         $Context=$this->ConfigMap[$Context]?? $Context;
       if($Context===true)

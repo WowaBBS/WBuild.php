@@ -115,6 +115,15 @@
       return $this->Modules[$Name]??false;
     }
     
+    Function GetSubModules($Parent)
+    {
+      $Res=[];
+      ForEach($this->Modules As $Module)
+        if($Module->Parent===$Parent)
+          $Res[]=$Module;
+      return $Res;
+    }
+    
     Protected Function _Done()
     {
       ForEach($this->Modules As $Module)

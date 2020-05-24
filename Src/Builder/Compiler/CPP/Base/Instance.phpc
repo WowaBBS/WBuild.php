@@ -44,8 +44,7 @@
   
     Function DetectUsingPath($Path) {}
     
-    Abstract Protected Function _BuildExe    (Array $Args); // {}
-    Abstract Protected Function _BuildDll    (Array $Args); // {}
+    Abstract Protected Function _BuildBin    (Array $Args); // {}
     Abstract Protected Function _BuildRc     (Array $Args); // {}
     Abstract Protected Function _BuildResX   (Array $Args); // {}
     
@@ -55,7 +54,7 @@
     {
       $Args['Compiler']=$this;
       $Compiler=$this->GetCompiler();
-      $Compiler->Compile($Args);
+      return $Compiler->Compile($Args);
     }
     
     Protected $Compiler=null;
@@ -138,59 +137,16 @@
   //$Args['Exec'     ]=$this->Create_Exec();
   //$Args['Objects'  ]=$this->ExtractAssets('Cpp/Obj');
   //$Args['Libs'     ]=$this->ExtractAssetsR('Cpp/Lib');
-  //$Args['ExeAsset' ]=$this->CreateAsset('Bin/Exe', ['Path'=>$Compiler->GetExeFile($ExeName)]);
-    Final Function BuildExe(Array $Args)
-    {
-      $Exec      =$Args['Exec'      ];
-      $Objects   =$Args['Objects'   ];
-      $Libs      =$Args['Libs'      ];
-      $Using     =$Args['Using'     ];
-      $ExeAsset  =$Args['ExeAsset'  ];
-      $ResAsset  =$Args['ResAsset'  ]??[];
-      $DefAsset  =$Args['DefAsset'  ]??[];
-      $Resources =$Args['Resources' ]??[];
-      $Manifests =$Args['Manifests' ]??[];
-      
-    //$this->Debug(array_column($Libs, 'LocalPath'));
-      $Libs=Static::AgregateLibs($Libs); $Args['Libs']=$Libs;
-    //$this->Debug(array_column($Libs, 'LocalPath'));
-      
-      ForEach($Objects As $Item) $ExeAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
-      ForEach($Libs    As $Item) $ExeAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
-      ForEach($Using   As $Item) $Item->UseForExe($ExeAsset);
-      
-      $this->PrepareExec($Exec);
-      
-      $Exec->Descr('Build ',$ExeAsset->GetLocalPathNick());
-      $Exec->AddCheckFiles($Objects   );
-      $Exec->AddCheckFiles($Libs      );
-      $Exec->AddCheckFiles($Using     );
-      $Exec->AddCheckFiles($ResAsset  );
-      $Exec->AddCheckFiles($DefAsset  );
-      $Exec->AddCheckFiles($Resources );
-      $Exec->AddCheckFiles($Manifests );
-      $Exec->MkDir($ExeAsset);
-      
-      $this->_BuildExe($Args);
-      // TODO: Copy depends dlls
-      $Exec->AddCheckResultFile($ExeAsset);
-
-      $Exec->SaveCallTo();
-      $Exec->Exec_Finish();
-    }
-
-  //$Args['Exec'     ]=$this->Create_Exec();
-  //$Args['Objects'  ]=$this->ExtractAssets('Cpp/Obj');
-  //$Args['Libs'     ]=$this->ExtractAssetsR('Cpp/Lib');
-  //$Args['DllAsset' ]=$this->CreateAsset('Bin/Dll', ['Path'=>$Compiler->GetDllFile    ($Name)]);
+  //$Args['BinAsset' ]=$this->CreateAsset('Bin/Dll', ['Path'=>$Compiler->GetDllFile    ($Name)]);
+  //$Args['BinType'  ]= 'Exe'|'Dll'
   //$Args['LibAsset' ]=$this->CreateAsset('Bin/Lib', ['Path'=>$Compiler->GetDllLibFile ($Name)]);
-    Final Function BuildDll(Array $Args)
+    Final Function BuildBin(Array $Args)
     {
       $Exec         =$Args['Exec'         ];
       $Objects      =$Args['Objects'      ]??[];
       $Libs         =$Args['Libs'         ];
       $Using        =$Args['Using'        ];
-      $DllAsset     =$Args['DllAsset'     ];
+      $BinAsset     =$Args['BinAsset'     ];
       $LibAsset     =$Args['LibAsset'     ]??false;
       $ResAsset     =$Args['ResAsset'     ]??[];
       $DefAsset     =$Args['DefAsset'     ]??[];
@@ -236,14 +192,14 @@
 
       $Libs=Static::AgregateLibs($Libs); $Args['Libs']=$Libs;
 
-      ForEach($Objects As $Item) $DllAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
-      ForEach($Libs    As $Item) $DllAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
-      if($LibAsset)              $LibAsset->AddFileDepends($DllAsset);
-      ForEach($Using   As $Item) $Item->UseForDll($DllAsset);
+      ForEach($Objects As $Item) $BinAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
+      ForEach($Libs    As $Item) $BinAsset->AddFileDepends($Item->GetFileDependsR('Bin/Dll'));
+      if($LibAsset)              $LibAsset->AddFileDepends($BinAsset);
+      ForEach($Using   As $Item) $Item->UseForBin($BinAsset);
 
       $this->PrepareExec($Exec);
 
-      $Exec->Descr('Build ',$DllAsset->GetLocalPathNick());
+      $Exec->Descr('Build ',$BinAsset->GetLocalPathNick());
       $Exec->AddCheckFiles($Objects   );
       $Exec->AddCheckFiles($Libs      );
       $Exec->AddCheckFiles($Using     );
@@ -251,13 +207,13 @@
       $Exec->AddCheckFiles($DefAsset  );
       $Exec->AddCheckFiles($Resources );
       $Exec->AddCheckFiles($Manifests );
-      $Exec->MkDir($DllAsset);
+      $Exec->MkDir($BinAsset);
       if($LibAsset)
         $Exec->MkDir($LibAsset);
 
-      $this->_BuildDll($Args);
+      $this->_BuildBin($Args);
 
-      $Exec->AddCheckResultFile($DllAsset);
+      $Exec->AddCheckResultFile($BinAsset);
       if($LibAsset)
         $Exec->AddCheckResultFile($LibAsset);
 

@@ -8,6 +8,7 @@
   
     Function GetInfo()
     {
+    //$Logger->Log('Fatal');
       $NoLog=$this->IsExternalModule();
       $Hash=$this->GetHash();
       if($this->Info && $this->Info['Hash']===$Hash)
@@ -70,6 +71,9 @@
   
     Function _GetHeaders(Int $Id, $Includes, $Logger, $Stack):Array
     {
+      if(IsSet($this->CacheHeader[$Id]))
+        return $this->CacheHeader[$Id];
+        
       $NoLog=$this->IsExternalModule();
       if($this->RecursiveIncluding)
       {
@@ -87,9 +91,9 @@
         }
         return [];
       }
-      if(IsSet($this->CacheHeader[$Id]))
-        return $this->CacheHeader[$Id];
+      
       $SearchArgs=[
+        'NoLog'=>$NoLog,
         'InFile'=>[
           'File'=>$this->GetFullPath(),
           'Line'=>false,
@@ -99,8 +103,7 @@
       $Res=[];
      #ForEach($Force As $Item)
      #  $Res+=$Item->_GetHeaders($Id, $Includes, $Logger, $Stack);
-      $Dir=DirName($this->GetLocalPath());
-      $Dir=$Dir==='.'? '':$Dir.'/';
+      $Dir=$this->GetLocalFolder();
       $Parent=$this->Parent;
       ForEach($this->GetIncludes() As $I=>$Line)
       {

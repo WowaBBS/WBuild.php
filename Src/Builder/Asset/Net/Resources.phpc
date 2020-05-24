@@ -1,8 +1,8 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/File');
-  $Loader->Load_Class('/Builder/Asset/Cpp/ResX');
+  $Loader->Load_Class('/Builder/Asset/Net/ResX');
 
-  class C_Builder_Asset_Cpp_Resources extends C_Builder_Asset_FS_File
+  class C_Builder_Asset_Net_Resources extends C_Builder_Asset_FS_File
   {
     Var $ResPrivate =false;
     

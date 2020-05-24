@@ -60,37 +60,26 @@
     }
     
   //$Args['Exec'     ]=$this->Create_Exec();
-  //$Args['Objects'  ]=$this->ExtractAssets  ('Cpp/Obj');
-  //$Args['Libs'     ]=$this->ExtractAssetsR ('Cpp/Lib');
-  //$Args['ExeAsset' ]=$this->CreateAsset    ('Bin/Exe', ['Path'=>$Compiler->GetExeFile($ExeName)]);
-    Protected Function _BuildExe(Array $Args)
-    {
-      $Exec     =$Args['Exec'     ];
-    //$Objects  =$Args['Objects'  ];
-    //$Libs     =$Args['Libs'     ];
-      $ExeAsset =$Args['ExeAsset' ];
-      
-      $Params=$this->CreateParams();
-      $this->_Build($Args, $Params, $ExeAsset);
-    }
-
-  //$Args['Exec'     ]=$this->Create_Exec();
   //$Args['Objects'  ]=$this->ExtractAssets('Cpp/Obj');
   //$Args['Libs'     ]=$this->ExtractAssetsR('Cpp/Lib');
-  //$Args['DllAsset' ]=$this->CreateAsset('Bin/Dll', ['Path'=>$Compiler->GetDllFile    ($Name)]);
+  //$Args['BinAsset' ]=$this->CreateAsset('Bin/Dll', ['Path'=>$Compiler->GetDllFile    ($Name)]);
+  //$Args['BinType'  ]='Exe'|'Dll'
   //$Args['LibAsset' ]=$this->CreateAsset('Bin/Lib', ['Path'=>$Compiler->GetDllLibFile ($Name)]);
-    Protected Function _BuildDll(Array $Args)
+    Protected Function _BuildBin(Array $Args)
     {
       $Exec     =$Args['Exec'     ];
     //$Objects  =$Args['Objects'  ];
     //$Libs     =$Args['Libs'     ];
-      $DllAsset =$Args['DllAsset' ];
-      $LibAsset =$Args['LibAsset' ];
+      $BinAsset =$Args['BinAsset' ];
+      $BinType  =$Args['BinType'  ];
+      $LibAsset =$Args['LibAsset' ]??false;
       
       $Params=$this->CreateParams();
-      $Params->Add('-shared');
-      $Params->Add('-Wl,--out-implib,'.$LibAsset->GetFullPath());
-      $this->_Build($DllAsset, $Params);
+      if($BinType==='Dll')
+        $Params->Add('-shared');
+      if($LibAsset)
+        $Params->Add('-Wl,--out-implib,'.$LibAsset->GetFullPath());
+      $this->_Build($BinAsset, $Params);
     }
 
   //$Args['Exec'     ]=$this->Create_Exec();

@@ -1,0 +1,168 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/Base');
+
+  class C_Builder_Asset_Cpp_MakeBin extends C_Builder_Asset_Base
+  {
+    // Input Assets
+    Var       $Compiler  ; //< It is no asset
+    Var Array $Using     ;
+    Var Array $Resources ;
+    Var Array $Libs      ;
+    Var Array $Objects   ;
+    Var Array $ResAsset  ;
+    Var Array $DefAsset  ;
+    Var Array $Manifests ;
+    
+    // Output Assets
+    Var       $LibAsset  =null;
+  
+    Function CollectUsingAssets()
+    {
+      return [
+      //$this->Compiler  ,
+      
+        $this->Using     ,
+        $this->Resources ,
+        
+        $this->Libs      ,
+        $this->Objects   ,
+        $this->ResAsset  ,
+        $this->DefAsset  ,
+        $this->Manifests ,
+      ];
+    }
+    
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+
+    //$Param=$Args; //['Param'];
+    }
+      
+    Function _InitParam(Array &$Param)
+    {
+      $Outer=$this;
+      parent::_InitParam($Param);
+      
+      $this->Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance;
+      if(!$this->Compiler)
+      {
+      //Var_Dump($Outer);
+        throw new Exception('Haven`t any compiler');
+      }
+      $this->OutPath=$this->Compiler->CreateOutPath($Outer);
+        
+//TODO: $DLL          =$Param['DLL'          ]?? '';
+      UnSet($Param['DLL']);
+      $this->BinName     =C_Builder_Asset_Cpp_MakeBase::_GetName($Param, $Outer); UnSet($Param['Name']);
+      $this->BinType      =$Param['BinType'      ]?? 'Unsetted' ; UnSet($Param['BinType'      ]);
+      $this->NoEntry      =$Param['NoEntry'      ]??null        ; UnSet($Param['NoEntry'      ]);
+      $this->NoDefaultLib =$Param['NoDefaultLib' ]??null        ; UnSet($Param['NoDefaultLib' ]);
+      $this->Proxy        =$Param['Proxy'        ]??[]          ; UnSet($Param['Proxy'        ]);
+
+      $bManaged     =$Param['Managed'      ]??false      ; UnSet($Param['Managed'      ]);
+      $DebugPostfix =$Param['DebugPostfix' ]??!$bManaged ; UnSet($Param['DebugPostfix' ]);
+
+      $bDebug=$DebugPostfix!==false && $Outer->IsDebug();
+      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
+
+      $Def          =$Param['Def'          ]?? []; UnSet($Param['Def' ]);
+      if(!Is_Array($Def))
+        $Def=[$Def];
+      $DefAssets=[];
+      ForEach($Def As $DefItem)
+        $DefAssets[]=$Outer->CreateAsset('Cpp/Def', $DefItem);
+      
+      // TODO: DefAssets
+      $this->Using        =$Outer->GetAssets     ('Net/Using'     );
+      $this->Resources    =$Outer->ExtractAssets ('Net/Resources' );
+      
+      $this->Libs         =$Outer->GetAssets     ('Cpp/Lib'       );
+      $this->DefAsset     =$Outer->ExtractAssets ('Cpp/Def'       );
+      $this->Objects      =$Outer->ExtractAssets ('Cpp/Obj'       );
+      $this->ResAsset     =$Outer->ExtractAssets ('Cpp/Res'       );
+      $this->Manifests    =$Outer->ExtractAssets ('Cpp/Manifest'  );
+      
+      Switch($this->BinType)
+      {
+      Case 'Exe': $BinPath=$this->Compiler->GetExeFile    ($this->BinName.$_d); break;
+      Case 'Dll': $BinPath=$this->Compiler->GetDllFile    ($this->BinName.$_d); break;
+      Default: $this->Log('Fatal', 'Unknown bin type = ',$this->BinType);
+        $BinPath=$this->BinName.$_d;
+      }
+      
+    //$this->Debug(['Debug', $BinPath, $bDebug, $Outer->IsDebug(), $_d]);
+      
+      $PathBinAsset=$Outer->CreateAsset('Bin/Path', $this->OutPath.'Bin');
+      $this->BinAsset=$Outer->CreateAsset   ('Bin/'.$this->BinType, [
+        'Path'=>$BinPath,
+        '>FileDepends'=>$Param['>FileDepends']??[],
+        '>Create'=>1
+      ]);
+      UnSet($Param['>FileDepends']);
+      
+      $this->Exec=$this->BinAsset->CreateExec([
+        'CachePath'=>$this->OutPath.'Task/'.$this->BinType.'/'.$this->BinName,
+        'Performance'=>'Build',
+      ]);
+      
+      if($LibAsset=$Param['LibAsset']??null) 
+      { UnSet($Param['LibAsset']);
+        if($LibAsset===true)
+          $this->LibAsset=$Outer->CreateAsset('Cpp/Lib'   ,[
+            'Path'=>$this->Compiler->GetDllLibFile ($this->BinName.$_d),
+            '>Create'=>1,
+          ]);
+        else
+          $this->Log('Error', 'Unknown lib asset')->Debug($LibAsset);
+      }
+      
+      $this->Compiler->BuildBin([
+        'Outer'        =>$Outer              ,
+        'Name'         =>$this->BinName      ,
+        'Exec'         =>$this->Exec         ,
+        
+        'Using'        =>$this->Using        ,
+        'Resources'    =>$this->Resources    ,
+        
+        'Objects'      =>$this->Objects      ,
+        'Libs'         =>$this->Libs         ,
+        'DefAsset'     =>$this->DefAsset     ,
+        'ResAsset'     =>$this->ResAsset     ,
+        'Manifests'    =>$this->Manifests    ,
+        'BinAsset'     =>$this->BinAsset     ,
+        'BinType'      =>$this->BinType      ,
+        'LibAsset'     =>$this->LibAsset     ,
+        'NoEntry'      =>$this->NoEntry      ,
+        'NoDefaultLib' =>$this->NoDefaultLib ,
+        'Proxy'        =>$this->Proxy        ,
+      ]);
+
+      $PathBinAsset->RemoveFromOuter();
+
+      if($bManaged)
+      {
+        $Using=$Outer->CreateAsset('Net/Using', ['Path'=>$this->BinAsset->GetFullPath(), '>Create'=>1]);
+        $Using->AddFileDepends($this->BinAsset->GetFileDepends());
+        if(IsSet($this->BinAsset->Tasks))
+          ForEach($this->BinAsset->Tasks As $Task)
+            $Using->AddTask($Task);
+      //TODO: $this->BinAsset->RemoveFromOuter();
+      }
+    }
+    
+    Static Function _ParseParams($Args)
+    {
+    //$Outer=$Args['Outer'];
+    //$Compiler=$Outer->GetLastAsset('Cpp/Compiler');
+    //$Param=$Args['Param'];
+    //unset($Args['Param']);
+    //$Args['Compiler' ]=$Compiler;
+    //$Args['Search'   ]=$Param;
+      // TODO Check exists compiler 
+      return [$Args];
+    }
+
+  //****************************************************************
+  };
+?>

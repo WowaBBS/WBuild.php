@@ -1,15 +1,25 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/Base');
   $Loader->Load_Lib('/FS/Utils');
-  $Loader->Load_Lib('/FS/IOFS');
+  $Loader->Using_Module('/FS/IOFS');
   $Loader->Using_Module('/Array');
 
   class C_Builder_Asset_FS_PathBase extends C_Builder_Asset_Base
   {
-    Var $LocalPath=''; // TODO: Private
-    Var $Parent;
-    Var $HasNext=false;
-    Private $FullPath='';
+    Var     $LocalPath =''; // TODO: Private
+    Var     $Parent    ;
+    Var     $HasNext   =false;
+    Private $FullPath  ='';
+    // TODO: Var $FileDepends=[];
+
+    Function IsSomeAsset($Asset)
+    {
+      if(Parent::IsSomeAsset($Asset))
+        return true;
+      If(Get_Class($this)!==Get_Class($Asset))
+        return false;
+      return $this->GetFullPath()===$Asset->GetFullPath();
+    }
     
     Function GetFullPath  () { return $this->FullPath  ; }
     Function GetLocalPath () { return $this->LocalPath ; }

@@ -1,0 +1,99 @@
+<?
+  $this->Parent_Class('/Builder/Program/VS/Builder/Base');
+  
+  class C_Builder_Program_VS_Builder_ModuleInstance extends C_Builder_Program_VS_Builder_Base
+  {
+    Var Array  $Defines       =[];
+    Var String $Condition     ='True';
+    Var String $Configuration ='NoConfiguration' ;
+    Var String $Platform      ='NoPlatform'      ;
+    Var String $Key           =''                ;
+    Var Array  $Depends       =[];
+    
+    Var        $Module        =null;
+    Var        $BuildInstance =null;
+    Var        $TargetDir     =null;
+    
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+    //$this->Defines       =$Args['Defines'       ]?? [];
+      $Module              =$Args['Module'        ];
+      $this->Module        =WeakReference::create($Module);
+      $this->BuildInstance =$Args['BuildInstance' ];
+      $this->Configuration =$Args['Configuration' ];
+      $this->Platform      =$Args['Platform'      ];
+      $this->Key           =$Args['Key'           ];
+      $ConfigInfo=$this->GetManager()->ConfigInfo;
+      if(!IsSet($ConfigInfo[$this->Key]))
+        $this->Log('Error', 'Can\'t find key ',$this->Key)->Debug($ConfigInfo);
+      $this->Condition     =$ConfigInfo[$this->Key]['Condition'];
+    }
+    
+    Function GetModule() { return $this->Module->Get(); }
+    
+    Function GetCondition():?String { return $this->Condition; }
+
+    Function AddDefine($Created)
+    {
+      $this->Defines[$Created->GetKey()]=$Created->GetValue();
+    }
+    
+    Function SetTargetDir($Created)
+    {
+      $this->TargetDir=$Created->GetFullPath();
+    }
+    
+    Var $ExecFile;
+    
+    Function SetTargetCopy($Created)
+    {
+    //$this->Debug($Created);
+      ForEach($Created->FromAssets As $Item)
+        if(SubStr($Item->GetFullPath(), -4)=='.exe') // TODO; It's magic
+        {
+          $this->ExecFile=$Created->TargetDir->GetFullPath().'/'.ExtractFileName($Item->GetFullPath());
+          break;
+        }
+    }
+    
+    Function UpdateConfigMap($Key, $ProjectsPath, $NoConfigMap=false)
+    {
+      $Module=$this->GetModule();
+      $NoConfigMap=$Module->VS['NoConfigMap']?? $NoConfigMap;
+      $ProjectsPath.=$Module->ModuleName;
+      $Module->AddToConfigMap($Key, $this->Key, $ProjectsPath, $NoConfigMap);
+      ForEach($this->Depends As $Instance)
+        $Instance->UpdateConfigMap($Key, $ProjectsPath.'->', $NoConfigMap);
+    }
+    
+    Function AddDepends($Instance)
+    {
+      $ModuleName=$Instance->GetModule()->ModuleName;
+      $this->Depends[$ModuleName]=$Instance;
+    }
+
+    Function UpdateVSProject($VsProject)
+    {
+      $VsConfig=$VsProject->GetConfig($this->Key);
+    
+      $OutPath=$this->TargetDir ?? $this->BuildInstance->GetCachePath();
+      $VsConfig->ConfigProps['InPath'     ]=['SolutionDir', $OutPath];
+      $VsConfig->ConfigProps['OutPath'    ]=['SolutionDir', $OutPath];
+      $VsConfig->ConfigProps['WBuild_Log' ]=['SolutionDir', $OutPath.'\Build.log'];
+      $VsConfig->ConfigProps['WBuild_Err' ]=['SolutionDir', $OutPath.'\Build.err'];
+      $VsConfig->ConfigProps['WUse']='WBuild';
+    //$VsConfig->Props['WBuild_Log' ]='Build.log';
+    //$VsConfig->Props['WBuild_Err' ]='Build.err';
+      if($this->ExecFile)
+        $VsConfig->Props['NMakeOutput' ]=$this->ExecFile;
+        
+      $Manager=$this->GetManager();
+      
+      if(($v=$Manager->IntelliSense['AdditionalOptions']?? null)!==null)
+        $VsConfig->Props['AdditionalOptions']=$v;
+    //'/std:c++17 -std=c++17';
+      $VsConfig->Defines=$Manager->Defines+$this->Defines;
+    }
+  }
+?>

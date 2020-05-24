@@ -26,12 +26,14 @@
     
     Function GetCompiler($Name, Array $Args=[])
     {
-      if(IsSet($this->List[$Name]))
-        return $this->List[$Name];
+      return $this->List[$Name] ??= $this->_CreateCompiler($Name, $Args);
+    }
+
+    Private Function _CreateCompiler($Name, Array $Args=[])
+    {
       $Args['Manager']=$this->Manager;
       $Res=$this->Create_Object('/Builder/Compiler/CPP/'.$Name.'/Manager', $Args);
     //$Res->Load();
-      $this->List[$Name]=$Res;
       return $Res;
     }
 

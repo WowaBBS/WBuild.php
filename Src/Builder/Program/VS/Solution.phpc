@@ -3,8 +3,8 @@
   
   class C_Builder_Program_VS_Solution extends C_Object
   {
-    Var $Version  =11.0;
-  //Var $Version  =12.0;
+  //Var $Version  =11.0;
+    Var $Version  =12.0;
   //Var $Compiler ='Visual C++ Express 2010';
     Var $Compiler ='Visual Studio 15';
     Var $VisualStudioVersion        = '15.0.27130.2036';
@@ -16,16 +16,17 @@
     Var $Platforms =[];
     Var $Configs   =[];
     Var $Projects  =[];
-    Protected $Solutions     =[];
-    Protected $SortSolutions =[];
+    Protected ?Array $Solutions     =null;
+    Protected ?Array $SortSolutions =null;
+    Protected ?Array $DefConfigMap  =null;
     
     Var $DefaultProjectType='C++';
     
     Var       String $Name     ='';
     Var       String $GUID_Key ='';
     
-    Var       Array  $CustomProps   =[]; // TODO:
-    Var       Array  $NMakeCompiler =[]; // TODO:
+    Var       Array  $DefArgs=[];
+    
     Protected String $AbsPath       ='';
     Protected String $VcxAbsPath    ='';
     
@@ -40,20 +41,19 @@
         ],
       ];
       $TLoader->Types['w2_cpp']=$this->Create_Object('/Tmpl/W2/Manager', $Manager_Args);
-      $TLoader->Types['w2_cpp']->Cache=''; // Disable Cache
+      $TLoader->Types['w2_cpp']->Cache=$Args['Template_Cache']?? ''; // Disable Cache
       $TLoader->DefType='w2_cpp';
       $this->Template_Loader=$TLoader;
       
       $this->Name          =$Args['Name'          ]?? 'NoName';
       $this->GUID_Key      =$Args['GUID_Key'      ]?? $this->Name;
-      $this->CustomProps   =$Args['CustomProps'   ]?? [];
-      $this->NMakeCompiler =$Args['NMakeCompiler' ]?? [];
+      $this->DefArgs       =$Args['DefArgs'       ]?? [];
       $this->AbsPath       =NormPath($Args['AbsPath'    ]?? './', true);
       $this->VcxAbsPath    =NormPath($Args['VcxAbsPath' ]?? './', true);
       $this->GUID          =$this->GUIDs->Generate('SolutionGuid'.$this->GUID_Key);
       $this->SetPlatforms  ($Args['Platforms'     ]?? []);
       $this->SetConfigs    ($Args['Configs'       ]?? []);
-      $this->AddProjects(   $Args['Projects'      ]?? []);
+      $this->AddProjects   ($Args['Projects'      ]?? []);
 
       Parent::_Init($Args);
     }
@@ -86,22 +86,39 @@
       $Res=[];
       ForEach($List As $Id=>$Project)
       {
-        if(Is_String($Id) && StrLen($Id)>1 && $Id[0]==='/')
-          $Res[$Id]=$this->AddFolder(SubStr($Id, 1), $Project);
-        else
-          $Res[$Id]=$this->AddProject($Id, $Project);
+        Switch(Is_String($Id) && StrLen($Id)>1? $Id[0]:'')
+        {
+        Case '/': $Item=$this->AddFolder  (SubStr($Id, 1) ,$Project); break;
+        Case ':': $Item=$this->AddExists  (SubStr($Id, 1) ,$Project); break;
+        Default : $Item=$this->AddProject (       $Id     ,$Project); break;
+        }
+        $Res[$Id]=$Item;
       }
       return $Res;
     }
     
-    Function AddProject($Id, $Args)
+    Function AddExists($Id, $Args=[])
+    {
+      $Args['Solution'      ]   = $this ;
+      $Args['Id'            ] ??= $Id;
+      $Res=$this->Create_Object('/Builder/Program/VS/Project/ExistsFile', $Args);
+    # If(IsSet($this->Projects[$Id]))
+    #   $this->Log('Error', 'Project ', $Id, ' already exists');
+      $this->Projects[$Id]=$Res;
+      return $Res;
+    }
+    
+    Function AddProject($Id, $Args=[])
     {
       $Args['Solution'      ]   = $this ;
       $Args['Id'            ] ??= $Id;
       $Args['Type'          ] ??= $this->DefaultProjectType ;
-      $Args['CustomProps'   ] ??= $this->CustomProps   ;
-      $Args['NMakeCompiler' ] ??= $this->NMakeCompiler ;
       $Args['AbsPath'       ] ??= $this->VcxAbsPath    ;
+      $Args['SolutionDir'   ] ??= $this->AbsPath       ;
+
+      $Args+=$this->DefArgs[$Args['Type']]??[];
+      $Args+=$this->DefArgs['']??[];
+      
       $Res=$this->Create_Object('/Builder/Program/VS/Project/File', $Args);
       If(IsSet($this->Projects[$Id]))
         $this->Log('Error', 'Project ', $Id, ' already exists');
@@ -109,12 +126,10 @@
       return $Res;
     }
     
-    Function AddFolder($Id, $Args)
+    Function AddFolder($Id, $Args=[])
     {
       $Args['Solution'      ]   = $this ;
       $Args['Id'            ] ??= $Id;
-    # $Args['CustomProps'   ] ??= $this->CustomProps   ;
-    # $Args['NMakeCompiler' ] ??= $this->NMakeCompiler ;
     # $Args['AbsPath'       ] ??= $this->VcxAbsPath    ;
       $Res=$this->Create_Object('/Builder/Program/VS/Project/Folder', $Args);
       If(IsSet($this->Projects[$Id]))
@@ -130,43 +145,34 @@
       return $this->Projects[$Id];
     }
     
-    Function SaveToFiles(String $SlnOutDir, String $ProjDir)
+    Function SaveToFiles(String $SlnOutDir, ?String $ProjDir=null)
     {
+      $ProjDir ??=$SlnOutDir;
       $Output=$SlnOutDir.$this->Name.'.sln';
       CreatePath(ExtractFilePath($Output));
       File_Put_Contents($Output, $this->Create_Object('/Builder/Program/VS/Solution/Builder', ['Info'=>$this]));
       
       ForEach($this->GetProjects() As $Project)
-        if(!$Project->IsFolder())
-        {
-          $Output   =$ProjDir.$Project->File();
-          CreatePath(ExtractFilePath($Output));
-          
-          $Content = (String)$this->Create_Object('/Builder/Program/VS/Project/Builder', ['Info'=>$this, 'Project'=>$Project]);
-    
-          $Content=str_replace("\r", '', $Content);
-          $Content=str_replace("\n", "\r\n", $Content);
-          File_Put_Contents($Output, $Content);
-        }
+        $Project->Generate($ProjDir);
     }
     
-    Function InvelidateSolutions()
+    Function InvalidateSolutions()
     {
-      $this->Solutions     =[];
-      $this->SortSolutions =[];
+      $this->Solutions     =null;
+      $this->SortSolutions =null;
+      $this->DefConfigMap  =null;
     }
 
-    Function _GetSolutions() { return $this->Solutions?: $this->ProcessSolutions(); }
-    Function GetSolutions() { return $this->_GetSolutions(); }
-    Function _GetSortSolutions() { $Res=$this->_GetSolutions(); KSort($Res); return $Res; }
-//  Function GetSortSolutions() { return $this->SortSolutions ??= $this->_GetSortSolutions(); }
-    Function GetSortSolutions() { return $this->SortSolutions ?: $this->SortSolutions=$this->_GetSortSolutions(); }
+    Private Function _GetSortSolutions() { $Res=$this->GetSolutions(); KSort($Res); return $Res; }
+    Function GetSolutions     () { return $this->Solutions     ??=$this->_GetSolutions     (); }
+    Function GetSortSolutions () { return $this->SortSolutions ??=$this->_GetSortSolutions (); }
+    Function GetDefConfigMap  () { return $this->DefConfigMap  ??=$this->_GetDefConfigMap  (); }
     Function GetProjects() { return $this->Projects; }
     
     Function SetConfigs($Configs)
     {
       $Res=[];
-      ForEach( $Configs As $Name=>$Item)
+      ForEach($Configs As $Name=>$Item)
       {
         if(Is_Int($Name))
           $Name=$Item;
@@ -174,20 +180,23 @@
         if(Is_String($Item))
           $Item=['Config'=>$Item];
         
-                     if(IsSet($Item['Name'  ])) { $Name  =$Item['Name'  ]; UnSet($Item['Name'  ]); }
-        $Real=$Name; if(IsSet($Item['Real'  ])) { $Real  =$Item['Real'  ]; UnSet($Item['Real'  ]); }
-        $Props=  []; if(IsSet($Item['Props' ])) { $Props =$Item['Props' ]; UnSet($Item['Props' ]); }
+        $Hidden =$Item['Hidden' ]??False ; UnSet($Item['Hidden' ]);
+        $Name   =$Item['Name'   ]??$Name ; UnSet($Item['Name'   ]);
+        $Real   =$Item['Real'   ]??$Name ; UnSet($Item['Real'   ]);
+        $Props  =$Item['Props'  ]??[]    ; UnSet($Item['Props'  ]);
+
+        $Res[$Name]=[
+          'Hidden' =>$Hidden ,
+          'Name'   =>$Name   ,
+          'Real'   =>$Real   ,
+          'Props'  =>$Props  ,
+        ];
         
         if($Item)
           $this->Log('Error', 'Unknown parameters of config: ', Implode(', ', Array_Keys($Item)));
-        $Res[$Name]=[
-          'Name'  =>$Name  ,
-          'Real'  =>$Real  ,
-          'Props' =>$Props ,
-        ];
       }
       $this->Configs=$Res;
-      $this->InvelidateSolutions();
+      $this->InvalidateSolutions();
     }
     
     Function SetPlatforms($Platforms)
@@ -209,70 +218,96 @@
         if(Is_String($Item))
           $v=['Platform'=>$Item];
         
-                      if(IsSet($Item['Name'  ])) { $Name     =$Item['Name'  ]; UnSet($Item['Name'  ]); }
-        $Real =$Name; if(IsSet($Item['Real'  ])) { $Real     =$Item['Real'  ]; UnSet($Item['Real'  ]); }
-        $Prefix  =''; if(IsSet($Item['<'     ])) { $Prefix   =$Item['<'     ]; UnSet($Item['<'     ]); }
-        $Postfix =''; if(IsSet($Item['>'     ])) { $Postfix  =$Item['>'     ]; UnSet($Item['>'     ]); }
-        $Props   =[]; if(IsSet($Item['Props' ])) { $Props    =$Item['Props' ]; UnSet($Item['Props' ]); }
+        $Hidden =$Item['Hidden' ]??False       ; UnSet($Item['Hidden' ]);
+        $Name   =$Item['Name'   ]??$Name       ; UnSet($Item['Name'   ]);
+        $Real   =$Item['Real'   ]??$Name       ; UnSet($Item['Real'   ]);
+        $Config =$Item['Config' ]??'{Var:Real}'; UnSet($Item['Config' ]);
+        $Props  =$Item['Props'  ]??[]          ; UnSet($Item['Props'  ]);
         
-        if(!IsSet($AllowPlatforms[$Real]))
-          $this->Log('Error', 'Platform ', $Real, ' is not allowed');
+        if(!$Hidden && !IsSet($AllowPlatforms[$Real]))
+          $this->Log('Error', 'Platform ', $Real, ' is not allowed in solution');
         if($Item)
           $this->Log('Error', 'Unknown parameters of platform: ', Implode(', ', Array_Keys($Item)));
         $Res[$Name]=[
+          'Hidden'  =>$Hidden  ,
           'Name'    =>$Name    ,
           'Real'    =>$Real    ,
-          'Prefix'  =>$Prefix  ,
-          'Postfix' =>$Postfix ,
+          'Config'  =>$Config  ,
           'Props'   =>$Props   ,
         ];
       }
       $this->Platforms=$Res;
-      $this->InvelidateSolutions();
+      $this->InvalidateSolutions();
     }
     
-    Function ProcessSolutions()
+    Private Static Function _DoConfigMap($List)
     {
+      $Res=[];
+      ForEach($List As $Item)
+        if(!$Item['Hidden'])
+          $Res[$Name=$Item['Name']]=$Name;
+      return $Res;
+    }
+    
+    Private Function _GetDefConfigMap()
+    {
+      return [
+        'Configs'   =>Static::_DoConfigMap($this->Configs   ),
+        'Platforms' =>Static::_DoConfigMap($this->Platforms ),
+      ];
+    }
+    
+    Private Function _GetSolutions()
+    {
+      $TLoader=$this->Template_Loader;
       $Res=[];
       ForEach($this->Configs As $Config)
         ForEach($this->Platforms As $Platform)
         {
-          $SlnSolution    =$Config['Name'].'|'.$Platform['Name'];
-          $SolutionConfig =$Platform['Prefix'].$Config['Real'].$Platform['Postfix'];
+          $ConfigName     =$Config   ['Name'];
+          $PlatformName   =$Platform ['Name'];
+          $SlnSolution    =$ConfigName.'|'.$PlatformName;
+          if(IsSet($Res[$SlnSolution]))
+            $this->Log('Error', 'Key ', $SlnSolution, ' already exists');
+          $SolutionConfig =$TLoader->String_Template($Config, $Platform['Config'])->Exec_To_Str($Config);
+//        $SolutionConfig =$Platform['Prefix'].$Config['Real'].$Platform['Postfix'];
           $SolutionConfig =StrTr($SolutionConfig, ' /\\', '___');
           $SolutionName   =$SolutionConfig.'|'.$Platform['Real'];
           $SolutionProps=[
             'RealConfig'   => $Config   ['Name'],
             'RealPlatform' => $Platform ['Name'],
           ];
-          if(IsSet($Res[$SlnSolution]))
-            $this->Log('Error', 'Key ', $SlnSolution, ' already exists');
           $Res[$SlnSolution]=[
-            'SlnSolution' =>$SlnSolution,
-            'Solution'    =>$SolutionName,
-            'Config'      =>$SolutionConfig,
-            'Platform'    =>$Platform['Real'],
-            'Condition'   =>'\'$(Configuration)|$(Platform)\'==\''.$SolutionName.'\'',
-            'Props'       =>$this->ProcessProps( 
+            'Hidden'       =>$Config['Hidden'] || $Platform['Hidden'],
+            'ConfigName'   =>$Config   ['Name'],
+            'PlatformName' =>$Platform ['Name'],
+            'SlnSolution'  =>$SlnSolution,
+            'KeySolution'  =>$SlnSolution,
+            'Solution'     =>$SolutionName,
+            'Config'       =>$SolutionConfig,
+            'Platform'     =>$Platform['Real'],
+            'Condition'    =>'\'$(Configuration)|$(Platform)\'==\''.$SolutionName.'\'',
+            'Props'        =>$this->ProcessProps( 
               $SolutionProps,
               $Config   ['Props'],
               $Platform ['Props']
             ),
-            'HasBuild' =>true,
+            'HasBuild'     =>true,
           ];
         }
-      return $this->Solutions=$Res;
+      return $Res;
     }
     
     Function ProcessProps(...$PropsList)
     {
       $Res=[];
+      $TLoader=$this->Template_Loader;
       ForEach($PropsList As $Props)
         ForEach($Props As $k=>$v)
         {
-          if(Is_Bool($v)) $v=$v? 'true':'false';
+          if(Is_Bool($v)) $v=$v? 'true':'false'; else
           if(StrPos($v, '{')!==false)
-            $v=$this->Template_Loader->String_Template($Res, $v)->Exec_To_Str($Res);
+            $v=$TLoader->String_Template($Res, $v)->Exec_To_Str($Res);
           $Res[$k]=$v;
         }
       return $Res;

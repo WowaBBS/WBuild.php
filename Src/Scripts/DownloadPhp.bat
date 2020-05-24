@@ -2,7 +2,7 @@
 setlocal
 
 set PhpDir=%~1
-if "%PhpDir%"=="" set PhpDir=%~dp0../../../Build/Tools/Php74
+if "%PhpDir%"=="" set PhpDir=%~dp0../../../.Build/Tools/Php74
 set PhpZip=%~dp0php.zip
 ::set UrlPhpFile=php-7.2.4-Win32-VC15-x64.zip
 set UrlPhpFile=php-7.4.1-Win32-vc15-x64.zip

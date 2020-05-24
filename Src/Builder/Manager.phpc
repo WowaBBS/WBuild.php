@@ -2,11 +2,12 @@
   $Loader->Parent_Class('/Object');
 //$Loader->Load_Class('/Builder/Module');
   $Loader->Load_Type('/System/Delegate');
+  $Loader->Load_Type('/Builder/Config');
   $Loader->Load_Lib('/FS/Utils');
 
   class C_Builder_Manager extends C_Object
   {
-    Var $CacheDir ='.Build';
+    Var $CacheDir ='.Build/';
     Var $Cache    ;
     Var $Modules  ;
     Var $OnAsset  ;
@@ -24,12 +25,16 @@
     
     Function _Init(Array $Args)
     {
+      $this->Ctrl_Handler_Init();
       $this->OnAsset=new TDelegate();
       parent::_Init($Args);
       $CacheDir=$Args['CacheDir']?? $this->CacheDir;
       CreatePath($CacheDir);
       $CacheDir=StrTr(RealPath($CacheDir), '\\', '/').'/';
       $this->CacheDir=$CacheDir;
+      
+      $this->Mutex_Create();
+      
       $this->Cache=$this->Create_Object('/Cache/Manager', [$CacheDir]);
       $ModulesArgs= $Args['Modules']??[''];
       $ModulesArgs['CacheDir']='Modules';
@@ -37,20 +42,30 @@
       $this->Performance =$this->Create_Object('/Debug/Performance');
       $this->Modules    =$this->Create_Object('/Builder/Modules', $ModulesArgs);
       if($Args['Configurations']?? False)
-        $this->Configurations=include $Args['Configurations'];
+        $this->SetConfigurationsMap(include $Args['Configurations']);
     }
  
-    Function GetModule($Name)
-    {
-      return $this->Modules->Get($Name);
-    }
-    
     Protected Function _Done()
     {
       $this->Modules->Done();
       $this->Modules=null;
       $this->Performance->Done();
+      $this->Mutex_Close();
       parent::_Done();
+    }
+    
+    Function SetConfigurationsMap($Cs)
+    {
+      $Res=['Configuration' =>[], 'Platform'      =>[],];
+      ForEach($Res As $Type=>&$List)
+        ForEach($Cs[$Type] As $Config=>$v)
+          $List[$Config]=(new T_Builder_Config())->InitArray($this, $List, $v, $Config, $Type);
+      $this->Configurations=$Res;
+    }
+ 
+    Function GetModule($Name)
+    {
+      return $this->Modules->Get($Name);
     }
     
     Function Create_Context($Args)
@@ -152,6 +167,75 @@
     Function _DoAssetEvent($Asset, $Type, ...$Args)
     {
       return ($this->OnAsset)($Asset, $Type, ...$Args);
+    }
+    
+  //****************************************************************
+
+    Function Ctrl_Handler_Init($v=true)
+    {
+      if(Function_Exists('sapi_windows_set_ctrl_handler'))
+        SApi_Windows_Set_Ctrl_Handler([$this, 'Ctrl_Handler'], $v);
+    }
+  
+    function Ctrl_Handler(Int $Event)
+    {
+      Static $Skip=false;
+      if($Skip)
+        return;
+      $Skip=true;
+      $this->Ctrl_Handler_Init(False);
+      Switch($Event)
+      { 
+      Case PHP_WINDOWS_EVENT_CTRL_C     : $EventName='Ctrl+C'     ; break;
+      Case PHP_WINDOWS_EVENT_CTRL_BREAK : $EventName='Ctrl+Break' ; break;
+      Default: $EventName='Unknown '.$Event;
+      }
+    //$this->GetLogger()->Get('Console')->Disable();
+    //Ini_Set('display_errors', 'off');
+      SApi_Windows_Cp_Set(SApi_Windows_Cp_Get('oem'));
+      SApi_Windows_Generate_Ctrl_Event($Event); //,$pid) : bool
+      $this->Log('Fatal', 'Ctrl_Handler ', $EventName, ' (', $Event, ')');
+    }
+    
+  //****************************************************************
+    Var $Mutex=null;
+    
+    Function Mutex_Create()
+    {
+      $OpenMode=omRead|omWrite|omMakePath|omCreate|omBinary;//|omShareable;
+      $OpenMode|=($Args['Append']??False)? omAppend:omClear; //omExclusive
+      $MutexName=$this->CacheDir.'Mutex.lock';
+    //$this->Log('Debug', 'MutexFile: ',$MutexName);
+      $this->Mutex=$this->Create_Object('/Stream/File', [
+        'FileName'=>$MutexName,
+        'OpenMode'=>$OpenMode,
+      ]);
+    }
+  
+    Function Mutex_Close()
+    {
+      $this->Mutex->Close();
+      $this->Mutex->Done();
+      $this->Mutex=null;
+    }
+    
+    Function Lock($Wait=false)
+    {
+    //$this->Log('Debug', ($Wait? 'Locking':'Try lock'), ' mutex');
+      if($this->Mutex->TryLock())
+        return true;
+      if($Wait)
+      {
+        $this->Log('Log', 'Wait....');
+        return $this->Mutex->Lock();
+      }
+      $this->Log('Error', 'WBuilder is busy...');
+      return false;
+    }
+    
+    Function UnLock()
+    {
+      return $this->Mutex->UnLock();
     }
     
   //****************************************************************

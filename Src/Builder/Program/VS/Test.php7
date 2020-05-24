@@ -7,25 +7,33 @@
   $Data=[
     'AbsPath'   =>'SlnDir/',
     'VcxAbsPath'=>'VcxDir/', // 'Builder/Build/VStudio', // ..
-    'CustomProps'=>[
-      ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Release\'', 'Label'=>'Configuration_d',
-        ['_d', ''],
-      ],
-      ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Debug\'', 'Label'=>'Configuration_d',
-        ['_d', '_d'],
+    
+    'DefArgs'=>[
+      'C++'=>[
+        'CustomProps'=>[
+          ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Release\'', 'Label'=>'Configuration_d',
+            ['_d', ''],
+          ],
+          ['PropertyGroup', 'Condition'=>'\'$(SimpleConfig)\'==\'Debug\'', 'Label'=>'Configuration_d',
+            ['_d', '_d'],
+          ],
+        ],
+        'NMakeCompiler'=>[],
       ],
     ],
-    'NMakeCompiler'=>[],
     'Name'=>'MySolution',
     'Type'=>'C++',
   //'ProjectFile'=> $Dir.$Name.'sln',
     'Platforms'=>[
-      'Win32'   =>[                 'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}32'       ]],
-      'Win64'   =>[                 'Real'=>'x64'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}'         ]],
-      'WinArm'  =>[                 'Real'=>'arm'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_Arm'     ]],
-      'Linux'   =>['>'=>'_Linux'   ,'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_Linux'   ]],
-      'MSBuild' =>['<'=>'MSBuild ' ,'Real'=>'Win32' ,'Props'=>['WUse'=>'MSBuild' ,'ConfigPath'=>'{Var:ConfigPath}_MSBuild' ]],
-      'DoxyGen' =>['<'=>'DoxyGen ' ,'Real'=>'Win32' ,'Props'=>['WUse'=>'DoxyGen' ,'ConfigPath'=>'{Var:ConfigPath}_DoxyGen' ]],
+      'Win32'      =>[                                'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}32'       ]],
+      'Win64'      =>[                                'Real'=>'x64'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}'         ]],
+      'WinArm'     =>[                                'Real'=>'arm'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_Arm'     ]],
+      'Win32 2019' =>['Config'=>'{Var:Real}_2019'    ,'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}32_2019'  ]],
+      'Win64 2019' =>['Config'=>'{Var:Real}_2019'    ,'Real'=>'x64'   ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_2019'    ]],
+      'Linux'      =>['Config'=>'{Var:Real}_Linux'   ,'Real'=>'Win32' ,'Props'=>['WUse'=>'WBuild'  ,'ConfigPath'=>'{Var:ConfigPath}_Linux'   ]],
+      'MSBuild'    =>['Config'=>'MSBuild {Var:Real}' ,'Real'=>'Win32' ,'Props'=>['WUse'=>'MSBuild' ,'ConfigPath'=>'{Var:ConfigPath}_MSBuild' ]],
+      'DoxyGen'    =>['Config'=>'DoxyGen {Var:Real}' ,'Real'=>'Win32' ,'Props'=>['WUse'=>'DoxyGen' ,'ConfigPath'=>'{Var:ConfigPath}_DoxyGen' ]],
+      'Hid32'      =>['Config'=>'Hidden {Var:Real}'  ,'Real'=>'Win32' ,'Props'=>['WUse'=>'Hidden'  ,'ConfigPath'=>'{Var:ConfigPath}_Hidden'  ], 'Hidden'=>true],
     ],
     'Configs'=>[
       'Development' =>['Props'=>['SimpleConfig'=>'Release' ,'ConfigPath'=>'Development' ]],
@@ -33,6 +41,7 @@
       'Full Debug'  =>['Props'=>['SimpleConfig'=>'Debug'   ,'ConfigPath'=>'FullDebug'   ]],
       'Fast Debug'  =>['Props'=>['SimpleConfig'=>'Release' ,'ConfigPath'=>'FastDebug'   ]],
       'Shipping'    =>['Props'=>['SimpleConfig'=>'Release' ,'ConfigPath'=>'Shipping'    ]],
+      'Hidden'      =>['Props'=>['SimpleConfig'=>'Hidden'  ,'ConfigPath'=>'Hidden'      ], 'Hidden'=>true],
     ],
     'Projects'=>[
       'Project1'=>[
@@ -40,6 +49,7 @@
       ],
       'Project2'=>[
         'NMakeCompiler'=>['Import', 'Project'=>'$(ProjectDir)\Project2.vcxproj.compiler'],
+        'Depends'=>['External1'],
       ],
       '/Folder'=>[
         'Projects'=>[
@@ -50,18 +60,61 @@
           'SubProject2'=>[
             'Depends'=>['Project2'],
             'AbsDir'=>'Folder',
+            'ConfigMap'=>[
+              'Platforms'=>[
+                'Win32'      =>'Hid32',
+                'Win64'      =>'Hid32',
+                'WinArm'     =>'Hid32',
+                'Win32 2019' =>'Hid32',
+                'Win64 2019' =>'Hid32',
+                'Linux'      =>'Hid32',
+              # 'MSBuild'    =>'Hid32',
+              # 'DoxyGen'    =>'Hid32',
+              # 'Hid32'      =>'Hid32',
+              ],
+            ],
           ],
           'SubProject3'=>[
             'Type'=>'C++',
             'Depends'=>['SubProject2'],
             'AbsDir'=>'Folder',
+            'ConfigMap'=>[
+              'Configs'=>[
+                'Development' =>'Development' ,
+              # 'Debug'       =>'Debug'       ,
+                'Full Debug'  =>'Full Debug'  ,
+                'Fast Debug'  =>'Fast Debug'  ,
+                'Shipping'    =>'Hidden'      ,
+              ],
+            ],
+          ],
+        ],
+      ],
+      '/External'=>[
+        'Projects'=>[
+          ':External1'=>[
+            'File'=>'External1.csproj',
+            'Type'=>'C#',
+            'GUID'=>'{01234567-89AB-CDEF-0123-456789ABCDEF}', // TODO: Read it
+          # 'Depends'=>['Project2', 'SubProject2'],
+            'AbsDir'=>'Folder',
+            'ConfigMap'=>[
+              'Configs'=>[
+                '*'           =>'Debug'   ,
+                'Developing'  =>'Release' ,
+                'Shipping'    =>'Release' ,
+              ],
+              'Platforms'=>[
+                '*'=>'Any CPU',
+              ],
+            ],
           ],
         ],
       ],
     ],
   ];
 
-  $Loader->GetLogger()->Add('Make.log');
+  $Loader->GetLogger()->Add(__FILE__.'.log');
   $Solution=$Loader->Create_Object('/Builder/Program/VS/Solution', $Data);
   $Solution->SaveToFiles($SlnOutDir, $VcxOutDir);
 ?>

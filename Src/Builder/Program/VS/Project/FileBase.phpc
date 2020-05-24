@@ -1,0 +1,165 @@
+<?
+  $Loader->Parent_Class('/Builder/Program/VS/Project/Base');
+  
+  class C_Builder_Program_VS_Project_FileBase extends C_Builder_Program_VS_Project_Base
+  {
+    Var        String $AbsPath        ='';
+    Var        String $SolutionDir    ='';
+    Var        Array  $ConfigMap      =[];
+    Protected ?Array  $Solutions      =null;
+    Protected ?Array  $SortSolutions  =null;
+    Protected ?Array  $Configurations =null;
+    Protected  Array  $Configs        =[]  ;
+    Var        String $FileExt        ='.vcxproj';
+    
+    Function _Init(Array $Args)
+    {
+      $this->AbsPath       =NormPath($Args['AbsPath'     ]?? './', true);
+      $this->SolutionDir   =NormPath($Args['SolutionDir' ]?? './', true);
+      $this->ConfigMap     =$Args['ConfigMap'     ]?? [];
+      Parent::_Init($Args);
+    }
+    
+    Function File() { return $this->Id.$this->FileExt; }
+  
+    Function AbsFilePath() { return $this->AbsPath.$this->File(); }
+    Function AbsPath() { return DirName($this->AbsFilePath()).'/'; }
+    Function SolutionDir() { return $this->SolutionDir; }
+    
+    Function RelFilePath($From)
+    {
+      return $this->GetSolution()->CalcRelPath($From, $this->AbsFilePath());
+    }
+    
+    Function GetSolutions     () { return $this->ConfigMap? ($this->Solutions     ??=$this->_GetSolutions     ()):$this->GetSolution()->GetSolutions     (); }
+    Function GetSortSolutions () { return $this->ConfigMap? ($this->SortSolutions ??=$this->_GetSortSolutions ()):$this->GetSolution()->GetSortSolutions (); }
+    Private Function _GetSortSolutions()
+    {
+      $Res=$this->_GetSolutions();
+      KSort($Res);
+      return $Res;
+    }
+    
+    Private Function _GetSolutions()
+    {
+      $Solution=$this->GetSolution();
+      $ConfigMap =$this->ConfigMap;
+      
+      $Configs   =$ConfigMap['Configs'   ]?? ['*'=>true];
+      $Platforms =$ConfigMap['Platforms' ]?? ['*'=>true];
+      $Map       =$ConfigMap['Map'       ]?? ['*'=>true];
+      
+      $Def  =$Solution->GetDefConfigMap();
+      if(($v=$Configs   ['*']?? false)!==False) if($v===true) $Configs   +=$Def['Configs'   ]; Else ForEach($Def['Configs'   ] as $k=>$t) $Configs   [$k]??=$v; UnSet($Configs   ['*']);
+      if(($v=$Platforms ['*']?? false)!==False) if($v===true) $Platforms +=$Def['Platforms' ]; Else ForEach($Def['Platforms' ] as $k=>$t) $Platforms [$k]??=$v; UnSet($Platforms ['*']);
+      
+      $DefMap=[];
+      ForEach($Configs As $kc=>$vc)
+        ForEach($Platforms As $kp=>$vp)
+          $DefMap[$kc.'|'.$kp]=($vc!==false && $vp!==false)? ($vc===True? $kc:$vc).'|'.($vp===True? $kp:$vp):False;
+      if($Map['*']?? false) $Map+=$DefMap; UnSet($Map['*']);
+      $Res =[];
+      $List =$Solution->GetSolutions();
+      ForEach($List As $k=>$v)
+      {
+        if(false && !IsSet($Map[$k]))
+        {
+          $v['Hidden']=true;
+          $Res[$k]=$v;
+          continue;
+        }
+        $New=$Map[$k]?? false;
+        if($New===False)
+        {
+          $New=[
+            'Hidden'       =>$v['Hidden'],
+            'ConfigName'   =>'Invalid',
+            'PlatformName' =>'Win32',
+            'SlnSolution'  =>$v['SlnSolution'], //'Invalid|Win32',
+            'KeySolution'  =>'Invalid|Win32',
+            'Solution'     =>'Invalid|Win32', //$Solution, //
+            'Config'       =>'Invalid',
+            'Platform'     =>'Win32',
+            'Condition'    =>'\'$(Configuration)|$(Platform)\'==\'Invalid|Win32\'',
+            'Props'        =>['WUse'=>'Invalid'],
+            'HasBuild'     =>true,
+          ];
+          $Res[$k]=$New;
+          continue;
+        }
+        if(!IsSet($List[$New]))
+        {
+          if($this->IsGenerated())
+          {
+            $this->Log('Error', 'Not found old solution key ', $New)->Debug($List);
+            continue;
+          }
+          $Solution=$New;
+          $New=[];
+          $New['SlnSolution' ]=$v['SlnSolution'];
+          $New['Solution'    ]=$Solution;
+          $New['HasBuild'    ]=true;
+        }
+        Else
+        {
+          $New=$List[$New];
+          $New['SlnSolution']=$v['SlnSolution'];
+        }
+        $New['Hidden']=false;
+        $Res[$k]=$New;
+      }
+      return $Res;
+    }
+    
+    Function GetConfig($Key)
+    {
+      $Res=$this->Configs[$Key]??=$this->Create_Object('/Builder/Program/VS/Project/Configuration', ['Project'=>$this, 'Key'=>$Key]);
+      if($Res->Used)
+        $this->Log('Error', 'Config ', $Key, ' already used in ', $this->Id)->Debug($Res);
+      return $Res;
+    }
+    
+    Function GetConfigurations() { return $this->Configurations??=$this->_GetConfigurations(); }
+    
+    Function _GetConfigurations()
+    {
+      $Res=[];
+      
+      $HasExists=Count($this->Configs)>0;
+      ForEach($this->Configs As $Key=>$Config)
+        $Config->WasExists=true;
+      $Solutions=$this->GetSolutions();
+      ForEach($Solutions As $Item)
+      {
+        $Key=$Item['KeySolution'];
+        if($Config=$this->Configs[$Key]?? null)
+          $Res[$Key]??=$Config->UpdateConfigParams($Item);
+        elseIf(!$Item['Hidden'])// && !$this->ConfigMap)
+          $Res[$Key]??=$this->GetConfig($Key)->UpdateConfigParams($Item);
+      }
+      ForEach($Solutions As $Key=>$Item)
+        if($Config=$this->Configs[$Key]?? null)
+        {
+          $Res[$Key]??=$Config->UpdateConfigParams($Item);
+        //$Config->IsOverloaded=true;
+        }
+
+      $Errors=[];
+      ForEach($this->Configs As $Key=>$Config)
+        if(!$Config->Used && !$Config->IsOverloaded)
+          $Errors[]='Config '.$Key.' is not used';
+        elseIf(!$Config->WasExists && $HasExists && $Key!=='Invalid|Win32')
+          $Errors[]='Config '.$Key.' was not exsists';
+      If($Errors)
+        $this->Log('Error', 'Config in module ', $this->Id)->Debug([
+          'Errors'    =>$Errors          ,
+          'Configs'   =>$this->Configs   ,
+          'ConfigMap' =>$this->ConfigMap ,
+          'Debug'     =>$this->DebugConfigMap?? null,
+        ]);
+      return $Res;
+    }
+    
+    Function IsFile() { return true; }
+  }
+?>

@@ -1,0 +1,18 @@
+<?
+  $Loader->Parent_Class('/Builder/Program/VS/Project/FileBase');
+  
+  class C_Builder_Program_VS_Project_ExistsFile extends C_Builder_Program_VS_Project_FileBase
+  {
+    Var $FileNameExt='';
+  
+    Function _Init(Array $Args)
+    {
+      $this->FileNameExt=$Args['File'];
+      Parent::_Init($Args);
+    }
+    
+    Function File() { $this->Log('Error', 'UnSupported'); return $this->FileNameExt; } // TODO: Move to base
+    Function AbsFilePath() { return $this->FileNameExt; }
+    Function GetDepends() { return []; } // TODO
+  }
+?>

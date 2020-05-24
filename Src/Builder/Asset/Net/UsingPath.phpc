@@ -1,7 +1,7 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/Path');
 
-  class C_Builder_Asset_Cpp_UsingPath extends C_Builder_Asset_FS_Path
+  class C_Builder_Asset_Net_UsingPath extends C_Builder_Asset_FS_Path
   {
     Protected Function _Init(Array $Args)
     {

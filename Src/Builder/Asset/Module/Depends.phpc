@@ -22,9 +22,10 @@
       
       if($Module=$I->GetModule()->GetSubModule($this->Name))
         $this->Instance=$Module->CreateInstance($Context, $IsExternal, $this);
-
+        
       if($this->Instance)
       {
+      //DoEvent
         if(!$I->IsExternalModule)
           asdf();
         $this->Instance->SetExternalModule($IsExternal, $this);

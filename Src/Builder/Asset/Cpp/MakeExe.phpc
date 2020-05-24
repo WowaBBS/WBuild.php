@@ -1,41 +1,22 @@
 <?
-  $Loader->Parent_Class('/Builder/Asset/Cpp/Compile');
+  $Loader->Parent_Class('/Builder/Asset/Cpp/MakeBase');
 
-  class C_Builder_Asset_Cpp_MakeExe extends C_Builder_Asset_Cpp_Compile
+  class C_Builder_Asset_Cpp_MakeExe extends C_Builder_Asset_Cpp_MakeBase
   {
     Static Function Make($Outer, $Compiler, $Param)
     {
-      $ExeName=Static::_GetName($Param, $Outer);
-      $bDebug=$Outer->IsDebug();
-      $DebugPostfix =$Param['DebugPostfix' ]??True;
-      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
-
-      $OutPath=$Param['OutPath'];
-    
-      Static::Compile($Outer, $Compiler, $Param);
-
-      $PathExeAsset=$Outer->CreateAsset('Bin/Path', $OutPath.'Bin');
-      
-      $ExeAsset=$Outer->CreateAsset('Bin/Exe', [
-          'Path'=>$Compiler->GetExeFile($ExeName.$_d),
-          '>FileDepends'=>$Param['>FileDepends']??[],
-          '>Create'=>1,
-      ]);
-      $Compiler->BuildExe([
-        'Outer'     =>$Outer,
-        'Name'      =>$ExeName,
-        'Exec'      =>$ExeAsset->CreateExec(['CachePath'=>$OutPath.'Task/Exe/'.$ExeName, 'Performance'=>'Build']),
-        'Using'     =>$Outer->GetAssets     ('Cpp/Using'     ),
-        'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'       ),
-        'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'       ),
-        'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
-        'DefAsset'  =>$Outer->ExtractAssets ('Cpp/Def'       ),
-        'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
-        'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
-        'ExeAsset'  =>$ExeAsset,
-      ]);
-
-      $PathExeAsset->RemoveFromOuter();
+      $_Param=$Param;
+      UnSet($_Param['OutPath'      ]);
+      UnSet($_Param['Name'         ]);
+      UnSet($_Param['Def'          ]);
+      UnSet($_Param['DLL'          ]);
+      UnSet($_Param['Managed'      ]);
+      UnSet($_Param['DebugPostfix' ]);
+      UnSet($_Param['Proxy'        ]);
+      $CompileAsset=$Outer->CreateAsset('Cpp/Compile', $_Param);
+      $_Param=$Param+['BinType'=>'Exe'];
+      UnSet($_Param['OutPath'      ]);
+      $MakeAsset=$Outer->CreateAsset('Cpp/MakeBin', $_Param);
     }
   };
 ?>

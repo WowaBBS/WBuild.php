@@ -3,172 +3,175 @@
   
   class C_Builder_Program_VS_Project_Builder extends C_XML_Builder  //implements ArrayAccess
   {
-    Var $Result;
+    Var $BaseDir     ;
+    Var $SolutionDir ;
   
     Function _Init(Array $Args)
     {
-      $Args[0]=$this->Result=$this->Create_Object('/Stream/Fifo');
-      $this->SelfCloseTag=' />';
+      $Project=$Args['Project'];
+      
+      $this->BaseDir     =$Project? $Project->AbsPath     ():$Args['BaseDir'     ];
+      $this->SolutionDir =$Project? $Project->SolutionDir ():$Args['SolutionDir' ];
+      
+    //$Args[0]=$this->Create_Object('/Stream/Fifo');
+      $this->SelfCloseTag =' />';
+      $this->EndLine      ="\r\n";
       Parent::_Init($Args);
-      if(IsSet($Args['Info']))
-        $this->Make($Args['Info'], $Args['Project']?? []);
+      if($Project)
+      {
+        if($Args['Filters']?? false)
+          $Project->MakeFilters($this);
+        else
+          $Project->Make($this);
+      }
     }
     
     Function ItemGroup($Label=null)
     {
       return $this->Tag('ItemGroup')->AttrMap(['Label'=>$Label]);
     }
+    
+    Function WriteLnEmpty()
+    {
+      return $this->Text($this->EndLine.'  ');
+    }
 
+    Function _SolutionDirRelPath ($File) { return Static::__RelPath($File, $this->SolutionDir , '$(SolutionDir)'); }
+    Function _RelPath            ($File) { return Static::__RelPath($File, $this->BaseDir                       ); } 
+    
+    Static Function __RelPath($File, $FromDir, $AddMacro='')
+    {
+      $FromDisk    =$FromDir[1]===':'? StrToLower(SubStr($FromDir, 0, 2)):'';
+    //$this->log('Debug', $BaseDir[1], ';', StrToLower(SubStr($BaseDir, 0, 2)), ';', StrToLower(SubStr($File, 0, 2)));
+      $IsMacro     =StrLen($File) && $File[0]==='$';
+      $IsOtherDisc =$FromDisk!=='' && $FromDisk!==StrToLower(SubStr($File, 0, StrLen($FromDisk)));
+      if(!$IsMacro && !$IsOtherDisc)
+      {
+        $BaseDir=TPath::Create($FromDir);
+        $File=TPath::Create($File);
+        $File->PathFrom($BaseDir);
+        $FileStr=$AddMacro.$File->ToString();
+      }
+      else
+        $FileStr=$File;
+      return StrTr($FileStr, '/', '\\');
+    }
+    
     Function PropertyGroup($Label=null, $Condition=null, $Vars=null)
     {
       $this->Tag('PropertyGroup')->AttrMap(['Condition'=>$Condition, 'Label'=>$Label]);
       if(!Is_Null($Vars))
       {
-        ForEach($Vars As $k=>$v)
-          $this->Tag($k)->Text($v)->End();
+        $this->AddVars($Vars);
         if(!$Vars)
-          $this->Text("\n  ");
+          $this->WriteLnEmpty();
         $this->End();
       }
       return $this;
     }
     
-    Function Import($File)
+    Function Import($File, $Condition=null, $Label=null)
     {
-      return $this->Tag('Import')->AttrMap(['Project'=>$File])->End();
+      $File=$this->_RelPath($File);
+      if(Is_Bool($Condition))
+        if($Condition===true)
+          $Condition='exists(\''.$File.'\')';
+        Else
+          $Condition=null;
+      return $this->Tag('Import')->AttrMap([
+        'Project'   =>$File      ,
+        'Condition' =>$Condition ,
+        'Label'     =>$Label     ,
+      ])->End();
     }
     
-  //****************************************************************
-  
-    Function Make(C_Builder_Program_VS_Solution $Info, $Proj)
+    Function Imports($Files)
     {
-      $Res=$this;
-      $Solutions=$Proj->GetSolutions();
-      $Res->XML();
-      $Res->Tag('Project')->AttrMap([
-        'DefaultTargets' =>'Build' ,
-        'ToolsVersion'   =>'4.0'   ,
-        'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
-      ]);
-      
-      $Res->ItemGroup('ProjectConfigurations');
-      ForEach($Solutions As $Solution) 
+      ForEach($Files As $k=>$v)
       {
-        $Res->Tag('ProjectConfiguration')->AttrMap(['Include'=>$Solution['Solution']]);
-        $Res->Tag('Configuration' )->Text($Solution['Config'   ])->End();
-        $Res->Tag('Platform'      )->Text($Solution['Platform' ])->End();
-        $Res->End();
-      } 
-      $Res->End();
-      
-      $Res->PropertyGroup('Globals',null,[
-        'ProjectGuid' =>$Proj->GUID    ,
-        'Keyword'     =>'MakeFileProj' ,
-        'ProjectName' =>$Proj->Name    ,
-      ]);
-      
-      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.Default.props');
-      
-      ForEach($Solutions As $Solution)
-        $Res->PropertyGroup('Configuration', $Solution['Condition'], [
-          'ConfigurationType'=>'Makefile',
-          'UseDebugLibraries'=>'true',
-        ]+$Solution['Props']);
-      
-      $Res->TagTree($Proj->CustomProps);
-      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
-      $Res->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->Text("\n  ")->End();
-      
-      ForEach($Solutions As $Solution)
-        $Res->Tag('ImportGroup')
-          ->Attr('Label'     ,'PropertySheets')
-          ->Attr('Condition' ,$Solution['Condition'])
-          ->Tag('Import')->AttrMap([
-            'Project'   =>         '$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props',
-            'Condition' =>'exists(\'$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props\')',
-            'Label'     =>'LocalAppDataPlatform',
-          ])
-          ->End()
-        ->End();
-      
-      $Res->PropertyGroup('UserMacros',null,[]);
-      $Res->TagTree($Proj->NMakeCompiler);
-
-      ForEach($Solutions As $Solution)
-        $Res->PropertyGroup(null, $Solution['Condition'], [
-          'NMakeBuildCommandLine'        =>'$(NMakeBuildCommandLine)'        ,
-          'NMakeOutput'                  =>'$(NMakeOutput)'                  ,
-          'NMakeCleanCommandLine'        =>'$(NMakeCleanCommandLine)'        ,
-          'NMakeReBuildCommandLine'      =>'$(NMakeReBuildCommandLine)'      ,
-        # 'NMakePreprocessorDefinitions' =>'$(NMakePreprocessorDefinitions)' ,
-        ]);
-        
-      $Res->Tag('ItemDefinitionGroup')->Text("\n  ")->End();
-      
-      If(False) // Files
-        $Res->Tag('ItemGroup')
-          ->Tag('None')->AttrMap(['Include'=>'readme.txt'])->End()
-          ->End();
-      
-      if($DependsList=$Proj->GetDepends())
-      {
-        $Res->Tag('ItemGroup');
-        $AbsPath=$Proj->AbsPath();
-        ForEach($DependsList As $Depends)
+        if(!Is_String($k))
         {
-          $DepProj=$Depends['Proj'];
-          $Res->Tag('ProjectReference')->Attr('Include', $DepProj->RelFilePath($AbsPath));
-            $Res->TagTree(['Project'                      ,$DepProj->GUID  ]);
-            ForEach($Depends['Param'] As $k=>$v)
-              $Res->TagTree([$k ,$v]);
-          #?$Res->TagTree(['Name'                         ,'ProjectA'      ]);
-          # $Res->TagTree(['Private'                      ,'false'         ]);
-          # $Res->TagTree(['CopyLocalSatelliteAssemblies' ,'true'          ]);
-          # $Res->TagTree(['ReferenceOutputAssembly'      ,'true'          ]);
-          #?$Res->TagTree(['LinkLibraryDependencies'      ,'true'          ]);
-          #?$Res->TagTree(['UseLibraryDependencyInputs'   ,'false'         ]);
-          #?$Res->TagTree(['OutputItemType'               ,'Content'       ]);
-          #?$Res->TagTree(['CopyToOutputDirectory'        ,'PreserveNewest']);
-          $Res->End('ProjectReference');
+          $k=$v;
+          $v=[];
         }
-        $Res->End('ItemGroup');
+        if(!Is_Array($v))
+          $v=['Condition'=>$v];
+        $this->Import($k, $v['Condition']?? null, $v['Label']?? null);
       }
-          
-/* TODO:
-  <ItemGroup>
-    <Reference Include="System">
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="System.Data">
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-    <Reference Include="System.Data.Linq" />
-    <Reference Include="System.Drawing">
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-    <Reference Include="System.Management" />
-    <Reference Include="System.Windows.Forms">
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-    <Reference Include="System.Xml">
-      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-    </Reference>
-  </ItemGroup>
-*/
-
-      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.targets');
-      $Res->Tag('ImportGroup')
-        ->Attr('Label', 'ExtensionTargets')
-        ->Text("\n  ")
-        ->End();
-      
-      $Res->End('Project');
+    }
+    
+    Function AddVars($Vars)
+    {
+      ForEach($Vars As $k=>$v)
+      {
+        if(Is_Null($v)) continue;
+        if(Is_Bool($v)) $v=$v? 'true':'false'; else
+        if(Is_Array($v))
+        {
+          switch($v[0]?? '')
+          {
+          Case 'Text'        : $v=$v[1]; Break;
+          Case 'Bool'        : $v=$v[1]?'true':'false'; Break;
+          Case 'SolutionDir' : $v=$this->_SolutionDirRelPath($v[1]); Break;
+          Case 'File'        : $v=$this->_RelPath($v[1]); Break;
+          Case '':
+            $this->Tag($k);
+            $this->AddVars($v);
+            $this->End();
+            continue 2;
+          Default:
+            $this->Log('Error', 'Unknown type ', $v[0]);
+            continue 2;
+          }
+        }
+        $this->TagTree([$k ,$v]);
+      }
+      return $this;
+    }
+    
+    Function GetMacroCurrentTag() { return '$('.$this->GetLastTagName().')'; }
+    
+    Function _StrList(Array $List, Int $Overload=1, String $Macro='')
+    {
+      if(StrLen($Macro))
+      {
+        if($Overload>0)
+          Array_UnShift($List, $Macro);
+        else
+          $List[]=$Macro;
+      }
+      return Implode(';', $List);
+    }
+    
+    Function _Defines(Array $List, Int $Overload=1, String $Macro='')
+    {
+      ForEach($List As $k=>&$v)
+        if(Is_String($k) && $v!==false)
+          $v=$k.'='.($v===true? '':$v);
+      return $this->_StrList($List, $Overload, $Macro);
+    }
+    
+    Function StrList(Array $List, Int $Overload)
+    {
+      $this->Text($this->_StrList($List, $Overload, $Overload? $this->GetMacroCurrentTag(): ''));
+      return $this;
+    }
+    
+    Function _RelPaths(Array $List)
+    {
+      ForEach($List As $Key=>$Path)
+        $List[$Key]=$this->_RelPath($Path);
+      return $List;
+    }
+    
+    Function _PathList(Array $List, Int $Overload, String $Macro='')
+    {
+      return $this->_StrList($this->_RelPaths($List), $Overload, $Macro);
+    }
+    
+    Function PathList(Array $List, Int $Overload)
+    {
+      return $this->StrList($this->_RelPaths($List), $Overload);
     }
     
   //****************************************************************
@@ -176,7 +179,7 @@
 
     Function __toString()
     {
-      return $this->Result->Get_Content();
+      return $this->GetStream()->Get_Content();
     }
     
   //****************************************************************

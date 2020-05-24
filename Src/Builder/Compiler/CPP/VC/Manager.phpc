@@ -38,6 +38,9 @@
       ['MSVC++' ,[ 14,21 ], 1921 ,[ 16,1] ,2019 ,1 ,'VS2019' ,'Visual Studio 2019 version 16.1'],
       ['MSVC++' ,[ 14,22 ], 1922 ,[ 16,2] ,2019 ,2 ,'VS2019' ,'Visual Studio 2019 version 16.2'],
       ['MSVC++' ,[ 14,23 ], 1923 ,[ 16,3] ,2019 ,3 ,'VS2019' ,'Visual Studio 2019 version 16.3'],
+      ['MSVC++' ,[ 14,24 ], 1924 ,[ 16,4] ,2019 ,4 ,'VS2019' ,'Visual Studio 2019 version 16.4'],
+      ['MSVC++' ,[ 14,24 ], 1925 ,[ 16,5] ,2019 ,5 ,'VS2019' ,'Visual Studio 2019 version 16.5'],
+      ['MSVC++' ,[ 14,24 ], 1926 ,[ 16,6] ,2019 ,6 ,'VS2019' ,'Visual Studio 2019 version 16.6'],
     ];
     
     Private Function LoadInfo(&$Item)
@@ -237,7 +240,9 @@
       ForEach($this->List As $Item)
         if($this->CheckCfg($Cfg, $Item))
            return $this->_Get($Item);
-      $this->Debug([$Cfg, $Config['Value']]);
+      $this->Log('Error', 'Compiler not found')->Debug([$Cfg, $this->List]);
+    //$this->Log('Fatal', 'Compiler not found')->Debug([$Cfg, $Config]);
+    //$this->Debug([$Cfg, $Config['Value']]);
       return null;
     }
   }   

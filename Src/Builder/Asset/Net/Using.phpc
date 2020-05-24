@@ -1,11 +1,11 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/File');
 
-  class C_Builder_Asset_Cpp_Using extends C_Builder_Asset_FS_File
+  class C_Builder_Asset_Net_Using extends C_Builder_Asset_FS_File
   {
     Protected Function _GetSearchPathClass()
     {
-      return ['Cpp/UsingPath'];
+      return ['Net/UsingPath'];
     }
     
     Function IsDll() { return true; }
@@ -27,8 +27,7 @@
         $Asset->AddFileDepends($this);
     }
     
-    Function UseForExe($Asset) { $this->UseForAsset($Asset); }
-    Function UseForDll($Asset) { $this->UseForAsset($Asset); }
+    Function UseForBin($Asset) { $this->UseForAsset($Asset); }
     Function UseForLib($Asset) { $this->UseForAsset($Asset); }
     
     Function UseForObj(Array &$Depends)

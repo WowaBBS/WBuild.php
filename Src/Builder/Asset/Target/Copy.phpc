@@ -4,6 +4,10 @@
 
   class C_Builder_Asset_Target_Copy extends C_Builder_Asset_Base//extends C_Builder_Asset_Inline
   {
+    Var $FromAssets   ;
+    Var $CopingAssets ;
+    Var $TargetDir    ;
+    
   //Static Function _ParseParams($Args)
   //  $Outer=$Args['Outer'];
   //  $Param=$Args['Param'];
@@ -15,13 +19,14 @@
       $To   =$Param[1]??$Param['To'   ]??''; UnSet($Param[1]); UnSet($Param['To'   ]);
      
       $TargetDir=$To? $this->CreateAsset('Target/Dir', $To):false;
+      $this->TargetDir=$this->GetLastAsset('Target/Dir');
         
-      $From =$this->GetAssets($From);
+      $this->FromAssets=$From =$this->GetAssets($From);
       
      #ForEach($From As $FromItem)
      #  ForEach($FromItem->GetFileDepends() As $Item)
      #    $From[$Item->Object_Id]=$Item;
-      $From=C_Builder_Asset_FS_PathBase::_GetFileDependsR($From);
+      $this->CopingAssets=$From=C_Builder_Asset_FS_PathBase::_GetFileDependsR($From);
       $Outer=$this->Outer;
       
       ForEach($From As $i)

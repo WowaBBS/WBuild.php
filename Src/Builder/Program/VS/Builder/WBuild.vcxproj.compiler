@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(WUse)'=='WBuild'">
+      <NMakeBuildCommandLine>$(WBuild_Exec) -op Build   -configuration "$(RealConfig)" -platform "$(RealPlatform)" -target "$(WBuild_Module)" -log "$(WBuild_Log)" -cache "$(WBuild_Cache)" -modules "$(WBuild_Root)" -WaitMutex -FromMsBuild</NMakeBuildCommandLine>
+      <NMakeCleanCommandLine>$(WBuild_Exec) -op Clean   -configuration "$(RealConfig)" -platform "$(RealPlatform)" -target "$(WBuild_Module)" -log "$(WBuild_Log)" -cache "$(WBuild_Cache)" -modules "$(WBuild_Root)" -WaitMutex -FromMsBuild</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>$(WBuild_Exec) -op ReBuild -configuration "$(RealConfig)" -platform "$(RealPlatform)" -target "$(WBuild_Module)" -log "$(WBuild_Log)" -cache "$(WBuild_Cache)" -modules "$(WBuild_Root)" -WaitMutex -FromMsBuild</NMakeReBuildCommandLine>
+                <NMakeOutput>Output is not exists</NMakeOutput>
+<!--
+      <NMakeBuildCommandLine>echo $(WBuild_Exec) -op Build   -configuration "$(RealConfig)" -platform "$(RealPlatform)" -target "$(WBuild_Module)" -log "$(WBuild_Log)" -cache "$(WBuild_Cache)" -modules "$(WBuild_Root)" 2&rt;"$(WBuild_Err)"</NMakeBuildCommandLine>
+      <NMakeCleanCommandLine>echo $(WBuild_Exec) -op Clean   -configuration "$(RealConfig)" -platform "$(RealPlatform)" -target "$(WBuild_Module)" -log "$(WBuild_Log)" -cache "$(WBuild_Cache)" -modules "$(WBuild_Root)" 2&rt;"$(WBuild_Err)"</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>echo $(WBuild_Exec) -op ReBuild -configuration "$(RealConfig)" -platform "$(RealPlatform)" -target "$(WBuild_Module)" -log "$(WBuild_Log)" -cache "$(WBuild_Cache)" -modules "$(WBuild_Root)" 2&rt;"$(WBuild_Err)"</NMakeReBuildCommandLine>
+-->
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(WUse)'=='Invalid'">
+      <NMakeBuildCommandLine>echo This Configuration/Platform is not valid for this target.</NMakeBuildCommandLine>
+      <NMakeCleanCommandLine>echo This Configuration/Platform is not valid for this target.</NMakeCleanCommandLine>
+    <NMakeReBuildCommandLine>echo This Configuration/Platform is not valid for this target.</NMakeReBuildCommandLine>
+                <NMakeOutput>Invalid output</NMakeOutput>
+  </PropertyGroup>
+</Project>

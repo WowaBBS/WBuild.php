@@ -49,6 +49,8 @@
       $this->Disabled     =$Args['Disabled'     ]?? False;
       $this->LazyDepsId   =$Args['LazyDepsId'   ];
       
+      KSort($this->Defines);
+      
       $this->Call_MakeCompile();
     }
 

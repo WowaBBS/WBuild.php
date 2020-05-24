@@ -17,6 +17,7 @@
     Var $EnumCache   ;
     Var $Prefixes =[];
     Var $SubModules = false;
+    Var $VS         = [];
     
     Var $Assets_Init =[];
     Var $Assets_Php  =[];
@@ -70,6 +71,7 @@
       if($this->Name     ==='' && IsSet($Cfg['Name'     ])) $this->Name     =$Cfg['Name'     ];
       if(IsSet($Cfg['Assets'     ])) $this->Assets_Php =$Cfg['Assets'     ];
       if(IsSet($Cfg['SubModules' ])) $this->SubModules =$Cfg['SubModules' ];
+      if(IsSet($Cfg['VS'         ])) $this->VS         =$Cfg['VS'         ];
       if(IsSet($Cfg[0            ])) $this->Type       =$Cfg[0            ];
       switch($this->Type)
       {
@@ -94,6 +96,8 @@
         if($Res!==True)
         {
           $Res->SetExternalModule($IsExternal, $ExternalBy);
+          if(!$ExternalBy)
+            $this->_DoAssetEvent($this, 'InstanceExists', $Res);
           return $Res;
         }
         $this->Log('Fatal', 'Recursive creating instance of ', $this->Name);
@@ -121,6 +125,9 @@
       ];
       $Res=$this->Create_Object($Info->Class, $Args);
       $this->Instances[$Key]=$Res;
+      if(!$ExternalBy)
+        $this->_DoAssetEvent($this, 'InstanceCreated', $Res);
+      // TODO: DoEvent
       return $Res;
     }
     

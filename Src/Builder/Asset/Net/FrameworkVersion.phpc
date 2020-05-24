@@ -1,0 +1,24 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/Base');
+
+  class C_Builder_Asset_Net_FrameworkVersion extends C_Builder_Asset_Base
+  {
+    Var $Version;
+
+    Function GetKey() { return 0; }
+  
+    Protected Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      $this->Version=$Args['Version'];
+    }
+    
+    Static Function _ParseParams($Args)
+    {
+      $Param=$Args['Param'];
+      unset($Args['Param']);
+      $Args['Version']=$Param[0]?? $Param['Version']?? 'V4.0';
+      return [$Args];
+    }
+  };
+?>

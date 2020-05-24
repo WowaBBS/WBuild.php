@@ -1,113 +1,101 @@
 <?
   for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
   
-  if(!IsSet($Modules   )) $Modules  =RealPath('./../../../../..');
-  if(!IsSet($LogFile   )) $LogFile  ='./Hook.log'   ;
-  if(!IsSet($CachePath )) $CacheDir ='.Build'       ;
+  $Loader->Using_Module('/FS/IOFS');
+  
+  $BaseDir=RealPath(__DIR__).'/Res/'; //.'/../Build/VStudio').'/';
+  $Imports=[];
+  
   $Mode='arg';
   ForEach($argv as $k=>$Arg)
+  {
+    Echo ' ', $Mode,'=>"', $Arg, '"',"\n";
     switch($Mode)
     {
     case 'arg':
       Switch($Arg)
       {
-      case '/modules' : $Mode='modules' ; break;
-      case '-modules' : $Mode='modules' ; break;
-      case '/log'     : $Mode='log'     ; break;
-      case '-log'     : $Mode='log'     ; break;
-      case '/cache'   : $Mode='cache'   ; break;
-      case '-cache'   : $Mode='cache'   ; break;
+      case '/project_dir'   : $Mode='project_dir'   ; break;
+      case '-project_dir'   : $Mode='project_dir'   ; break;
+      case '/solution_dir'  : $Mode='solution_dir'  ; break;
+      case '-solution_dir'  : $Mode='solution_dir'  ; break;
+      case '/solution_name' : $Mode='solution_name' ; break;
+      case '-solution_name' : $Mode='solution_name' ; break;
+      case '/modules'       : $Mode='modules'       ; break;
+      case '-modules'       : $Mode='modules'       ; break;
+      case '/log'           : $Mode='log'           ; break;
+      case '-log'           : $Mode='log'           ; break;
+      case '/cache'         : $Mode='cache'         ; break;
+      case '-cache'         : $Mode='cache'         ; break;
+      case '/imports'       : $Mode='imports'       ; break;
+      case '-imports'       : $Mode='imports'       ; break;
       default:
         if($k>0)
           $Loader->Log('Error', 'Arg ', $Arg, ' is unsupported');
       }
       break;
-    case 'modules' : $Modules  =$Arg; $Mode='arg';  break;
-    case 'log'     : $LogFile  =$Arg; $Mode='arg';  break;
-    case 'cache'   : $CacheDir =$Arg; $Mode='arg';  break;
+    case 'project_dir'   : $Project_Dir   =NormPath(Str_Replace('\\','/', $Arg)); $Mode='arg'; break;
+    case 'solution_dir'  : $Solution_Dir  =NormPath(Str_Replace('\\','/', $Arg)); $Mode='arg'; break;
+    case 'solution_name' : $Solution_Name =$Arg; $Mode='arg'; break;
+    case 'modules'       : $Modules       =$Arg; $Mode='arg'; break;
+    case 'log'           : $LogFile       =$Arg; $Mode='arg'; break;
+    case 'cache'         : $CacheDir      =$Arg; $Mode='arg'; break;
+    case 'imports'       : $Imports[]     =$Arg; $Mode='arg'; break;
     }
+  }
+  
+  $Solution_Dir  ??=$BaseDir;
+  $Project_Dir   ??=$Solution_Dir;
+  $Solution_Name ??='MySolution';
 
+  $Modules  ??=RealPath(__DIR__.'/../../../../..');
+  $LogFile  ??=__FILE__.'.log'; //'./Hook.log'   ;
+  $CacheDir ??=$Modules.'/../.Build'       ;
+  
   if($LogFile!=='')
     $Loader->GetLogger()->Add($LogFile);
-
-  // '$(Configuration)|$(Platform)'==
-  $Projects=[
-    'Build/Editor' ,
-    'Build/Game'   ,
-  ];
   
-  $Configurations=[
-    'Debug'       ,
-    'Full Debug'  ,
-    'Fast Debug'  ,
-    'Development' ,
-    'Shipping'    ,
-  ];
-  
-  $Targets=[
-  //'Win32'=>'Win32' ,
-    'Win64'=>'x64'   ,
-  ];
-  
-  $MainTargets=[];
-  ForEach($Projects As $Project)
-    ForEach($Configurations As $Configuration)
-      ForEach($Targets As $Target=>$VcTarget)
-      {
-        if($Configuration==='Shipping' && $Project==='Build/Editor')
-          Continue;
-        $Condition=StrTr($Configuration, ' ', '_').'|'.$VcTarget;
-        $MainTargets[]=[$Project, $Configuration, $Target, $Condition];
-      }
-  $Op           ='Hook';
-  if(!Is_Dir(__DIR__.'/Res'))
-    MkDir(__DIR__.'/Res');
-  $BaseDir      =RealPath(__DIR__.'/Res').'/';
-//$BaseDir      =RealPath(__DIR__.'/../Build/VStudio').'/';
-  echo $BaseDir,"\n";
-//$ProjPath     ='WBuild/';
-  $ProjPath     =$BaseDir;
-  $ProjFiles    =$ProjPath.'Generated.vcxproj.files'   ;
-//$ProjFilters  =$ProjPath.'Generated.vcxproj.filters' ;
-  $ProjFilters1 =$ProjPath.'Editor.vcxproj.filters' ;
-  $ProjFilters2 =$ProjPath.'Game.vcxproj.filters'   ;
-  
-  $Args=[
+  $Manager=$Loader->Create_Object('/Builder/Manager', [
     'Modules'        =>['Path'=>$Modules],
     'Configurations' =>$Modules.'/Build/Config.php',
     'CacheDir'       =>$CacheDir,
-  ];
-  $Manager=$Loader->Create_Object('/Builder/Manager', $Args);
+  ]);
   
-  $Analyzer=$Loader->Create_Object('/Builder/Program/VS/Builder/MakeFiles');
-  
-  $Manager->OnAsset[]=$Analyzer->OnAsset;
-  
-  ForEach($MainTargets As [$MainTarget, $Config, $Platform, $Condition])
+  if($Manager->Lock())
   {
-    $Condition="'$(Configuration)|$(Platform)'=='".$Condition."'";
-    $Analyzer->BeginConditions($Condition);
-    $Module=$Manager->Modules->Get($MainTarget);
-    if(!$Module)
-    {
-      echo '[Error] Module '.$MainTarget." not found\n";
-      return;
-    }
-    $Args=[
-      'Configuration' =>$Config   ,
-      'Platform'      =>$Platform ,
-    ];
-    $Context=$Manager->Create_Context($Args);
-    $Instance=$Module->CreateInstance($Context);
-  //$Tasks=$Instance->Make();
-    $Analyzer->OnAsset->Process();
-    $Analyzer->EndConditions($Condition);
+    $Analyzer=$Loader->Create_Object('/Builder/Program/VS/Builder/Analyzer', [
+      'Defines'=>[
+      # '_MSVC_LANG'=>'201402L', // /std:c++14
+        '_MSVC_LANG'=>'201703L', // /std:c++17
+      ],
+      'IntelliSense'=>[
+        'AdditionalOptions'=>'/std:c++17 -std=c++17',
+      ],
+    ]);
+    
+    $Analyzer->ProcessBuilder($Manager);
+    
+    $Solution=$Analyzer->CreateSolution([
+      'Name'        =>$Solution_Name ,
+      'AbsPath'     =>$Solution_Dir  ,
+      'VcxAbsPath'  =>$Project_Dir   ,
+      'Template_Cache' =>$CacheDir? $CacheDir.'/Tpl/':null,
+      'DefArgs'=>[
+        'C++'=>[
+          'Props'=>[
+            'WBuild_Root'  =>['SolutionDir', $Modules  ],
+            'WBuild_Cache' =>['SolutionDir', $CacheDir ],
+          ],
+          'AddImports'=>$Imports,
+        ],
+      ],
+    ]);
+    $Analyzer->UpdateDepends();
+    $Analyzer->UpdateVSProject($Solution);
+    $Analyzer->CreateFolders($Solution);
+    $Solution->SaveToFiles($Solution_Dir, $Project_Dir);
+    $Manager->UnLock();
   }
-
-  $Analyzer->MakeFolders();
-  $Analyzer->CreateFiles   ($BaseDir, $ProjFiles    );
-  $Analyzer->CreateFilters ($BaseDir, $ProjFilters1 );
-  $Analyzer->CreateFilters ($BaseDir, $ProjFilters2 );
   
   $Manager->Done();
   $Loader->Done();

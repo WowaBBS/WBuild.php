@@ -3,8 +3,8 @@
 setlocal
 
 set Root=%~dp0
-::set PHP_Path=%~dp0..\..\..\Build\Tools\PHP
-set PHP_Path=%~dp0..\..\..\Build\Tools\Php74
+::set PHP_Path=%~dp0..\..\..\.Build\Tools\PHP
+set PHP_Path=%~dp0..\..\..\.Build\Tools\Php74
 if not exist "%PHP_Path%/php.exe" if exist "%~dp0../_InitPhp.bat" call "%~dp0../_InitPhp.bat"
 if not exist "%PHP_Path%/php.exe" call "%~dp0DownloadPhp.bat" "%PHP_Path%"
 if not exist "%PHP_Path%/php.exe" echo %PHP_Path%/php.exe not found

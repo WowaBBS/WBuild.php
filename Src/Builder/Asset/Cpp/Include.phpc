@@ -9,7 +9,7 @@
     {
       if($Path==='>Compiler')
       {
-        $Paths=$Args['Outer']->RequireAsset('Cpp/Compiler')->Instance->GetIncludes();
+        $Paths=$Args['Outer']->RequireAsset('Cpp/Compiler')->GetIncludes();
         self::_AddItems($Res, $Args, $Paths);
         return;
       }

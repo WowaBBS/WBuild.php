@@ -61,6 +61,11 @@
         return $this->Key.'=';
       return $this->Key.'='.$this->Value;
     }
+
+    Function GetValue()
+    {
+      return $this->Value;
+    }
   };
 
   $DebM=$Loader->Get_Singleton('/Debug/Manager');

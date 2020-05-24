@@ -23,11 +23,13 @@
         PassThru($this->GetFullPath());
       else
       {
-        $Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;
         $EnumCache=$this->GetModuleInstance()->EnumCache;
         [$Dir, $Name]=$this->GetDirAndNick();
         $Num=$EnumCache->AllocNum($Dir, 'Cmd', ['Pad'=>1]);
         $Nick=$Num.'/'.$Name;
+        
+        // TODO: Refuse from compiler
+        $Compiler=$this->RequireAsset('Cpp/Compiler')->Instance;
         $OutPath=$Compiler->CreateOutPath($this);
 
         $Exec=$this->CreateExec(['CachePath'=>$OutPath.'Task/Exec/'.$Nick]);

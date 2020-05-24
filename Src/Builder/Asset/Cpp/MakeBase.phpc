@@ -17,7 +17,7 @@
       Static::Make($Outer, $Compiler, $Param);
       return [];
     }
-    
+
     Static Function _GetName($Param, $Outer)
     {
       if(IsSet($Param['Name']))

@@ -1,0 +1,181 @@
+<?
+  $this->Parent_Class('/Object');
+  $this->Load_Type('/FS/Path');
+  
+  class C_Builder_Program_VS_Builder_Analyzer extends C_Object
+  {
+    Var $OnAsset         ;
+    Var $Modules      =[];
+    Var $Solution        ;
+    Var $ConfigInfo   =[];
+    Var $Projects     =[];
+  
+    // ModuleInstance global data
+    Var $Defines      =[];
+    Var $IntelliSense =[];
+    
+    Function _Init(Array $Args)
+    {
+      $this->Defines      =$Args['Defines'      ]?? [];
+      $this->IntelliSense =$Args['IntelliSense' ]?? [];
+      Parent::_Init($Args);
+    }
+    
+    Protected Function _CreateModule($Module)
+    {
+      return
+        $this->Create_Object('/Builder/Program/VS/Builder/Module', [
+          'Manager'=>$this, 
+          'Module'=>$Module
+        ]);
+    }
+    
+    Function GetModule($Module)
+    {
+      return $this->Modules[$Module->GetName()]??= $this->_CreateModule($Module);
+    }
+    
+    Function GetModuleByName($ModuleName)
+    {
+      return $this->Modules[$ModuleName];
+    }
+    
+    Function ProcessBuilder($Builder)
+    {
+      $Builder->OnAsset[]=$this->OnAsset=$this->Create_Object('/Builder/Program/VS/Builder/OnAsset', ['Manager'=>$this]);
+
+      $Configs=[];
+      ForEach($Builder->Configurations['Configuration'] As $ConfigName=>$Config)
+        if(!$Config->Abstract) //Hidden)
+          $Configs[$ConfigName]=$Config->VS+['Hidden'=>$Config->Hidden];
+      $this->Configs=$Configs;
+      
+      $Platforms=[];
+      ForEach($Builder->Configurations['Platform'] As $PlatformName=>$Platform)
+        if(!$Platform->Abstract) //Hidden)
+          $Platforms[$PlatformName]=$Platform->VS+['Hidden'=>$Platform->Hidden];
+      $this->Platforms=$Platforms;
+      
+      $ConfigInfo=[];
+      ForEach($Configs As $ConfigName=>$ConfigVS)
+        ForEach($Platforms As $PlatformName=>$PlatformVS)
+        {
+          $VcPlatform=$PlatformVS['Real']?? $PlatformName;
+          $Key=$ConfigName.'|'.$PlatformName;
+          $VsKey=StrTr($ConfigName, ' ', '_').'|'.$VcPlatform;
+          $ConfigInfo[$Key]=[
+            'Hidden'       =>$ConfigVS['Hidden'] || $PlatformVS['Hidden'],
+            'ConfigName'   =>$ConfigName,
+            'PlatformName' =>$PlatformName,
+            'Key'          =>$Key,
+            'VsKey'        =>$VsKey,
+            'Condition'    =>"'$(Configuration)|$(Platform)'=='".$VsKey."'",
+          ];
+        }
+      $this->ConfigInfo =$ConfigInfo;
+      
+      $Projects=[];
+      ForEach($Builder->Modules->GetSubModules('Build') As $Module)
+        $Projects[]=$Module->GetName(); // $this->Log('Log', $Module->GetName());
+      $this->Projects=$Projects;
+      
+      $this->ProcessProjects($Builder, $Projects);
+      $this->UpdateConfigMap();
+      $Unused=$this->FindUnusedModules($Builder);
+      // TODO: $this->ProcessProjects($Builder, $Unused);
+    }
+    
+    Function ProcessProjects($Builder, $Projects)
+    {
+      ForEach($Projects As $ProjectName)
+        ForEach($this->ConfigInfo As $Target)
+          if(!$Target['Hidden'])
+          {
+            $BuilderModule=$Builder->Modules->Get($ProjectName);
+            if($BuilderModule->VS['ExcludeConfigs'][$Target['ConfigName']]??false)
+              Continue;
+            if(!$BuilderModule)
+            {
+              $this->Log('Error', 'Module ', $ProjectName, ' not found');
+              return;
+            }
+            $Args=[
+              'Configuration' =>$Target['ConfigName'   ],
+              'Platform'      =>$Target['PlatformName' ],
+            ];
+            $Context=$Builder->Create_Context($Args);
+            $this->OnAsset->Begin($BuilderModule, $Target);
+            $BuilderInstance=$BuilderModule->CreateInstance($Context);
+          //$Tasks=$BuilderInstance->Make();
+            $this->OnAsset->Process();
+          }
+    }
+    
+    Function UpdateConfigMap()
+    {
+      ForEach($this->Projects As $ProjectName)
+        ForEach($this->ConfigInfo As $Key=>$Target)
+          if(!$Target['Hidden'])
+            $this->GetModuleByName($ProjectName)->UpdateConfigMap($Key);
+      ForEach($this->Modules As $Module)
+        if($Module->IsTools)
+          ForEach($Module->ConfigMap As $Key=>$Target)
+            $Module->UpdateConfigMap($Key, true);
+    }
+    
+    Function FindUnusedModules($Builder)
+    {
+      $Res=[];
+      ForEach($Builder->Modules->Modules As $BuilderModule)
+        if(!IsSet($this->Modules[$ModuleName=$BuilderModule->GetName()]))
+        {
+          $Res[]=$ModuleName;
+          $this->GetModule($BuilderModule)->IsUnused=true;
+        }
+      return $Res;
+    }
+    
+    Function CreateSolution($Args)
+    {
+      $Args['Platforms' ]=$this->Platforms   ;
+      $Args['Configs'   ]=$this->Configs     ;
+      
+      return $this->Create_Object('/Builder/Program/VS/Solution', $Args);
+    }
+    
+    Function UpdateDepends()
+    {
+      ForEach($this->Modules As $Module)
+        $Module->UpdateDepends();
+    }
+    
+    Function UpdateVSProject($Solution)
+    {
+      ForEach($this->Modules As $Module)
+        $Module->UpdateVSProject($Solution);
+    }
+    
+    Var $Folders_Names=[];
+    Var $Folders=[];
+    
+    Function GetFolder($Solution, $Name)
+    {
+      return $this->Folders[$Name]??=
+        $Solution->AddFolder($this->Folders_Names[$Name]??=$Name);
+    }
+    
+    Function CreateFolders($Solution)
+    {
+      $MapProjects=Array_Flip($this->Projects);
+      ForEach($this->Modules As $Module)
+        if(!IsSet($MapProjects[$Module->ModuleName]))
+          $Solution->GetProject($Module->ModuleName)->SetFolder($this->GetFolder($Solution,
+            $Module->IsTools    ? 'Tools'    :(
+            $Module->IsUnused   ? 'Unused'   :(
+            $Module->IsBroken   ? 'Broken'   :(
+            $Module->IsExternal ? 'External' :
+                                  'Modules'
+          )))));
+    }
+  }
+?>

@@ -1,6 +1,7 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/PathBase');
-  $Loader->Load_Lib('/FS/IOFS');
+  $Loader->Load_Lib('/FS/Utils');
+  $Loader->Using_Module('/FS/IOFS');
 
   class C_Builder_Asset_FS_Path extends C_Builder_Asset_FS_PathBase
   {
@@ -71,11 +72,12 @@
       $bIsFile =$Args['IsFile']??true;
       $Logger  =$Args['Logger']??$this;
       $InFile  =$Args['InFile']??[false];
+      $NoLog   =$Args['NoLog' ]??false;
     //$this->Log('Debug', 'Search:',$Path,' ',$this->GetFullPath());
       $Res=$this->GetSubPath($Path);
       $Res=NormPath($Res);
     //$this->Log('Debug', '  ',$Path);
-      if(!$bIsFile && Is_Dir($Res) || $bIsFile && Is_File($Res))
+      if($bIsFile? Is_File($Res):Is_Dir($Res))
       {
         $Real=StrTr(RealPath($Res), '\\', '/');
         if(StrLen($Real)!==StrLen($Res))
@@ -87,10 +89,13 @@
         {
           $RealPath=SubStr($Real, -StrLen($Path));
           if($RealPath===$Path)
-            $Logger->Log('Warning', '??? Different paths:', "\n",
-              '   Used=',$Res  ,"\n",
-              '   Real=',$Real
-            )->File($InFile);
+          {
+            if(!$NoLog)
+              $Logger->Log('Warning', '??? Different paths:', "\n",
+                '   Used=',$Res  ,"\n",
+                '   Real=',$Real
+              )->File($InFile);
+          }
           else
           {
             while(SubStr($Path, 0, 3)==='../')
@@ -98,11 +103,11 @@
               $Path     =SubStr($Path     ,3);
               $RealPath =SubStr($RealPath ,3);
             }
-            if($RealPath!==$Path)
-              $Logger->Log('Error', 'Different paths:', "\n",
+            if($RealPath!==$Path && !$NoLog)
+              $Logger->Log('Error', 'Different paths:', "\n", //'Fatal', 
                 '   Used=',$Path,"\n",
                 '   Real=',$RealPath
-              )->File($InFile);
+              )->File($InFile); //->Debug($Real);
           }
         }
           
@@ -184,7 +189,13 @@
     
     Function GetFiles()
     {
-      return $this->GetSearch()->GetListArray($this->GetFullPath());
+      $FullPath=$this->GetFullPath();
+      if(!Is_Dir($FullPath))
+      {
+        $this->Log('Error', '"', $FullPath,'" is not directory in module ', $this->GetModule()->GetName());
+        return [];
+      }
+      return $this->GetSearch()->GetListArray($FullPath);
     }
     
     Function GetSubAssets($AssetType)

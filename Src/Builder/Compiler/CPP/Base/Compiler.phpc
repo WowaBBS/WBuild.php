@@ -27,14 +27,14 @@
     
     Final Function Compile($Args)
     {
-      if(IsSet($Args['DepUsing'     ])) $Args['DepUsing'     ]= False;
-      if(IsSet($Args['Dir'          ])) $Args['Dir'          ]= False ; //$ObjAsset->GetDirFullPath()
-      if(IsSet($Args['PchType'      ])) $Args['PchType'      ]='NoUse';
-      if(IsSet($Args['Pch'          ])) $Args['Pch'          ]= False ;
-      if(IsSet($Args['PchAsset'     ])) $Args['PchAsset'     ]= Null;
-      if(IsSet($Args['ForceInclude' ])) $Args['ForceInclude' ]= [];
-     #if(IsSet($Args['Libs'         ])) $Args['Libs'         ]= []; // TODO: Remove?
-      if(IsSet($Args['Disabled'     ])) $Args['Disabled'     ]= false;
+      $Args['DepUsing'     ]??= False;
+      $Args['Dir'          ]??= False ; //$ObjAsset->GetDirFullPath()
+      $Args['PchType'      ]??='NoUse';
+      $Args['Pch'          ]??= False ;
+      $Args['PchAsset'     ]??= Null;
+      $Args['ForceInclude' ]??= [];
+     #$Args['Libs'         ]??= []; // TODO: Remove?
+      $Args['Disabled'     ]??= false;
 
       $FileDepends=[];
      #ForEach($Args['Objects'] As $Item)
@@ -52,8 +52,10 @@
         }
       
       $List=$this->Split($Args);
+      $Res=[];
       ForEach($List As $Item)
-        $this->CreateTaskCompile($Item);
+        $Res[]=$this->CreateTaskCompile($Item);
+      return $Res;
     }
     
     Protected Function Split($Args, Array $Res=[])

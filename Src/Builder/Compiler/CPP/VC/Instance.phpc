@@ -349,37 +349,25 @@
   //$Args['Exec'     ]=$this->Create_Exec();
   //$Args['Objects'  ]=$this->ExtractAssets  ('Cpp/Obj');
   //$Args['Libs'     ]=$this->ExtractAssetsR ('Cpp/Lib');
-  //$Args['ExeAsset' ]=$this->CreateAsset   ('Bin/Exe', ['Path'=>$Compiler->GetExeFile($ExeName)]);
-    Protected Function _BuildExe(Array $Args)
-    {
-      $Exec     =$Args['Exec'     ];
-    //$Objects  =$Args['Objects'  ];
-    //$Libs     =$Args['Libs'     ];
-      $ExeAsset =$Args['ExeAsset' ];
-      
-      $Params=$this->CreateParams();
-      $Params->Preload($ExeAsset, 'link');
-      $this->_Build($Args, $Params, $ExeAsset, true);
-    }
-
-  //$Args['Exec'     ]=$this->Create_Exec();
-  //$Args['Objects'  ]=$this->ExtractAssets  ('Cpp/Obj');
-  //$Args['Libs'     ]=$this->ExtractAssetsR ('Cpp/Lib');
-  //$Args['DllAsset' ]=$this->CreateAsset    ('Bin/Dll', ['Path'=>$Compiler->GetDllFile    ($Name)]);
+  //$Args['BinAsset' ]=$this->CreateAsset    ('Bin/Dll', ['Path'=>$Compiler->GetDllFile    ($Name)]);
+  //$Args['BinType'  ]='Exe'|'Dll'
   //$Args['LibAsset' ]=$this->CreateAsset    ('Bin/Lib', ['Path'=>$Compiler->GetDllLibFile ($Name)]);
-    Protected Function _BuildDll(Array $Args)
+    Protected Function _BuildBin(Array $Args)
     {
       $Exec     =$Args['Exec'     ];
     //$Objects  =$Args['Objects'  ];
     //$Libs     =$Args['Libs'     ];
-      $DllAsset =$Args['DllAsset' ];
-      
+      $BinAsset =$Args['BinAsset' ];
+      $BinType  =$Args['BinType'  ];
+      $LibAsset =$Args['LibAsset' ]??false;
+    
       $Params=$this->CreateParams();
-      $Params->Preload($DllAsset, 'link');
-      if($LibAsset =$Args['LibAsset' ]??false)
+      $Params->Preload($BinAsset, 'link');
+      if($LibAsset)
         $Params->Add('/IMPLIB:',$LibAsset->GetFullPath());
-      $Params->Add('/DLL');
-      $this->_Build($Args, $Params, $DllAsset, false);
+      if($BinType==='Dll')
+        $Params->Add('/DLL');
+      $this->_Build($Args, $Params, $BinAsset, $BinType==='Exe');
     }
 
   //$Args['Exec'     ]=$this->Create_Exec();

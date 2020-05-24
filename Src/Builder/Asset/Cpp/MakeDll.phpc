@@ -1,62 +1,22 @@
 <?
-  $Loader->Parent_Class('/Builder/Asset/Cpp/Compile');
+  $Loader->Parent_Class('/Builder/Asset/Cpp/MakeBase');
 
-  class C_Builder_Asset_Cpp_MakeDll extends C_Builder_Asset_Cpp_Compile
+  class C_Builder_Asset_Cpp_MakeDll extends C_Builder_Asset_Cpp_MakeBase
   {
     Static Function Make($Outer, $Compiler, $Param)
     {
-      $OutPath      =$Param['OutPath'      ];
-      $bManaged     =$Param['Managed'      ]??false;
-      $DebugPostfix =$Param['DebugPostfix' ]??$bManaged;
-      $Proxy        =$Param['Proxy'        ]??[];
-      $NoEntry      =$Param['NoEntry'      ]??null;
-      $NoDefaultLib =$Param['NoDefaultLib' ]??null;
-      
-      $bDebug=$DebugPostfix && $Outer->IsDebug();
-      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
-      
-      $LibName=Static::_GetName($Param, $Outer);
-      
-      Static::Compile($Outer, $Compiler, $Param);
-      
-      $PathDllAsset=$Outer->CreateAsset('Bin/Path', $OutPath.'Bin');
-      
-      $Libs=$Outer->GetAssets     ('Cpp/Lib');
-      
-      $DllAsset=$Outer->CreateAsset   ('Bin/Dll', [
-        'Path'=>$Compiler->GetDllFile    ($LibName.$_d),
-        '>FileDepends'=>$Param['>FileDepends']??[],
-        '>Create'=>1
-      ]);
-      
-      $Compiler->BuildDll([
-        'Outer'        =>$Outer,
-        'Name'         =>$LibName,
-        'Exec'         =>$DllAsset->CreateExec(['CachePath'=>$OutPath.'Task/Dll/'.$LibName, 'Performance'=>'Build']),
-        'Objects'      =>$Outer->ExtractAssets ('Cpp/Obj'       ),
-        'Using'        =>$Outer->GetAssets     ('Cpp/Using'     ),
-        'ResAsset'     =>$Outer->ExtractAssets ('Cpp/Res'       ),
-        'DefAsset'     =>$Outer->ExtractAssets ('Cpp/Def'       ),
-        'Resources'    =>$Outer->ExtractAssets ('Cpp/Resources' ),
-        'Manifests'    =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
-        'Libs'         =>$Libs         ,
-        'DllAsset'     =>$DllAsset     ,
-        'NoEntry'      =>$NoEntry      ,
-        'NoDefaultLib' =>$NoDefaultLib ,
-        'Proxy'        =>$Proxy        ,
-      ]);
-
-      $PathDllAsset->RemoveFromOuter();
-      
-      if($bManaged)
-      {
-        $Using=$Outer->CreateAsset('Cpp/Using', ['Path'=>$DllAsset->GetFullPath(), '>Create'=>1]);
-        $Using->AddFileDepends($DllAsset->GetFileDepends());
-        if(IsSet($DllAsset->Tasks))
-          ForEach($DllAsset->Tasks As $Task)
-            $Using->AddTask($Task);
-      //TODO: $DllAsset->RemoveFromOuter();
-      }
+      $_Param=$Param;
+      UnSet($_Param['OutPath'      ]);
+      UnSet($_Param['Name'         ]);
+      UnSet($_Param['Def'          ]);
+      UnSet($_Param['DLL'          ]);
+      UnSet($_Param['Managed'      ]);
+      UnSet($_Param['DebugPostfix' ]);
+      UnSet($_Param['Proxy'        ]);
+      $CompileAsset=$Outer->CreateAsset('Cpp/Compile', $_Param);
+      $_Param=$Param+['BinType'=>'Dll'];
+      UnSet($_Param['OutPath'      ]);
+      $MakeAsset=$Outer->CreateAsset('Cpp/MakeBin', $_Param);
     }
   };
 ?>

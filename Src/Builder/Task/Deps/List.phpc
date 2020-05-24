@@ -17,13 +17,13 @@
     Function AddAsset($Asset, Array $Args=[])
     {
       $Key=$Asset->GetKey();
-      if(IsSet($this->List[$Key]))
+      if($Item=$this->List[$Key]?? null)
       {
-        if(!($Args['SkipDups']??false))
+        if(!($Args['SkipDups']??false) && !$Item->Asset->IsSomeAsset($Asset))
           $this->Log($Asset->IsNoSearch()? 'Warning':'Error', 'Asset ', $Key, ' already exists in Task Depens List')
-            ('  Exists ', $this->List[$Key]->Asset->GetModule()->FullName)
+            ('  Exists ', $Item->Asset->GetModule()->FullName)
             ('  Added ', $Asset->GetModule()->FullName);
-        return $this->List[$Key];
+        return $Item;
       }
       $Args['Asset']=$Asset;
       $Item=$this->Create_Object('/Builder/Task/Deps/Asset', $Args);

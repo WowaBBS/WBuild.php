@@ -1,7 +1,7 @@
 <?
-  $Loader->Parent_Class('/Builder/Asset/Cpp/Compile');
+  $Loader->Parent_Class('/Builder/Asset/Cpp/MakeBase');
 
-  class C_Builder_Asset_Cpp_MakeLib extends C_Builder_Asset_Cpp_Compile
+  class C_Builder_Asset_Cpp_MakeLib extends C_Builder_Asset_Cpp_MakeBase
   {
     Static Function Make($Outer, $Compiler, $Param)
     {
@@ -11,13 +11,7 @@
       // $Mode==3 -- Compile and generate DLL if avalible
       $Mode=$Outer->IsStatic()? 2:3; // TODO: Customization
 
-      $bDebug=$Outer->IsDebug();
-      $DebugPostfix =$Param['DebugPostfix' ]??True;
-      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
-      
-      $OutPath=$Param['OutPath'];
-      
-      $DLL          =$Param['DLL'          ]?? ''; // TODOL "??" ?
+      $DLL          =$Param['DLL'          ]?? '';
       $Def          =$Param['Def'          ]?? [];
       $DllCondition =$Param['DllCondition' ]?? [];
       if($DllCondition && $Mode===3)
@@ -29,10 +23,74 @@
       $IsDll = $Mode>=3 &&($DLL!==''||Count($Def)>0);
       $IsLib = $Mode>=2 && !$IsDll;
       $IsObj = $Mode>=1;
+
+      // Begin defines
+      $DLL=Static::MakeDllDefines($Compiler, $DLL);
+      $DefineAssets=$Outer->CreateAssets('Cpp/Define', $IsDll? $DLL['Export']:$DLL['Zero']);
+      
+      if($IsObj)
+      {
+        $_Param=$Param;
+        $_Param['DepUsing']=!$IsDll && !$IsLib;
+        UnSet($_Param['OutPath'      ]);
+        UnSet($_Param['Name'         ]);
+        UnSet($_Param['Def'          ]);
+        UnSet($_Param['DLL'          ]);
+        UnSet($_Param['Managed'      ]);
+        UnSet($_Param['DebugPostfix' ]);
+        UnSet($_Param['Proxy'        ]);
+        UnSet($_Param['DllCondition' ]);
+        $CompileAsset=$Outer->CreateAsset('Cpp/Compile', $_Param);
+      }
+      
+      ForEach($DefineAssets As $DefineAsset)
+        $DefineAsset->RemoveFromOuter();
+      // End defines
+      
+      $bDebug=$Outer->IsDebug();
+      $DebugPostfix =$Param['DebugPostfix' ]??True;
+      $_d=$bDebug? (Is_String($DebugPostfix)? $DebugPostfix:'_d'):'';
+      
+      $OutPath=$Param['OutPath'];
+      
       $LibName=Static::_GetName($Param, $Outer);
       
-      $DefineAssets=[];
       
+      if($IsDll || $IsLib)
+      {
+        $PathLibAsset=$Outer->CreateAsset('Cpp/LibPath', $OutPath.'Lib');
+        
+        if($IsDll)
+        {
+          $_Param=$Param+['LibAsset'=>True, 'BinType'=>'Dll'];
+          UnSet($_Param['DllCondition' ]);
+          UnSet($_Param['OutPath'      ]);
+          $MakeAsset=$Outer->CreateAsset('Cpp/MakeBin', $_Param);
+          $Outer->CreateAsset('Cpp/Define', $DLL['Import']);
+        }
+        if($IsLib)
+        {
+          $LibAsset= $Outer->CreateAsset   ('Cpp/Lib'  ,[
+            'Path'     =>$Compiler->GetLibFile ($LibName.$_d),
+            '>Create'=>1,
+          ]);
+          $Compiler->BuildLib([
+            'Outer'    =>$Outer,
+            'Exec'     =>$LibAsset->CreateExec(['CachePath'=>$OutPath.'Task/Lib/'.$LibName, 'Performance'=>'LinkLib']),
+            'Objects'  =>$Outer->ExtractAssets ('Cpp/Obj'   ),
+            'Using'    =>$Outer->GetAssets     ('Net/Using' ),
+            'Libs'     =>$Outer->GetAssets     ('Cpp/Lib'   ),
+            'LibAsset' =>$LibAsset,
+          ]);
+          $Outer->CreateAsset('Cpp/Define', $DLL['Include']);
+        }
+        $PathLibAsset->RemoveFromOuter();
+      }
+    //$Outer->CreateAsset('CPP/Define', ['TestBadObject']); // Check generate error
+    }
+    
+    Static Function MakeDllDefines($Compiler, $DLL)
+    {
       $DLL_Export  =[];
       $DLL_Import  =[];
       $DLL_Zero    =[];
@@ -65,7 +123,7 @@
             break;
           default:
             // TODO: static 
-            $DefTypes=[                        // Zero  ,TODO:   
+            Static $DefTypes=[                        // Zero  ,TODO:   
               //                  Export ,Import ,Lib   ,Include 
             //'Define'        => [true   ,false  ,false ,false   ], //< TODO: Deprecated
             //'Liberary'      => [false  ,true   ,true  ,true    ],
@@ -89,73 +147,13 @@
               $this->Fatal('Unknown DllType ',$DllType);
           }
         }
-        $DefineAssets+=$Outer->CreateAssets('Cpp/Define', $IsDll? $DLL_Export:$DLL_Zero);
       }
-      
-      if($IsObj)
-      {
-        $_Param=$Param;
-        $_Param['DepUsing']=!$IsDll && !$IsLib;
-        Static::Compile($Outer, $Compiler, $_Param);
-      }
-      
-      ForEach($DefineAssets As $DefineAsset)
-        $DefineAsset->RemoveFromOuter();
-      
-      if($IsDll || $IsLib)
-      {
-        $PathLibAsset=$Outer->CreateAsset('Cpp/LibPath', $OutPath.'Lib');
-        
-        if($IsDll)
-        {
-          $PathDllAsset =$Outer->CreateAsset('Bin/Path', $OutPath.'Bin');
-          $DefAssets=[];
-          ForEach($Def As $DefItem)
-            $DefAssets[]  =$Outer->CreateAsset('Cpp/Def', $DefItem);
-          
-          $DllAsset=$Outer->CreateAsset   ('Bin/Dll'   ,['Path'=>$Compiler->GetDllFile    ($LibName.$_d), '>Create'=>1]);
-          $Compiler->BuildDll([
-            'Outer'     =>$Outer,
-            'Name'      =>$LibName,
-            'Exec'      =>$DllAsset->CreateExec(['CachePath'=>$OutPath.'Task/Dll/'.$LibName, 'Performance'=>'Build']),
-            'Objects'   =>$Outer->ExtractAssets ('Cpp/Obj'   ),
-            'Libs'      =>$Outer->GetAssets     ('Cpp/Lib'   ),
-            'Using'     =>$Outer->GetAssets     ('Cpp/Using' ),
-            'DllAsset'  =>$DllAsset,
-            'LibAsset'  =>$Outer->CreateAsset   ('Cpp/Lib'   ,['Path'=>$Compiler->GetDllLibFile ($LibName.$_d), '>Create'=>1,
-              '>FileDepends'=>$Param['>FileDepends']??[],
-            ]),
-            'ResAsset'  =>$Outer->ExtractAssets ('Cpp/Res'       ),
-            'DefAsset'  =>$Outer->ExtractAssets ('Cpp/Def'       ),
-            'Resources' =>$Outer->ExtractAssets ('Cpp/Resources' ),
-            'Manifests' =>$Outer->ExtractAssets ('Cpp/Manifest'  ),
-          ]);
-          $Outer->CreateAsset('Cpp/Define', $DLL_Import);
-  
-          $PathDllAsset->RemoveFromOuter();
-        //ForEach($DefAssets As $DefAsset) //<Removed by Compiler
-        //  $DefAsset->RemoveFromOuter();
-        //TODO: $DllAsset->RemoveFromOuter();
-        }
-        if($IsLib)
-        {
-          $LibAsset= $Outer->CreateAsset   ('Cpp/Lib'  ,[
-            'Path'     =>$Compiler->GetLibFile ($LibName.$_d),
-            '>Create'=>1,
-          ]);
-          $Compiler->BuildLib([
-            'Outer'    =>$Outer,
-            'Exec'     =>$LibAsset->CreateExec(['CachePath'=>$OutPath.'Task/Lib/'.$LibName, 'Performance'=>'LinkLib']),
-            'Objects'  =>$Outer->ExtractAssets ('Cpp/Obj'   ),
-            'Using'    =>$Outer->GetAssets     ('Cpp/Using' ),
-            'Libs'     =>$Outer->GetAssets     ('Cpp/Lib'   ),
-            'LibAsset' =>$LibAsset,
-          ]);
-          $Outer->CreateAsset('Cpp/Define', $DLL_Include);
-        }
-        $PathLibAsset->RemoveFromOuter();
-      }
-    //$Outer->CreateAsset('CPP/Define', ['TestBadObject']); // Check generate error
+      return [
+        'Export'  =>$DLL_Export  ,
+        'Import'  =>$DLL_Import  ,
+        'Zero'    =>$DLL_Zero    ,
+        'Include' =>$DLL_Include ,
+      ];
     }
   };
 ?>

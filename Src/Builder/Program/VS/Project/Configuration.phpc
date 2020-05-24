@@ -1,0 +1,80 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  class C_Builder_Program_VS_Project_Configuration extends C_Object
+  {
+  //Private $Solution ;
+    Private $Project  ;
+    
+    Var     String $Key           ='';
+    Var     String $Include       =''; // 'Solution'
+    Var     String $Condition     =''; // 'Condition'
+    Var     String $Configuration =''; // 'Config'
+    Var     String $Platform      =''; // 'Platform'
+    Var     Array  $ConfigProps   =[]; // 'Props'
+    Var     Array  $Props         =[]; //
+    Var     Array  $Defines       =[]; //
+    
+    Var     Bool   $Used          =false; 
+    Var     Bool   $WasExists     =false;
+    Var     Bool   $IsOverloaded  =false;
+    
+    Function _Init(Array $Args)
+    {
+      $Project   =$Args['Project' ];
+      $this->Key =$Args['Key'     ];
+      $this->Project  =WeakReference::create($Project);
+    //$this->Solution =WeakReference::create($Project);
+      Parent::_Init($Args);
+    }
+    
+    Function UpdateConfigParams($Params)
+    {
+      if($this->Used)
+        $this->Log('Error', 'Config already used')->Debug($this);
+      $this->Include       =$Params['Solution'  ];
+      $this->Condition     =$Params['Condition' ];
+      $this->Configuration =$Params['Config'    ];
+      $this->Platform      =$Params['Platform'  ];
+      $this->ConfigProps  +=$Params['Props'     ];
+      $this->Used          =true;
+      return $this;
+    }
+    
+    Function MakeProjectConfiguration($Res)
+    {
+      $Res->Tag('ProjectConfiguration')->AttrMap(['Include'=>$this->Include]);
+      $Res->Tag('Configuration' )->Text($this->Configuration )->End();
+      $Res->Tag('Platform'      )->Text($this->Platform      )->End();
+      $Res->End();
+    }
+    
+    Function MakeConfiguration($Res)
+    {
+      $Res->PropertyGroup('Configuration', $this->Condition, [
+        'ConfigurationType'=>'Makefile',
+        'UseDebugLibraries'=>'true',
+      ]+$this->ConfigProps);
+    }
+    
+    Function MakePropertySheet($Res)
+    {
+      $Res->Tag('ImportGroup')
+        ->Attr('Label'     ,'PropertySheets')
+        ->Attr('Condition' ,$this->Condition)
+        ->Import('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props',  true, 'LocalAppDataPlatform')
+        ->End();
+    }
+    
+    Function MakeProperties($Res)
+    {
+      $Res->PropertyGroup(null, $this->Condition, $this->Props+[
+        'NMakeBuildCommandLine'        =>'$(NMakeBuildCommandLine)'        ,
+        'NMakeOutput'                  =>'$(NMakeOutput)'                  ,
+        'NMakeCleanCommandLine'        =>'$(NMakeCleanCommandLine)'        ,
+        'NMakeReBuildCommandLine'      =>'$(NMakeReBuildCommandLine)'      ,
+        'NMakePreprocessorDefinitions' =>$Res->_Defines($this->Defines, 1, '$(NMakePreprocessorDefinitions)'),
+      ]);
+    }
+  }
+?>

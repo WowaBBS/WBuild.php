@@ -95,9 +95,8 @@
     {
       if(!Count($Param)) return;
 
-      Var_Dump($Param);
-      // TODO: Log
-      throw new Exception('Invalid parameters');
+      Global $Loader;
+      $Loader->Log('Error', 'Invalid parameters')->BackTrace()->Debug($Param);
     }
     
     Static Function _ParseParams($Args)
@@ -111,6 +110,11 @@
     
   //****************************************************************
   // Assets functional
+  
+    Function IsSomeAsset($Asset)
+    {
+      return $this===$Asset;
+    }
 
     Function AddAssets($List)
     {
@@ -232,9 +236,9 @@
   // Events
   
     Function DoEvent($Type, ...$Args) { return $this->_DoEvent($this, $Type, ...$Args); }
-    Protected Function _DoEvent($Asset, $Type, ...$Args)
+    Protected Function _DoEvent($Sender, $Type, ...$Args)
     {
-      return $this->Outer->_DoEvent($Asset, $Type, ...$Args);
+      return $this->Outer->_DoEvent($Sender, $Type, ...$Args);
     }
     
   //****************************************************************

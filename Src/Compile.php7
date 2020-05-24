@@ -2,14 +2,17 @@
 //set_time_limit(1);
   Require_Once 'Using.php';
   
-  if(!IsSet($MainTarget    )) $MainTarget    ='UnTarget'     ;
-  if(!IsSet($OutTasks      )) $OutTasks      ='Un_tasks.bat' ; //<TODO: Remove
-  if(!IsSet($Modules       )) $Modules       ='Un./'         ;
-  if(!IsSet($Op            )) $Op            ='Build'        ;
-  if(!IsSet($Configuration )) $Configuration ='Release'      ;
-  if(!IsSet($Platform      )) $Platform      ='Win32'        ;
-  if(!IsSet($LogFile       )) $LogFile       =''             ;
-  if(!IsSet($CachePath     )) $CacheDir      ='.Build'       ;
+  $MainTarget    ??='UnTarget'     ;
+  $OutTasks      ??='Un_tasks.bat' ; //<TODO: Remove
+  $Modules       ??='Un./'         ;
+  $Op            ??='Build'        ;
+  $Configuration ??='Release'      ;
+  $Platform      ??='Win32'        ;
+  $LogFile       ??=''             ;
+  $CacheDir      ??='.Build'       ;
+  $WaitMutex     ??=False          ;
+  $FromMsBuild   ??=False          ;
+  
   $Mode='arg';
   ForEach($argv as $k=>$Arg)
     switch($Mode)
@@ -33,6 +36,8 @@
       case '-log'           : $Mode='log'           ; break;
       case '/cache'         : $Mode='cache'         ; break;
       case '-cache'         : $Mode='cache'         ; break;
+      case '-WaitMutex'     : $WaitMutex    =True   ; break;
+      case '-FromMsBuild'   : $FromMsBuild  =True   ; break;
       default:
         if($k>0)
           $Loader->Log('Error', 'Arg ', $Arg, ' is unsupported');
@@ -50,9 +55,9 @@
     
   switch($Op)
   {
-  case 'Build'   :               $bBuild=true; Break;
-  case 'ReBuild' : $bClean=true; $bBuild=true; Break;
-  case 'Clean'   : $bClean=true;               Break;
+  case 'Build'   : $bClean=false ; $bBuild=true  ; Break;
+  case 'ReBuild' : $bClean=true  ; $bBuild=true  ; Break;
+  case 'Clean'   : $bClean=true  ; $bBuild=False ; Break;
   default:
     echo '[Error] Not allowed operator (-op) ',$Op,"\n";
     echo '  Allowed operators:',"\n";
@@ -64,8 +69,9 @@
   if($LogFile!=='')
     $Loader->GetLogger()->Add($LogFile);
   $Loader->GetLogger()->Get('Console')->SetLogLevel('Log');
-//var_dump($argv);
-//return;
+
+  if(!GetEnv('PATH')) // TODO: Remove
+    $Loader->Log('Error', 'No env path found')->Debug([$argv, $_ENV]);
  
   $Args=[
     'Modules'=>[$Modules],
@@ -73,26 +79,32 @@
     'CacheDir'=>$CacheDir,
   ];
   $Manager=$Loader->Create_Object('/Builder/Manager', $Args);
-  $Args=[
-  //'Config'=>['Win32', 'VC'=>-2015, 'Debug'],
-    'Assets'=>[
-    //['Asset/Include', './Target/Options.Debug.php'],    
-    ],
-    'Configuration' =>$Configuration ,
-    'Platform'      =>$Platform      ,
-  ];
-  $Context=$Manager->Create_Context($Args);
-  $Module=$Manager->Modules->Get($MainTarget);
-  if(!$Module)
+  if($Manager->Lock($WaitMutex))
   {
-    echo '[Error] Module '.$MainTarget." not found\n";
-    return;
+    $Args=[
+    //'Config'=>['Win32', 'VC'=>-2015, 'Debug'],
+      'Assets'=>[
+      //['Asset/Include', './Target/Options.Debug.php'],
+      ],
+      'Configuration' =>$Configuration ,
+      'Platform'      =>$Platform      ,
+    ];
+    $Context=$Manager->Create_Context($Args);
+    $Module=$Manager->Modules->Get($MainTarget);
+    if(!$Module)
+    {
+      echo '[Error] Module '.$MainTarget." not found\n";
+      return;
+    }
+    $Instance=$Module->CreateInstance($Context);
+  
+    if($bClean)
+      $Instance->Clean();
+    if($bBuild)
+      $Instance->Build();
+  
+    $Manager->UnLock();
   }
-  $Instance=$Module->CreateInstance($Context);
-
-  if($bBuild)
-    $Instance->Build();
-
   $Manager->Done();
   $Loader->Done();
 ?>

@@ -3,7 +3,7 @@
   
   class C_Builder_Program_VS_Solution_Builder extends C_Object implements ArrayAccess  //ArrayIterator
   {
-    Var $Lines=["\xEF\xBB\xBF"];
+    Var $Lines=["\xEF\xBB\xBF"]; // TODO: Stream
     Var $Tab='';
     Var $Sections=[];
   
@@ -120,17 +120,14 @@
           '"'.$Project->TypeGUID.'"',
           '"'.$Name.'", "'.$Path.'", "'.$Project->GUID.'"'
         );
-        if($Is12)
+        if($Is12 && $Project->IsFile() && ($DependsList=$Project->GetDepends()))
         {
           $Res->Section('ProjectSection', 'ProjectDependencies', 'postProject');
-          ForEach($Project->GetDepends() As $Depends)
+          ForEach($DependsList As $Depends)
           {
             $DepProj=$Depends['Proj'];
-            if($Folder=$DepProj->GetFolder())
-            {
-              $GUID=$DepProj->GUID;
-              $Res[$GUID]=$GUID;
-            }
+            $GUID=$DepProj->GUID;
+            $Res[$GUID]=$GUID;
           }
           $Res->EndSection();
         }
@@ -141,19 +138,21 @@
       
       $Res->GlobalSection('SolutionConfigurationPlatforms', 'preSolution');
       ForEach($Info->GetSortSolutions() As $Solution)
-        $Res[$Solution['SlnSolution']]=$Solution['SlnSolution'];
+        if(!$Solution['Hidden'])
+          $Res[$Solution['SlnSolution']]=$Solution['SlnSolution'];
       $Res->EndSection();
       
       $Res->GlobalSection('ProjectConfigurationPlatforms', 'postSolution');
       ForEach($Projects As $Project)
-        if(!$Project->IsFolder())
+        if($Project->IsFile())
           ForEach($Project->GetSortSolutions() As $Item)
-          {
-            $Key=$Project->GUID.'.'.$Item['SlnSolution'];
-            $Res[$Key.'.ActiveCfg']=$Item['Solution'];
-            If($Item['HasBuild'])
-              $Res[$Key.'.Build.0']=$Item['Solution'];
-          }
+            if(!$Item['Hidden'])
+            {
+              $Key=$Project->GUID.'.'.$Item['SlnSolution'];
+              $Res[$Key.'.ActiveCfg']=$Item['Solution'];
+              If($Item['HasBuild'])
+                $Res[$Key.'.Build.0']=$Item['Solution'];
+            }
       $Res->EndSection();
       
       $Res->GlobalSection('SolutionProperties', 'preSolution');

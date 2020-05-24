@@ -11,14 +11,18 @@
       Parent::_Init($Args);
     }
     
-    Function GetFolder($Module)
+    Function GetManager() { return $this->Manager; }
+    
+    Function GetSubModule($Module)
     {
-      return $this->Manager->GetFolder($Module);
+      return $this->GetManager()->GetModule($Module);
     }
-  
-    Function GetModule($Module)
+
+    Protected Function _Debug_Info(Array &$Res)
     {
-      return $this->Manager->GetModule($Module);
+      Parent::_Debug_Info($Res);
+      UnSet($Res['Manager']);
     }
+    
   }
 ?>

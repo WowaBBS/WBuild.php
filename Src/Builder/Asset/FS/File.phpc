@@ -46,6 +46,16 @@
     //return FilePath_GetFileNick($this->GetLocalPath());
     }
     
+    Function GetLocalFolder()
+    {
+      $Res=$this->GetLocalPath();
+      $Pos1 = StrRPos($Res, '/');
+      if($Pos1==false)
+        return '';
+      return SubStr($Res, 0, $Pos1+1);
+    //return FilePath_GetFileNick($this->GetLocalPath());
+    }
+    
     Function GetLocalPathNick()
     {
       $Res=$this->GetLocalPath();

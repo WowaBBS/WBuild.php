@@ -1,38 +1,86 @@
 <?
-  $Loader->Parent_Class('/Builder/Asset/Cpp/MakeBase');
+  $Loader->Parent_Class('/Builder/Asset/Base');
 
-  class C_Builder_Asset_Cpp_Compile extends C_Builder_Asset_Cpp_MakeBase
+  class C_Builder_Asset_Cpp_Compile extends C_Builder_Asset_Base
   {
-    Static Function Make($Outer, $Compiler, $Param)
-    {
-      Parent::Make($Outer, $Compiler, $Param);
-      
-      Static::Compile($Outer, $Compiler, $Param);
-    }
+    // Input assets
+  
+    Var $Compiler     ;
+    Var $Sources      ;
+    Var $Objects      ;
+    Var $Defines      ;
+    Var $ForceInclude ;
+    Var $Includes     ;
+    Var $Using        ;
+    Var $UsingPath    ;
 
-    Static Function Compile($Outer, $Compiler, $Param)
-    {
-      $OutPath=$Param['OutPath'];
-     #$Outer->Log('Debug', 'OutPath: ',$OutPath);
+    Var $Items        ;
     
-      $PathObjAsset=$Outer->CreateAsset('Cpp/ObjPath', $OutPath.'Obj');
+    Function CollectUsingAssets($WithHeaders=!false)
+    {
+      $Res=[
+        $this->Compiler     ,
+        $this->Sources      ,
+        $this->Objects      ,
+        $this->Defines      ,
+        $this->ForceInclude ,
+        $this->Includes     ,
+        $this->Using        ,
+        $this->UsingPath    ,
+      ];
+      if($WithHeaders)
+      {
+        $Includes=$this->Includes;
+        ForEach($this->Sources As $Source)
+        {
+          $R=$Source->GetHeaders($this->Object_Id, $Includes, null);
+          if(false) //TODO: Remove
+          {
+            $L=[$Source->GetModule()->GetName()];
+            ForEach($R As $i)
+              $L[]=$i->GetFullPath().' -> '.$i->GetModule()->GetName();
+            $this->Debug([$Source->GetFullPath()=>$L]);
+          }
+          $Res[]=$R;
+        }
+      }
+      return $Res;
+    }
+  
+    Function _InitParam(Array &$Param)
+    {
+      $Outer=$this;
+      parent::_InitParam($Param);
+      
+      $this->Compiler=$Outer->RequireAsset('Cpp/Compiler');
+      $Compiler=$this->Compiler->Instance;
+      
+      if(!$Compiler)
+      {
+      //Var_Dump($Outer);
+        throw new Exception('Haven`t any compiler');
+      }
+      $this->OutPath=$Compiler->CreateOutPath($Outer);
+     #$Outer->Log('Debug', 'OutPath: ',$this->OutPath);
+    
+      $PathObjAsset=$Outer->CreateAsset('Cpp/ObjPath', $this->OutPath.'Obj');
 
       $ITypeCppObj       = 'Cpp/Obj'       ;
       $ITypeCppLib       = 'Cpp/Lib'       ;
       
-      $DepUsing=$Param['DepUsing']??false;
+      $DepUsing=$Param['DepUsing']??false; UnSet($Param['DepUsing']);
       if(!$DepUsing)
       {
         $ITypeCppObj='';
         $ITypeCppLib='';
       }
       
-      $Sources=$Outer->ExtractAssets('Cpp/Src');
+      $this->Sources=$Outer->ExtractAssets('Cpp/Src');
 
       $EnumCache=$Outer->GetModuleInstance()->EnumCache;
 
       $Items=[];
-      ForEach($Sources As $SrcAsset)
+      ForEach($this->Sources As $SrcAsset)
       {
         [$Dir, $Name]=$SrcAsset->GetDirAndNick();
         $Num=$EnumCache->AllocNum($Dir, 'Obj', ['Pad'=>1]);
@@ -42,27 +90,34 @@
        #$Outer->Log('Debug', '  ObjAsset: ',$ObjAsset->GetFullPath());
         
         $Items[]=[
-          'TaskPath'  =>$OutPath.'Task/Obj/'.$ObjNick,
+          'TaskPath'  =>$this->OutPath.'Task/Obj/'.$ObjNick,
           'SrcAsset' =>$SrcAsset,
           'ObjAsset' =>$ObjAsset,
         ];
       }
+      
+      $this->Items        =$Items ;
+      $this->Objects      =$Outer->GetAssets  ($ITypeCppObj       );
+      $this->Defines      =$Outer->GetAssets  ('Cpp/Define'       );
+      $this->ForceInclude =$Outer->GetAssets  ('Cpp/ForceInclude' );
+      $this->Includes     =$Outer->GetAssetsR ('Cpp/Include'      );
+      $this->Using        =$Outer->GetAssets  ('Net/Using'        );
+      $this->UsingPath    =$Outer->GetAssets  ('Net/UsingPath'    );
 
-      $Compiler->Compile([
-        'Objects'      =>$Outer->GetAssets  ($ITypeCppObj    ),
+      $Tasks=$Compiler->Compile([
+        'Items'        =>$this->Items        ,
+        'Objects'      =>$this->Objects      ,
+        'Defines'      =>$this->Defines      ,
+        'ForceInclude' =>$this->ForceInclude ,
+        'Includes'     =>$this->Includes     ,
+        'Using'        =>$this->Using        ,
+        'UsingPath'    =>$this->UsingPath    ,
         'Libs'         =>[], //$Outer->GetAssets  ($ITypeCppLib    ),
-        'Defines'      =>$Outer->GetAssets  ('Cpp/Define'       ),
-        'ForceInclude' =>$Outer->GetAssets  ('Cpp/ForceInclude' ),
-        'Includes'     =>$Outer->GetAssetsR ('Cpp/Include'      ),
-        'Using'        =>$Outer->GetAssets  ('Cpp/Using'        ),
-        'UsingPath'    =>$Outer->GetAssets  ('Cpp/UsingPath'    ),
         'DepUsing'     =>$DepUsing  ,
-        'Items'        =>$Items     ,
         'Outer'        =>$Outer     ,
-        'Compiler'     =>$Compiler  ,
         'EnumCache'    =>$EnumCache ,
-        'OutPath'      =>$OutPath   ,
-        'LazyDepsId'   =>$PathObjAsset->Object_Id,
+        'OutPath'      =>$this->OutPath   ,
+        'LazyDepsId'   =>$this->Object_Id , //$PathObjAsset->Object_Id,
       ]);
 
       $PathObjAsset->RemoveFromOuter();

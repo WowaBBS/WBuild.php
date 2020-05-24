@@ -116,14 +116,16 @@
             $this->Log('Error', 'Haven`t Type');
             UnSet($Args['Outer']);
             $this->Debug($Args);
-            UnSupported();
+            $this->Log('Fatal', '')->Debug($Args);
           }
         $Asset_Info=$Item['Asset_Info'];
         $Obj=$this->Create_Object($Asset_Info->Class, $Item);
         ForEach($Asset_Info->List As $Key)
           $this->__AddAsset($Key, $Obj);
         $Res[]=$Obj;
-        $this->DoEvent('Created', $Obj);
+      //$IsPrivate =$Obj->ShouldBePrivate ($this->Assets_IsPrivate );
+        $IsPublic  =$Obj->ShouldBePublic  ($this->Assets_IsPublic  );
+        $this->DoEvent('AssetCreated', $Obj, $IsPublic);
       }
     }
     

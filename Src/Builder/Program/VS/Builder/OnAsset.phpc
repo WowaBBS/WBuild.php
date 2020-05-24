@@ -4,10 +4,18 @@
   class C_Builder_Program_VS_Builder_OnAsset extends C_Builder_Program_VS_Builder_Base
   {
     Var $Assets=[];
+    Var $Begun_Module=null;
+    Var $Begun_Target=null;
   
     Function __invoke($Owner, $Event, ...$Args)
     {
       $this->Assets[]=[$Owner, $Event, $Args];
+    }
+    
+    Function Begin($BuildModule, $Target)
+    {
+      $this->Begun_Module=$BuildModule;
+      $this->Begun_Target=$Target;
     }
     
     Function Process()
@@ -15,69 +23,172 @@
       ForEach($this->Assets As [$Owner, $Event, $Args])
         $this->Process_Asset($Owner, $Event, $Args);
       $this->Assets=[];
+      $this->Begun_Module=null;
+      $this->Begun_Target=null;
     }
     
-    Function Process_Asset($Owner, $Event, $Args)
+    Function IAddAssets($Module, $Instance, Array $List)
     {
-      $Module=$this->GetModule($Owner->GetModule());
+      ForEach($List As $Item)
+        if(Is_Array  ($Item)) $this->IAddAssets ($Module, $Instance, $Item); else
+        if(Is_Object ($Item)) $this->IAddAsset  ($Module, $Instance, $Item, false);
+    }
+    
+    Function IAddAsset($Module, $Instance, $Created, $IsPublic)
+    {
+      switch($Type=$Created->Asset_Info->Type)
+      {
+      // Files:
+    # case 'Bin/Cmd'          : break;
+      case 'Cpp/Def'          : break;
+      case 'Cpp/Manifest'     : break; // TODO?
+      case 'Cpp/Rc'           : break;
+      case 'Cpp/Src'          : break;
+      case 'Cpp/Header'       : $Module->Add('ClInclude'        ,$Created); break;
+      case 'Net/ResX'         : break;
+    # case 'MSBuild/Project'  : break;
+       
+      case 'Cpp/NatVis'       : break;
+      case 'Exec/Php'         : break;
+
+      case 'Cpp/Define'       : $Instance->AddDefine            ($Created); break;
+      case 'Net/Using'        : $Module->AddUsing               ($Created); break;
+      
+      // Folders
+      case 'Cpp/RcInclude'    : $Module->AddInclude             ($Created); break;
+      case 'Cpp/Include'      : $Module->AddInclude             ($Created); break;
+      case 'Net/UsingPath'    : $Module->AddUsingPath           ($Created); break;
+    # case 'Module/Depends'   : break;
+    # case 'Target/Dir'       : break;
+      
+      // Info
+    # case 'Net/FrameworkVersion' : break;
+      
+      // Task:
+    # case 'Cpp/Compile'      : break;
+    # case 'Cpp/MakeBin'      : break;
+      
+    # case 'Asset/Include'    : break;
+    # case 'Asset/Path'       : break;
+    # case 'Bin/Dll'          : break;
+    # case 'Bin/Path'         : break;
+      case 'Bin/Exe'          : break;
+      case 'Cpp/Compiler'     : break;
+      case 'Cpp/DefPath'      : break;
+      case 'Cpp/Obj'          : break;
+      case 'Cpp/LibPath'      : break;
+      case 'Cpp/Lib'          : break;
+      case 'Cpp/RcPath'       : break;
+      case 'Cpp/Res'          : break;
+      case 'Cpp/ObjPath'      : break;
+      case 'Cpp/SrcPath'      : break;
+      case 'Cpp/Pch'          : break;
+      case 'Cpp/NatVis'       : break;
+      case 'Net/Resources'    : break;
+    # case 'Exec/Option'      : break;
+    # case 'FS/Path'          : break;
+    # case 'FS/File'          : break;
+    # case 'List'             : break;
+    # case 'Module/Conflict'  : break;
+    # case 'Module/Define'    : break;
+    # case 'Module/Path'      : break;
+    # case 'Target/Copy'      : break;
+    # case 'Target/File'      : break;
+      default: $this->Log('Error', 'Created unknown \'', $Type, '\'');
+      }
+      return true;
+    }
+    
+    Function AddAsset($Module, $Instance, $Created, $IsPublic)
+    {
+      switch($Type=$Created->Asset_Info->Type)
+      {
+      // Files:
+      case 'Bin/Cmd'          : $Module->Add('None'             ,$Created); break;
+      case 'Cpp/Def'          : $Module->Add('None'             ,$Created); break;
+      case 'Cpp/Manifest'     : break; // TODO?
+      case 'Cpp/Rc'           : $Module->Add('ResourceCompile'  ,$Created); break;
+      case 'Cpp/Src'          : $Module->Add('ClCompile'        ,$Created); break;
+      case 'Cpp/Header'       : break; // $Module->Add('ClInclude'        ,$Created); break;
+      case 'Net/ResX'         : $Module->AddResX                ($Created); break;
+      case 'MSBuild/Project'  : $Module->AddExists(              $Created); break;
+       
+      case 'Cpp/NatVis'       : $Module->Add('None'             ,$Created); break;
+      case 'Exec/Php'         : $Module->Add('None'             ,$Created); break;
+
+      case 'Cpp/Define'       : break; //$Instance->AddDefine   ($Created); break;
+      case 'Net/Using'        : $Module->AddUsing               ($Created); break;
+      
+      // Folders
+      case 'Cpp/SrcPath'      : $Module->AddSourcePath          ($Created); break;
+      case 'Cpp/RcInclude'    : $Module->AddInclude             ($Created); break;
+      case 'Cpp/Include'      : $Module->AddInclude             ($Created); break;
+      case 'Net/UsingPath'    : $Module->AddUsingPath           ($Created); break;
+      case 'Module/Depends'   : $Module->AddDepends             ($Created, $IsPublic); break;
+      case 'Module/Include'   : break; //$Module->AddDepends             ($Created, $IsPublic); break;
+      case 'Target/Dir'       : $Instance->SetTargetDir         ($Created); break;
+      
+      // Info
+      case 'Net/FrameworkVersion' : $Module->FrameworkVersion    ($Created);  break;
+      
+      // Task:
+      case 'Cpp/Compile'      :
+        $Module->AddCppCompiler($Created->Compiler);
+      case 'Cpp/MakeBin'      : 
+        $this->IAddAssets($Module, $Instance, $Created->CollectUsingAssets());
+        break;
+      
+      case 'Asset/Include'    : break;
+      case 'Asset/Path'       : break;
+      case 'Bin/Dll'          : break;
+      case 'Bin/Path'         : break;
+      case 'Bin/Exe'          : break;
+      case 'Cpp/Compiler'     : break;
+      case 'Cpp/DefPath'      : break;
+      case 'Cpp/Obj'          : break;
+      case 'Cpp/LibPath'      : break;
+      case 'Cpp/Lib'          : break;
+      case 'Cpp/RcPath'       : break;
+      case 'Cpp/Res'          : break;
+      case 'Cpp/ObjPath'      : break;
+      case 'Cpp/Pch'          : break;
+      case 'Cpp/NatVis'       : break;
+      case 'Net/Resources'    : break;
+      case 'Exec/Option'      : break;
+      case 'FS/Path'          : break;
+      case 'FS/File'          : break;
+      case 'List'             : break;
+      case 'Module/Conflict'  : break;
+      case 'Module/Define'    : break;
+      case 'Module/Path'      : break;
+      case 'Target/Copy'      : $Instance->SetTargetCopy($Created); break;
+      case 'Target/File'      : break;
+      default: $this->Log('Error', 'Created unknown \'', $Type, '\'');
+      }
+      return true;
+    }
+    
+    Function Process_Asset($Sender, $Event, $Args)
+    {
       switch($Event)
       {
-      case 'Created':
-        $Created=$Args[0];
-        if($Created->HasKey('External'))
-          return;
-        $Type=$Created->Asset_Info->Type;
-      //$Class=Get_Class($Created);
-        switch($Type)
-        {
-        case 'Bin/Cmd'          : $Module->Add('None'             ,$Created); break;
-        case 'Cpp/Def'          : $Module->Add('None'             ,$Created); break;
-        case 'Cpp/Manifest'     : break; // TODO?
-        case 'Cpp/RcInclude'    : $Module->AddInclude             ($Created); break;
-        case 'Cpp/Rc'           : $Module->Add('ResourceCompile'  ,$Created); break;
-        case 'Cpp/ResX'         : $Module->AddResX                ($Created); break;
-        case 'Cpp/Src'          : $Module->Add('ClCompile'        ,$Created); break;
-        case 'Cpp/Include'      : $Module->AddInclude             ($Created); break;
-        case 'Cpp/UsingPath'    : $Module->AddUsingPath           ($Created); break;
-        case 'Cpp/Using'        : $Module->AddUsing               ($Created); break;
-        case 'Cpp/NatVis'       : $Module->Add('None'             ,$Created); break;
-        case 'Exec/Php'         : $Module->Add('None'             ,$Created); break;
-        case 'Module/Depends'   : $Module->AddDepends             ($Created); break;
-        
-        case 'Asset/Include'    : break;
-        case 'Asset/Path'       : break;
-        case 'Bin/Dll'          : break;
-        case 'Bin/Path'         : break;
-        case 'Bin/Exe'          : break;
-        case 'Cpp/Header'       : break;
-        case 'Cpp/Compiler'     : break;
-        case 'Cpp/DefPath'      : break;
-        case 'Cpp/Define'       : $Module->AddDefine($Created); break;
-        case 'Cpp/Obj'          : break;
-        case 'Cpp/LibPath'      : break;
-        case 'Cpp/Lib'          : break;
-        case 'Cpp/RcPath'       : break;
-        case 'Cpp/Res'          : break;
-        case 'Cpp/ObjPath'      : break;
-        case 'Cpp/SrcPath'      : break;
-        case 'Cpp/Resources'    : break;
-        case 'Cpp/Pch'          : break;
-        case 'Cpp/NatVis'       : break;
-        case 'Exec/Option'      : break;
-        case 'FS/Path'          : break;
-        case 'FS/File'          : break;
-        case 'List'             : break;
-        case 'Module/Conflict'  : break;
-        case 'Module/Define'    : break;
-        case 'Module/Path'      : break;
-        case 'Target/Copy'      : break;
-        case 'Target/File'      : break;
-        case 'Target/Dir'       : break;
-        default: echo 'Created unknown \'', $Type, "'\n";
-          UnSupported(); // TODO: Log without falling
-        }
+      case 'AssetCreated':
+        $Module=$this->GetSubModule($Sender->GetModule());
+        $Instance=$Module->GetInstance($Sender);
+        $this->AddAsset($Module, $Instance, $Args[0], $Args[1]);
         break;
-      default: echo 'Event ', $Event, "\n";
+      Case 'InstanceCreated':
+      Case 'InstanceExists':
+        if($this->Begun_Module===$Sender)
+          break;
+        $Module   =$this->GetSubModule($Sender);
+        $Instance =$Module->GetInstance($Args[0]);
+        $Module->IsTools    =true;
+        $Module->IsExternal =true;
+        $Module->ConfigMap[$this->Begun_Target['Key']]['Tools']=[$Instance->Key, true];
+        break;
+      default: 
+        $this->Log('Error', 'Event ', $Event);
       }
     }
   }

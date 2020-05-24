@@ -14,7 +14,7 @@
     {
       if($Path==='>Compiler')
       {
-        $Paths=$Args['Outer']->RequireAsset('Cpp/Compiler')->Instance->GetLibPaths();
+        $Paths=$Args['Outer']->RequireAsset('Cpp/Compiler')->GetLibPaths();
         self::_AddItems($Res, $Args, $Paths);
         return;
       }
@@ -28,7 +28,7 @@
    #    unset($Args['>Compiler'])
    #    if($Args['>Compiler'])
    #    {
-   #      +=$Compiler=$Outer->RequireAsset('Cpp/Compiler')->Instance->GetLibPaths();
+   #      +=$Compiler=$Outer->RequireAsset('Cpp/Compiler')->GetLibPaths();
    #    }
    #  }
    #

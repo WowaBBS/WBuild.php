@@ -1,20 +1,40 @@
 <?
-  $Loader->Parent_Class('/Builder/Program/VS/Project/Base');
+  $Loader->Parent_Class('/Builder/Program/VS/Project/FileBase');
   
-  class C_Builder_Program_VS_Project_File extends C_Builder_Program_VS_Project_Base
+  class C_Builder_Program_VS_Project_File extends C_Builder_Program_VS_Project_FileBase
   {
     protected Array  $Depends       =[];
     Var       Array  $CustomProps   =[];
-    Var       Array  $NMakeCompiler =[];
-    Var       String $AbsPath       ='';
-  
+    Var       Array  $NMakeCompiler =[]; //<TODO: Remove // Custom
+    Var       Array  $AddImports    =[];
+    Var       Array  $Props         =[];
+    
     Function _Init(Array $Args)
     {
+      $this->Props         =$Args['Props'         ]?? [];
       $this->CustomProps   =$Args['CustomProps'   ]?? [];
-      $this->AbsPath       =NormPath($Args['AbsPath' ]?? './', true);
+      $this->AddImports    =$Args['AddImports'    ]?? [];
       $this->NMakeCompiler =$Args['NMakeCompiler' ]?? [];
-      $this->SetDepends    ($Args['Depends'       ]?? []);
       Parent::_Init($Args);
+      $this->SetDepends    ($Args['Depends'       ]?? []);
+    }
+    
+    Function IsGenerated() { return true; }
+    Function Generate($ProjDir)
+    {
+      $Output   =$ProjDir.$this->File();
+    # CreatePath(ExtractFilePath($Output));
+      $this->Create_Object('/Builder/Program/VS/Project/Builder', [$Output            ,'Project'=>$this]);
+      if($this->Sources)
+        $this->Create_Object('/Builder/Program/VS/Project/Builder', [$Output.'.filters' ,'Project'=>$this, 'Filters'=>true]);
+    }
+    
+    Function AddDepends($Name, $Vars)
+    {
+      if($Old=$this->Depends[$Name]?? [])
+        if($Old!==$Vars)
+          $this->Log('Error', 'Depends ', $Name, ' already exists')->Debug([$Old, $Vars])->BackTrace();
+      $this->Depends[$Name]=$Vars;
     }
     
     Function SetDepends($List)
@@ -61,17 +81,228 @@
       return $Res;
     }
     
-    Function File() { return $this->Id.'.vcxproj'; } // TODO: Custom ext
-    
-    Function AbsFilePath() { return $this->AbsPath.$this->File(); }
-    Function AbsPath() { return $this->AbsPath; }
-    
-    Function RelFilePath($From)
+    Function Make($Res)
     {
-      return $this->GetSolution()->CalcRelPath($From, $this->AbsFilePath());
+    //$Res=$this;
+      $Proj=$this;
+      $Configurations=$Proj->GetConfigurations();
+      $Res->XML();
+      $Res->Tag('Project')->AttrMap([
+        'DefaultTargets' =>'Build' ,
+      # 'ToolsVersion'   =>'4.0'   ,
+        'ToolsVersion'   =>'15.0'  ,
+        'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
+      ]);
+      
+      $Res->ItemGroup('ProjectConfigurations');
+      ForEach($Configurations As $Configuration)
+        $Configuration->MakeProjectConfiguration($Res);
+      $Res->End();
+      
+      $Res->PropertyGroup('Globals',null, $this->Props+[
+        'ProjectGuid' =>$Proj->GUID    ,
+      # 'Keyword'     =>'MakeFileProj' ,
+        'ProjectName' =>$Proj->Name    ,
+        
+        'Keyword'         =>'MakeFileProj' ,
+      # 'RootNamespace'   =>$Proj->Name    ,
+        'PlatformToolset' =>'v141'         , // v142
+      # 'MinimumVisualStudioVersion' =>'15.0', // TODO: Understand what is wrong
+        'TargetRuntime'   =>'Native'       ,
+      ]);
+      
+      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.Default.props');
+      
+      ForEach($Configurations As $Configuration)
+        $Configuration->MakeConfiguration($Res);
+      
+      $Res->TagTree($Proj->CustomProps);
+      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.props');
+      $Res->Tag('ImportGroup')->Attr('Label', 'ExtensionSettings')->WriteLnEmpty()->End();
+      
+      ForEach($Configurations As $Configuration)
+        $Configuration->MakePropertySheet($Res);
+      
+      $Res->PropertyGroup('UserMacros',null,[]);
+      $Res->Imports($Proj->AddImports);
+      $Res->TagTree($Proj->NMakeCompiler); //<TODO: Remove
+
+      ForEach($Configurations As $Configuration)
+        $Configuration->MakeProperties($Res);
+        
+      $Res->Tag('ItemDefinitionGroup')->WriteLnEmpty()->End();
+      
+      If(False) // Files
+        $Res->Tag('ItemGroup')
+          ->Tag('None')->AttrMap(['Include'=>'readme.txt'])->End()
+          ->End();
+      $this->MakeFiles($Res);
+      
+      if($DependsList=$Proj->GetDepends())
+      {
+        $Res->Tag('ItemGroup');
+        $AbsPath=$Proj->AbsPath();
+        ForEach($DependsList As $Depends)
+        {
+          $DepProj=$Depends['Proj'];
+          $Res->Tag('ProjectReference')->Attr('Include', $DepProj->RelFilePath($AbsPath));
+            $Res->TagTree(['Project'                      ,$DepProj->GUID  ]);
+            $Res->TagTree(['Name'                         ,$DepProj->GetName()]);
+            $Res->AddVars($Depends['Param']);
+        //#?$Res->TagTree(['Name'                         ,'ProjectA'      ]);
+          # $Res->TagTree(['Private'                      ,'false'         ]);
+          # $Res->TagTree(['CopyLocalSatelliteAssemblies' ,'true'          ]);
+          # $Res->TagTree(['ReferenceOutputAssembly'      ,'true'          ]);
+          #?$Res->TagTree(['LinkLibraryDependencies'      ,'true'          ]);
+          #?$Res->TagTree(['UseLibraryDependencyInputs'   ,'false'         ]);
+          #?$Res->TagTree(['OutputItemType'               ,'Content'       ]);
+          #?$Res->TagTree(['CopyToOutputDirectory'        ,'PreserveNewest']);
+          $Res->End('ProjectReference');
+        }
+        $Res->End('ItemGroup');
+      }
+          
+/* TODO:
+  <ItemGroup>
+    <Reference Include="System">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data">
+      <CopyLocalSatelliteAssemblies>true</CopyLocalSatelliteAssemblies>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </Reference>
+  </ItemGroup>
+*/
+
+      $Res->Import('$(VCTargetsPath)\Microsoft.Cpp.targets');
+      $Res->Tag('ImportGroup')
+        ->Attr('Label', 'ExtensionTargets')
+        ->WriteLnEmpty()
+        ->End();
+      
+      $Res->End('Project');
     }
     
-    Function GetSolutions() { return $this->GetSolution()->GetSolutions(); }
-    Function GetSortSolutions() { return $this->GetSolution()->GetSortSolutions(); }
+  //****************************************************************
+  // Files
+    // Value='String'
+    // Value=true/false // bool
+    // Value=['File', 'Path']
+    Var Array $Using      =[]; // [['IncludeItemName', ['ParamName'=>Value]],...]
+    Var Array $Includes   =[]; // Array of path
+    Var Array $SourcePath =[]; // Array of path
+    Var Array $Sources    =[]; // ['filepath'=>['TagName', 'FilePath', [Added vars], 'folder'], ...]
+    Var Array $NMakeForcedUsingAssemblies =[]; // Array of string
+    Var Array $NMakeAssemblySearchPath    =[]; // Array of string
+    
+    Function MakeFiles($Res)
+    {
+      if($this->Using)
+      {
+        $Res->Tag('ItemGroup');
+        ForEach($this->Using As [$UsingItem, $Add])
+          $Res->Tag('Reference')->Attr('Include', $UsingItem)
+            ->AddVars($Add)
+            ->End();
+        
+        $Res->End();
+      }
+      
+      if($this->NMakeForcedUsingAssemblies)
+        $Res->Tag('PropertyGroup')
+          ->Tag('NMakeForcedUsingAssemblies')
+            ->StrList($this->NMakeForcedUsingAssemblies, 1)
+            ->End()
+          ->End();
+      
+      if($this->NMakeAssemblySearchPath)
+        $Res->Tag('PropertyGroup')
+          ->Tag('NMakeAssemblySearchPath')
+            ->StrList($this->NMakeAssemblySearchPath, 1)
+            ->End()
+          ->End();
+      
+      $Res->Tag('PropertyGroup')
+        ->Tag('SourcePath')->PathList($this->SourcePath?:$this->Includes, 0)->End()
+        ->End();
+      
+      $Res->Tag('PropertyGroup')
+        // NMakePreprocessorDefinitions
+        ->Tag('NMakeIncludeSearchPath')->PathList($this->Includes, 1)->End()
+        // NMakeForcedIncludes
+        // NMakeAssemblySearchPath
+        ->End();
+      
+      // Files
+      $Res->Tag('ItemGroup');
+      
+      $Sources=$this->Sources;
+      KSort($Sources);
+      ForEach($Sources As $k=>[$Tag, $File, $Add, $Folder])
+        $Res->Tag($Tag)->Attr('Include', $Res->_RelPath($File))
+          ->AddVars($Add)
+          ->End();
+        
+      $Res->End();
+    }
+    
+    Static Private Function AddFolder(Array &$Folders, $Folder, $k=null, $Source=null)
+    {
+      if(StrLen($Folder))
+        Static::AddFolder($Folders, GetDirPath($Folder));
+      $Folders[$Folder]??=[];
+      if($Source)
+        $Folders[$Folder][$k]=$Source;
+      return true;  
+    }
+  
+    Function MakeFilters($Res)
+    {
+      $Res->XML();
+      $Res->Tag('Project')->AttrMap([
+      //'DefaultTargets' =>'Build' ,
+      # 'ToolsVersion'   =>'4.0'   ,
+        'ToolsVersion'   =>'15.0'  ,
+        'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
+      ]);
+      
+      $Res->Tag('ItemGroup');
+
+      $Sources=$this->Sources;
+    //KSort($Sources);
+      $Folders=[];
+      ForEach($Sources As $k=>$Source)//$FileInfo)
+        Static::AddFolder($Folders, $Source[3], $k, $Source);
+      
+    # $Res->End('ItemGroup');
+      
+      KSort($Folders);
+      $GUIDs=$this->GetSolution()->GUIDs;
+      $Key='FolderPath'; //.$this->GUID
+      
+    # $Res->Tag('ItemGroup');
+      ForEach($Folders As $Folder=>$FolderSources)
+      {
+        $Folder=StrTr($Folder, '/', '\\');
+        if(StrLen($Folder))
+          $Res->Tag('Filter')->Attr('Include', $Folder)
+            ->Tag('UniqueIdentifier')->Text($GUIDs->Generate($Key.$Folder))->End()
+            ->End(); 
+        KSort($FolderSources);
+        ForEach($FolderSources As [$Tag, $File, $Vars])//$FileInfo)
+        {
+          $Res->Tag($Tag)->Attr('Include', $Res->_RelPath($File));
+          if(StrLen($Folder))
+            $Res->Tag('Filter')->Text($Folder)->End();
+          $Res->End(); 
+        }
+      }
+      $Res->End('ItemGroup');
+      
+      $Res->End();
+    }
+  //****************************************************************
   }
 ?>

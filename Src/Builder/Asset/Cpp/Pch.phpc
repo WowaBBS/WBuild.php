@@ -94,12 +94,13 @@
      #}
       switch(count($Res))
       {
-      case 0; $this->Log('Error', 'StdAfx isn`t exist'); break;
+      case 0; $this->Log('Error', 'StdAfx ',$FileName,' isn`t exist in module ', $this->GetModule()->GetName()); break;
       case 1; break; // Ok
       default:
         $Log=$this->Log('Error', 'StdAfx files more then one:');
         ForEach($Res As $Item)
           $Log('  ',$Item['SrcAsset']->GetFullPath());
+        $Log('    in module ', $this->GetModule()->GetName());
         $Log->Done();
         while(Count($Res)>1)
           Array_Shift($Res);

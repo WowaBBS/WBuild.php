@@ -4,12 +4,12 @@
   class C_Builder_Program_VS_Project_Base extends C_Object
   {
     Private $Solution;
-    Var $Id       ='';
-    Var $Name     ='';
-    Var $GUID     ='';
-    Var $Type     ='';
-    Var $TypeGUID ='';
-    Var $Folder   =null;
+    Var $Id        ='';
+    Var $Name      ='';
+    Var $GUID      ='';
+    Var $Type      ='';
+    Var $TypeGUID  ='';
+    Var $Folder    =null;
     
     Function _Init(Array $Args)
     {
@@ -42,6 +42,12 @@
         $this->Folder->_AddProject($this);
     }
     
+    Function IsGenerated() { return false; }
+    Function Generate($OutDir) {}
+    
+    Function GetFolder() { return $this->Folder; }
+    
     Function IsFolder() { return false; }
+    Function IsFile() { return false; }
   }
 ?>

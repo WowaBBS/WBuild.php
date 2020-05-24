@@ -3,7 +3,7 @@
 
   class C_Builder_Asset_Cpp_Lib extends C_Builder_Asset_FS_File
   {
-    Var $FileDepends=[];
+    Var $FileDepends=[]; //<TODO: Remove
 
   //Var $Name=''; // TODO:
     Protected Function _GetSearchPathClass()

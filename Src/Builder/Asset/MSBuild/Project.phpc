@@ -1,0 +1,47 @@
+<?
+  $Loader->Parent_Class('/Builder/Asset/FS/File');
+
+/*
+  ['MSBuild/Project', 'Project.csproj',
+    'GUID'=>'{B0BB47F2-21C4-41FC-B6E6-40757ADFC4A1}', // TODO: Read it
+    'ProjectType'=>'C#',
+    'ConfigMap'=>[ // TODO: Auto
+      'Configs'=>[
+        '*'           =>'Debug'   ,
+        'Developing'  =>'Release' ,
+        'Shipping'    =>'Release' ,
+      ],
+      'Platforms'=>[
+        '*'=>'Any CPU',
+      ],
+    ];
+  ],
+*/
+  class C_Builder_Asset_MSBuild_Project extends C_Builder_Asset_FS_File
+  {
+    Var String $GUID        ='{None}' ;
+    Var String $ProjectType ='C#'     ;
+    Var Array  $ConfigMap   =[]       ;
+  
+    Protected Function _Init(Array $Args)
+    {
+      $this->GUID        =$Args['GUID'        ];
+      $this->ProjectType =$Args['ProjectType' ];
+      $this->ConfigMap   =$Args['ConfigMap'   ];
+      Parent::_Init($Args);
+    }
+    
+  //Protected Function _GetSearchPathClass() { return ['Cpp/SrcPath', 'Cpp/Include']; }
+    Static Function _ParseParams($Args)
+    {
+      $Param=$Args['Param'];
+      unset($Args['Param']);
+      $Args['Path'        ]=$Param['Path'        ]??$Param[0]; UnSet($Param['Path'        ]); UnSet($Param[0]);
+      $Args['GUID'        ]=$Param['GUID'        ];            UnSet($Param['GUID'        ]);
+      $Args['ProjectType' ]=$Param['ProjectType' ];            UnSet($Param['ProjectType' ]);
+      $Args['ConfigMap'   ]=$Param['ConfigMap'   ];            UnSet($Param['ConfigMap'   ]);
+      self::CheckEmptyParam($Param);
+      return [$Args];
+    }
+  };
+?>

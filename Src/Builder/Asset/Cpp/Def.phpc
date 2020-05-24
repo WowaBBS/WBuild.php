@@ -3,7 +3,7 @@
 
   class C_Builder_Asset_Cpp_Def extends C_Builder_Asset_FS_File
   {
-    Var $FileDepends=[];
+    Var $FileDepends=[]; //<TODO: Remove
     Var $FullPathFixed=false;
     Var $First=true;
 
@@ -21,8 +21,10 @@
       [$Dir, $Name]=$this->GetDirAndNick();
       $Num=$EnumCache->AllocNum($Dir, 'Rc', ['Pad'=>1]);
       $ResNick=$Num.'/'.$Name;
+      
       $Compiler=$this->Outer->RequireAsset('Cpp/Compiler')->Instance;
       $OutPath=$Compiler->CreateOutPath($this->Outer);
+      
       $Dir=$OutPath.'/Def/';
       CreatePath($Dir.$Num);
       return $this->FullPathFixed=$Dir.$ResNick.'.def';

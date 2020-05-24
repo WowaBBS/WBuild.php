@@ -39,6 +39,17 @@
     }
 
   //****************************************************************
+    Function GetIncludes()
+    {
+      return $this->Instance->GetIncludes();
+    }
+    
+    Function GetLibPaths()
+    {
+      return $this->Instance->GetLibPaths();
+    }
+  
+  //****************************************************************
   // Debug
   
     Function _ToDebugInfo() { return $this->Compiler->ToDebugInfo(); }

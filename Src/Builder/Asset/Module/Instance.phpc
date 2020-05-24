@@ -28,6 +28,11 @@
       $this->SetExternalModule($Args['IsExternal']?? null, $Args['ExternalBy']?? null);
       Parent::_Init($Args);
     }
+    
+    Function GetCachePath()
+    { // TODO:
+      return $this->EnumCache->FullPath.$this->Context->SimpleName;
+    }
 
     Function GetDependsModule($Name)
     {
@@ -54,6 +59,44 @@
         ForEach($Assets As $Asset)
           $Asset->GetTasks($Res);
       return $Res;
+    }
+    
+    Private Function _DeleteFile($File)
+    {
+      If(Is_Array($File))
+      {
+        $Res=True;
+        ForEach($File As $i=>$Item)
+          If(!$this->_DeleteFile($Item))
+            $Res=false;
+        Return $Res;
+      }
+      $this->Log('Log', 'Delete ', $File);
+      If(Is_Dir($File))
+      {
+        $List=ListDir($File.'/');
+        $LP=AddPaths($File.'/', $List);
+        $Res=$this->_DeleteFile($LP);
+        if($Res)
+          $Res=@RmDir($File);
+        $this->Log('Log', 'Delete dir ', $File, ' ', $Res?'Ok':'Failed');
+      }
+      If(Is_File($File))
+      {
+        $Res=@UnLink($File);
+        $this->Log('Log', 'Delete file ', $File, ' ', $Res?'Ok':'Failed');
+        Return $Res;
+      }
+      $this->Log('Log', 'Unknown delete ', $File, ' ');
+      Return False;
+    }
+
+    
+    Function Clean($WithDepends=false)
+    {
+    //$this->Log('Log', 'Delete ', $this->GetCachePath());
+      $this->_DeleteFile($this->GetCachePath());
+    //ListDir($Path, $Mask=False, $Attr=3, $Add='')
     }
     
     Function Build()
@@ -90,9 +133,9 @@
   //****************************************************************
   // Events
   
-    Protected Function _DoEvent($Asset, $Type, ...$Args)
+    Protected Function _DoEvent($Sender, $Type, ...$Args)
     {
-      return $this->Module->_DoAssetEvent($Asset, $Type, ...$Args);
+      return $this->Module->_DoAssetEvent($Sender, $Type, ...$Args);
     }
     
   //****************************************************************

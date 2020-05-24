@@ -1,7 +1,7 @@
 <?
   $Loader->Parent_Class('/Builder/Asset/FS/File');
 
-  class C_Builder_Asset_Cpp_ResX extends C_Builder_Asset_FS_File
+  class C_Builder_Asset_Net_ResX extends C_Builder_Asset_FS_File
   {
     Var $ResPrivate        =false;
     Var $DependentUponName =False;
@@ -63,12 +63,12 @@
       $Num=$EnumCache->AllocNum($Dir, 'ResX', ['Pad'=>1]);
       $ResNick=$Num.'/'.$Name;
       $OutPath=$Compiler->CreateOutPath($Outer);
-      $Resources=$Outer->CreateAsset('Cpp/Resources', ['Path'=>$OutPath.'/ResX/'.$ResNick.'.resources', '>Create'=>1]);
+      $Resources=$Outer->CreateAsset('Net/Resources', ['Path'=>$OutPath.'/ResX/'.$ResNick.'.resources', '>Create'=>1]);
       $Resources->ResPrivate=$ResXAsset->ResPrivate;
       $Compiler->BuildResX([
         'Outer'     =>$Outer,
         'Exec'      =>$ResXAsset->CreateExec(['CachePath'=>$OutPath.'Task/ResX/'.$ResNick]),
-        'Using'     =>$Outer->GetAssets    ('Cpp/Using'     ),
+        'Using'     =>$Outer->GetAssets    ('Net/Using'     ),
         'ResXAsset' =>$ResXAsset,
         'Resources' =>$Resources,
       ]);
