@@ -124,24 +124,41 @@
           default:
             // TODO: static 
             Static $DefTypes=[                        // Zero  ,TODO:   
-              //                  Export ,Import ,Lib   ,Include 
-            //'Define'        => [true   ,false  ,false ,false   ], //< TODO: Deprecated
-            //'Liberary'      => [false  ,true   ,true  ,true    ],
-              'IsStatic'      => [false  ,false  ,true  ,true    ],
-              'IsDll'         => [true   ,true   ,false ,false   ],
-              'IsBuild'       => [true   ,false  ,true  ,false   ],
-              'IsBuildStatic' => [false  ,false  ,true  ,false   ],
-              'IsBuildDll'    => [true   ,false  ,false ,false   ],
-              'IsUseDll'      => [false  ,true   ,false ,false   ],
-              'IsHeader'      => [false  ,true   ,false ,true    ],
+              //                   Export ,Import ,Lib   ,Include ,bool
+            //'Define'         => [true   ,false  ,false ,false   ,false ], //< TODO: Deprecated
+            //'Liberary'       => [false  ,true   ,true  ,true    ,false ],
+              'IsStatic'       => [false  ,false  ,true  ,true    ,false ],
+              'IsDll'          => [true   ,true   ,false ,false   ,false ],
+              'IsBuild'        => [true   ,false  ,true  ,false   ,false ],
+              'IsBuildStatic'  => [false  ,false  ,true  ,false   ,false ],
+              'IsBuildDll'     => [true   ,false  ,false ,false   ,false ],
+              'IsUseDll'       => [false  ,true   ,false ,false   ,false ],
+              'IsHeader'       => [false  ,true   ,false ,true    ,false ],
+              'bIsStatic'      => [false  ,false  ,true  ,true    ,true  ],
+              'bIsDll'         => [true   ,true   ,false ,false   ,true  ],
+              'bIsBuild'       => [true   ,false  ,true  ,false   ,true  ],
+              'bIsBuildStatic' => [false  ,false  ,true  ,false   ,true  ],
+              'bIsBuildDll'    => [true   ,false  ,false ,false   ,true  ],
+              'bIsUseDll'      => [false  ,true   ,false ,false   ,true  ],
+              'bIsHeader'      => [false  ,true   ,false ,true    ,true  ],
             ];
             if(IsSet($DefTypes[$DllType]))
             {
               $DT=$DefTypes[$DllType];
-              if($DT[0]) $DLL_Export  [$DLLi]='';
-              if($DT[1]) $DLL_Import  [$DLLi]='';
-              if($DT[2]) $DLL_Zero    [$DLLi]='';
-              if($DT[3]) $DLL_Include [$DLLi]='';
+              if($DT[4])
+              {
+                $DLL_Export  [$DLLi]=$DT[0]?'1':'0';
+                $DLL_Import  [$DLLi]=$DT[1]?'1':'0';
+                $DLL_Zero    [$DLLi]=$DT[2]?'1':'0';
+                $DLL_Include [$DLLi]=$DT[3]?'1':'0';
+              }
+              else
+              {
+                if($DT[0]) $DLL_Export  [$DLLi]='';
+                if($DT[1]) $DLL_Import  [$DLLi]='';
+                if($DT[2]) $DLL_Zero    [$DLLi]='';
+                if($DT[3]) $DLL_Include [$DLLi]='';
+              }
             }
             else
               $this->Fatal('Unknown DllType ',$DllType);
