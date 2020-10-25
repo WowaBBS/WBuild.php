@@ -317,7 +317,7 @@
       $FileParams=$Exec->CachePath.'.Opt';
       $Params->SaveTo($FileParams, "\r\n", ['@"','"']);
       
-      $Exec->NumThreads=4; // TODO:
+      $Exec->NumThreads=1; // TODO:
       $ExecLink=$this->Exec_Link($Exec, $Params);
 
       if($Manifests)

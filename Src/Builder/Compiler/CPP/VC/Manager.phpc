@@ -39,8 +39,9 @@
       ['MSVC++' ,[ 14,22 ], 1922 ,[ 16,2] ,2019 ,2 ,'VS2019' ,'Visual Studio 2019 version 16.2'],
       ['MSVC++' ,[ 14,23 ], 1923 ,[ 16,3] ,2019 ,3 ,'VS2019' ,'Visual Studio 2019 version 16.3'],
       ['MSVC++' ,[ 14,24 ], 1924 ,[ 16,4] ,2019 ,4 ,'VS2019' ,'Visual Studio 2019 version 16.4'],
-      ['MSVC++' ,[ 14,24 ], 1925 ,[ 16,5] ,2019 ,5 ,'VS2019' ,'Visual Studio 2019 version 16.5'],
-      ['MSVC++' ,[ 14,24 ], 1926 ,[ 16,6] ,2019 ,6 ,'VS2019' ,'Visual Studio 2019 version 16.6'],
+      ['MSVC++' ,[ 14,25 ], 1925 ,[ 16,5] ,2019 ,5 ,'VS2019' ,'Visual Studio 2019 version 16.5'],
+      ['MSVC++' ,[ 14,26 ], 1926 ,[ 16,6] ,2019 ,6 ,'VS2019' ,'Visual Studio 2019 version 16.6'],
+      ['MSVC++' ,[ 14,27 ], 1927 ,[ 16,7] ,2019 ,7 ,'VS2019' ,'Visual Studio 2019 version 16.7'],
     ];
     
     Private Function LoadInfo(&$Item)
@@ -65,14 +66,9 @@
       }
     }
     
-    Private Function _Get($Info)
+    Private Function _Get(&$Info)
     {
-    //$Key='Instance';
-    //if(IsSet($Info[$Key]))
-    //  return $Info[$Key];
-      $Res=$this->Create_Object('/Builder/Compiler/CPP/VC/Instance', ['Info'=>$Info, 'Manager'=>$this]);
-    //$Info[$Key]=$Res;
-      return $Res;
+      return $Info['Instance']??=$this->Create_Object('/Builder/Compiler/CPP/VC/Instance', ['Info'=>$Info, 'Manager'=>$this]);
     }
     
     Function Compare($a, $b)
@@ -134,7 +130,7 @@
     //$MapInfo  ->Done();
       ForEach($Res As &$Item)
         $this->LoadInfo($Item);
-      uasort($Res, [$this, 'Compare']);
+      UASort($Res, [$this, 'Compare']);
       $this->List=$Res;
     }
     
@@ -182,6 +178,9 @@
       $VC     =$Config->Value['VC'     ]?? False;
       $VC_Min =$Config->Value['VC_Min' ]?? False;
       $VC_Max =$Config->Value['VC_Max' ]?? False;
+      
+      If($VC===False && $VC_Min===False && $VC_Max===False)
+        Return False;
       
       if($VC!== False && $VC!==True)
         $VC=$this->MsVer($VC);
@@ -233,14 +232,13 @@
 
     Function Find($Config)
     {
-      if(Is_Array($Config))
-        $Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Config]);
-
       $Cfg=$this->ParseConfig($Config);
-      ForEach($this->List As $Item)
+      if($Cfg===False)
+        return null;
+      ForEach($this->List As &$Item)
         if($this->CheckCfg($Cfg, $Item))
            return $this->_Get($Item);
-      $this->Log('Error', 'Compiler not found')->Debug([$Cfg, $this->List]);
+      $this->Log('Error', 'VC compiler not found')->Debug([$Cfg, $this->List]);
     //$this->Log('Fatal', 'Compiler not found')->Debug([$Cfg, $Config]);
     //$this->Debug([$Cfg, $Config['Value']]);
       return null;
