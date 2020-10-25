@@ -4,10 +4,7 @@
   // TODO: Inline
   class C_Builder_Asset_Asset_Include extends C_Builder_Asset_FS_File
   {
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Asset/Path'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Asset/Path']; }
 
     Protected Function _Init(Array $Args)
     {

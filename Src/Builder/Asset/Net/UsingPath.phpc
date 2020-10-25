@@ -31,9 +31,6 @@
    #  return $Res;
    #}
     
-    Protected Function _GetSearchPathClass()
-    {
-      return [];
-    }
+    Static Protected Function _GetSearchPathClass() { return []; }
   };
 ?>

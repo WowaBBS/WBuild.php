@@ -49,11 +49,7 @@
       $this->SubType           =$Param['SubType'        ]??'Designer' ; UnSet($Param['SubType'       ]);
     }
     
-    
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/SrcPath', 'Cpp/Include'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/SrcPath', 'Cpp/Include']; }
 
     Static Function MakeResX($Outer, $ResXAsset)
     {

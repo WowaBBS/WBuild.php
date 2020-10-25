@@ -3,10 +3,7 @@
 
   class C_Builder_Asset_Net_Using extends C_Builder_Asset_FS_File
   {
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Net/UsingPath'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Net/UsingPath']; }
     
     Function IsDll() { return true; }
     Function IsSystem()

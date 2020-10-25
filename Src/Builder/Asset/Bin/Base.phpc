@@ -17,9 +17,6 @@
       }
     }
     
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Bin/Path'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Bin/Path']; }
   };
 ?>

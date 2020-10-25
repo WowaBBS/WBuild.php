@@ -9,9 +9,6 @@
       parent::_Init($Args);
     }
   
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Target/Dir'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Target/Dir']; }
   };
 ?>

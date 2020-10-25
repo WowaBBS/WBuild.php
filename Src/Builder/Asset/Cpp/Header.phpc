@@ -3,9 +3,6 @@
 
   class C_Builder_Asset_Cpp_Header extends C_Builder_Asset_Cpp_SrcBase
   {
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/Include'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/Include']; }
   };
 ?>

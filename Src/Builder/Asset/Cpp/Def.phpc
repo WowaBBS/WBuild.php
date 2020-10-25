@@ -8,10 +8,7 @@
     Var $First=true;
 
   //Var $Name=''; // TODO:
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/DefPath'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/DefPath']; }
     
     Function _GetFullPathFixed()
     {

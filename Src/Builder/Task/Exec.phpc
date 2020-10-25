@@ -4,18 +4,19 @@
   
   class C_Builder_Task_Exec extends C_Builder_Task_Base
   {
-    Var $Exec_Descr   =[];
-    Var $Exec_List    =[];
-    Var $Exec_CmdList =[];
-    Var $Exec_Idx     =0 ;
-    Var $Exec_Log_Out =true ;
-    Var $Exec_Log_Err =true ;
-    Var $ContentHash  =[];
-  //static $LabelIdx  =0;
-    Var $LabelIdx     =0;
-    Var $Exec         =null;
-    Var $NumThreads   =1;
-    Var $Env          =[];
+    Var $Exec_Descr    = [];
+    Var $Exec_List     = [];
+    Var $Exec_CmdList  = [];
+    Var $Exec_Idx      = 0 ;
+    Var $Exec_Log_Out  = true ;
+    Var $Exec_Log_Err  = true ;
+    Var $ContentHash   = [];
+  //static $LabelIdx   = 0;
+    Var $LabelIdx      = 0;
+    Var $Exec          = null;
+    Var $NumThreads    = 1;
+    Var $Env           = [];
+    Var $WorkDirectory = null;
     
     Protected function _Init(Array $Args)
     {
@@ -68,8 +69,9 @@
     }
     
     Function _AddCheckFile(String $v, ?String $i=null)
-    {    
-      $this->ExecCmd('if not exist "'.$v.'" echo [Error] Can`t find file "'.($i??$v).'" && exit /b');
+    { 
+      if(false) // TODO: Restore? but will not call this but file =) And do it step by step manually in this class
+        $this->ExecCmd('if not exist "'.$v.'" echo [Error] Can`t find file "'.($i??$v).'" && exit /b');
     }
     
     Function Copy($From, $To)
@@ -113,7 +115,7 @@
       $File.='.bat';
       CreatePath(DirName($File));
       $Content=$this->ToString();
-      $this->ContentHash[]=md5($Content);
+      $this->ContentHash[]=md5($Content); // TODO: Remove content hash, leave only depends files/nodes
       File_Put_Contents($File, $Content);
       $this->Exec_List=[];
     //$this->Log('Log', 'call "',$File,'"');
@@ -165,7 +167,8 @@
       if($this->Exec_Log_Err===true) $this->AddErrFile();
       
       $this->Exec=$this->Create_Object('/System/Exec');
-      $this->Exec->Env=$_SERVER+$this->Env;
+      $this->Exec->Env           =$_SERVER+$this->Env;
+      $this->Exec->WorkDirectory =$this->WorkDirectory;
       
       if($this->Async_Next(true))
         while($this->Async_Next()) {};

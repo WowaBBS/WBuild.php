@@ -3,9 +3,6 @@
 
   class C_Builder_Asset_Cpp_Manifest extends C_Builder_Asset_FS_File
   {
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/SrcPath', 'Cpp/Include'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/SrcPath', 'Cpp/Include']; }
   };
 ?>

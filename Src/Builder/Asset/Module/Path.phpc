@@ -6,9 +6,6 @@
   //Function ShouldBePublic($v, $List) { return $v && !$List->IsModuleInstance(); }
     Function IsCopyable($From, $To) { return !$From->IsModuleInstance() && !($From instanceof C_Builder_Asset_Module_Include); }
     
-    Protected Function _GetSearchPathClass()
-    {
-      return [];
-    }
+    Static Protected Function _GetSearchPathClass() { return []; }
   };
 ?>

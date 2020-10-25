@@ -3,9 +3,6 @@
 
   class C_Builder_Asset_Bin_Path extends C_Builder_Asset_FS_Path
   {
-    Protected Function _GetSearchPathClass()
-    {
-      return [];
-    }
+    Static Protected Function _GetSearchPathClass() { return []; }
   };
 ?>

@@ -3,14 +3,11 @@
 
   class C_Builder_Asset_Cpp_LibPath extends C_Builder_Asset_FS_Path
   {
-    Protected Function _GetSearchPathClass()
-    {
-      return [];
-    }
+    Static Protected Function _GetSearchPathClass() { return []; }
    
     Static Function GetDefMask() { return '*.lib;*.a'; }
     
-    Static Function _AddItem(Array &$Res, Array $Args, String $Path)
+    Static Function _AddItem(Array &$Res, Array $Args, $Path)
     {
       if($Path==='>Compiler')
       {

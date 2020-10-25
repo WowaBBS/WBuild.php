@@ -5,7 +5,7 @@
   {
     Var $Safe=true;
     
-    Static Function _AddItem(Array &$Res, Array $Args, String $Path)
+    Static Function _AddItem(Array &$Res, Array $Args, $Path)
     {
       if($Path==='>Compiler')
       {
@@ -22,11 +22,7 @@
       Parent::_Init($Args);
     }
   
-    Protected Function _GetSearchPathClass()
-    {
-      return [];
-    }
-
+    Static Protected Function _GetSearchPathClass() { return []; }
     Static Function GetDefMask() { return '*.h;*.hpp;*.inc'; }
   };
 ?>

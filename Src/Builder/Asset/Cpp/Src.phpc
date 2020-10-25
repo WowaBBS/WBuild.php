@@ -5,10 +5,7 @@
   {
     Var $FileDepends=[]; //<TODO: Remove
     
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/SrcPath', 'Cpp/Include'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/SrcPath', 'Cpp/Include']; }
     
     Function IsCompatible(C_Builder_Asset_Cpp_Src $Asset)
     {

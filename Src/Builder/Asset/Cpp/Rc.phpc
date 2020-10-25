@@ -9,10 +9,7 @@
       Static::MakeRc($this->Outer, $this);
     }
     
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/RcPath', 'Cpp/SrcPath', 'Cpp/Include'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/RcPath', 'Cpp/SrcPath', 'Cpp/Include']; }
 
     Static Function MakeRc($Outer, $RcAsset)
     {
