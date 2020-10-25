@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-set ZipFile=%~1
+set ZipFile=%~f1
 set OutDir=%~f2
 
 if "%ZipFile%"=="" set ZipFile=%~dp0php.zip
