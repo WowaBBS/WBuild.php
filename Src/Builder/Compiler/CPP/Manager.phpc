@@ -16,11 +16,14 @@
       $this->GetCompiler('GCC' );
     }
     
-    Function Find($Args)
+    Function Find($Config)
     {
+      if(Is_Array($Config))
+        $Config=$this->Create_Object('/Builder/Config/Set', ['Config'=>$Config]);
       ForEach($this->List As $Item)
-        if($Res=$Item->Find($Args))
+        if($Res=$Item->Find($Config))
           return $Res;
+      $this->Log('Error', 'Compiler not found')->Debug([$Config]);
       return null;
     }
     

@@ -224,12 +224,8 @@
   //****************************************************************
     Function FindFile($File, $Cfg=[])
     {
-      static $Load=true;
-      if($Load)
-      {
-        $Load=false;
-        $this->Loader->Load_Class('/Builder/Asset/FS/PathBase');
-      }
+      static $Load=null;
+      $Load ??=$this->Loader->Load_Class('/Builder/Asset/FS/PathBase');
       return C_Builder_Asset_FS_PathBase::GlobalSearch($File, $this, $Cfg);
     }
   //****************************************************************

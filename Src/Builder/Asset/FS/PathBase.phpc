@@ -31,37 +31,31 @@
       return File_Exists($this->GetFullPath());
     }
     
-    Function Remove():bool
+    Final Function Remove():bool
     {
       if(!$this->Exists()) return true;
-      return Unlink($this->GetFullPath());
+      $this->InvalidateCache();
+      return $this->_Remove();
+    }
+    
+    Protected Function _Remove():bool
+    {
+      $this->Log('Fatal', 'Remove method is not implemented');
+      return false;
     }
     
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);
       $this->HasNext=$Args['HasNext']??false;
-      if(IsSet($Args['>Parent']))
-      { // TODO: SetPath
-        $Parent=$Args['>Parent'];
-        if(Is_String($Parent))
-        {
-          $ParentAsset=$Parent;
-          $Parent=$this->GetLastAsset($ParentAsset);
-          if(!$Parent)
-            $this->Log('Fatal', 'Parent asset "', $ParentAsset, '" not found');
-        }
-        $this->Parent=$Parent;
-        $this->LocalPath=$Args['Path'];
-        $this->FullPath=NormPath($Parent->GetSubPath($this->LocalPath));
-      }
-      else
-    //if(IsSet($Args['Path']))
-        $this->SetPath(
-          $Args['Path'],
-          $Args['>Create'      ]??false,
-          $Args['>NoSearch'    ]??false
-        );
+      $this->SetPath(
+        $Args['Path'], [
+          'Parent'   =>$Args['>Parent'   ]??null  ,
+          'Create'   =>$Args['>Create'   ]??false ,
+          'NoSearch' =>$Args['>NoSearch' ]??false ,
+          'Searches' =>$Args[ 'Searches' ]??null  ,
+        ]
+      );
       if(IsSet($Args['>FileDepends']))
         $this->AddFileDepends($Args['>FileDepends']); 
     }
@@ -80,7 +74,7 @@
       ];
     }
     
-    Static Function _AddItem(Array &$Res, Array $Args, String $Path)
+    Static Function _AddItem(Array &$Res, Array $Args, $Path)
     {
       $Args['Path']=$Path;
       $Res[]=$Args;
@@ -88,7 +82,7 @@
     
     Static Function _AddItems(Array &$Res, Array $Args, Array $Paths)
     {
-      ForEach($Paths As $Path)
+      ForEach($Paths As $Path) // TODO: $Paths->$Path as array
         Static::_AddItem($Res, $Args, $Path);
     }
     
@@ -142,51 +136,83 @@
       }
       self::CheckEmptyParam($Param);
       $Type=$Args['Asset_Info']->Name; // $Args['Type']??
+      $Cfg=[
+        'Assets' =>Static::_GetSearchPathClass(),
+        'First'  =>true,
+      ];
+      $Searches=Static::GlobalSearches($Args['Outer'], $Cfg);
       $z=false;
       ForEach($Res As &$Item)
-        if(($Res['Type']??$Type)==$Type)
+        if(($Res['Type']??$Type)==$Type) // Only for DLLs of the lib?
+        {
+          $Item['Searches']=$Searches;
           if($z)
             $Item['HasNext']=true;
           else
             $z=true;
+        }
       return $Res;
     }
     
     Function IsNoSearch() { return $this->NoSearch??false; }
     
-    Final Function SetPath($v, $Create, $NoSearch)
+    Final Function SetPath($v, $Args=[])
     {
+      $Parent   =$Args['Parent'   ]?? Null ;
+      $Create   =$Args['Create'   ]?? False;
+      $NoSearch =$Args['NoSearch' ]?? False;
+      
+      if($Parent!==Null)
+      { // TODO: SetPath
+        if(Is_String($Parent))
+        {
+          $Parent=$this->GetLastAsset($ParentAsset=$Parent);
+          if(!$Parent)
+            $this->Log('Fatal', 'Parent asset "', $ParentAsset, '" not found');
+        }
+        $this->Parent=$Parent;
+        if(Is_Array($v))
+        {
+          $this->Log('Error', 'Array is not supported for parent path: ', $v);
+          $v=Reset($v);
+        }
+          
+        $this->LocalPath=$v;
+        $this->FullPath=NormPath($Parent->GetSubPath($this->LocalPath));
+        return;
+      }
       if($NoSearch)
         $this->NoSearch=true;
-      $v=FileName_Normalize($v);
-      $this->LocalPath=$v;
-      $Assets=$this->_GetSearchPathClass();
+      if(Is_String($v))
+        $v=FileName_Normalize($v);
+      else
+        ForEach($v As &$vi)
+          $vi=FileName_Normalize($vi);
       $Cfg=[
         'Outer'       => $this,
-        'IsFile'      => $this->_IsFile(),
+        'IsFile'      => Static::_IsFile(),
         'First'       => true,
         'Base'        => true,
         'Search'      =>!$Create && !$NoSearch ,
         'Create'      => $Create      ,
         'NoError'     => $NoSearch    ,
-        'Assets'      => $Assets,
+        'Assets'      => Static::_GetSearchPathClass(),
+        'Searches'    => $Args['Searches']??null,
       ];
-      [$p, $v]=Static::GlobalSearch($v, $this, $Cfg);
+      [$p, $v, $l]=Static::GlobalSearch($v, $this, $Cfg);
+      $this->LocalPath=$l;
       $this->Parent=$p;
       $v=NormPath($v);
       $this->FullPath=$v;
     }
     
-    Protected Function _GetSearchPathClass()
-    {
-      return [];
-    }
+    Static Protected Function _GetSearchPathClass() { return []; }
     
-    Protected Function _IsFile() { return false; }
+    Static Protected Function _IsFile() { return false; }
 
     Static Function IsAbsolute($Path)
     {
-      return StrLen($Path)>1 &&(
+      return Is_String($Path) && StrLen($Path)>1 &&(
         SubStr($Path, 0, 1)=='/'   ||
       //SubStr($Path, 0, 1)=='\\'  ||
         SubStr($Path, 1, 1)==':'   ||
@@ -203,18 +229,18 @@
     
     Static Function GlobalSearches($Outer, $Cfg)
     {
-      $Assets      =$Cfg['Assets'      ]??[];
-      $bFirst      =$Cfg['First'       ]??true;
+      $Assets =$Cfg['Assets' ]??[];
+      $bFirst =$Cfg['First'  ]??true;
       if($Cfg['Base']??true)
         $Assets[]='Module/Path:'; // TODO: NS
       $Res=[];
       ForEach($Assets As $AssetClass)
-        if(Is_Object($AssetClass))
+        If(Is_Object($AssetClass))
           $Res[$AssetClass->Object_Id]=$AssetClass;
         else
         {
           $List=$Outer->GetAssetsR($AssetClass);
-          $c=count($List);
+          $c=Count($List);
         //$this->Log('Debug', 'Global Search ', $Path, ' in ',$AssetClass, ' (', $c,')');
           if($c==0)
             continue;
@@ -236,27 +262,38 @@
     // Used in FindFile
     Static Function GlobalSearch($Path, $Outer, $Cfg)
     {
-      $bIsFile     =$Cfg['IsFile'      ]??true  ;
-      $bSearch     =$Cfg['Search'      ]??true  ;
-      $bCreate     =$Cfg['Create'      ]??false ;
-      $bNoError    =$Cfg['NoError'     ]??false ;
+      $bIsFile  =$Cfg['IsFile'  ]??true  ;
+      $bSearch  =$Cfg['Search'  ]??true  ;
+      $bCreate  =$Cfg['Create'  ]??false ;
+      $bNoError =$Cfg['NoError' ]??false ;
     
       if(Static::IsAbsolute($Path))
-        return [null, $Path];
+        return [null, $Path, $Path];
       
-      $Searches=Static::GlobalSearches($Outer, $Cfg);
+      $Searches=$Cfg['Searches' ]??Static::GlobalSearches($Outer, $Cfg);
       if($bSearch)
       {
         ForEach($Searches As $Asset)
         {
-          $Res=$Asset->SearchNode($Path, ['IsFile'=>$bIsFile]);
-          if($Res!=='')
-            return [$Asset, $Res];
+          $Paths=Is_Array($Path)? $Path: [$Path];
+          ForEach($Paths As $PathI)
+          {
+            $Res=$Asset->SearchNode($PathI, ['IsFile'=>$bIsFile]);
+            if($Res!=='')
+              return [$Asset, $Res, $PathI];
+          }
         }
       }
       if($bCreate)
+      {
+        if(Is_Array($Path))
+        {
+        //$Outer->Log('Error', 'Array is not supported for create path: ', $Path);
+          $Path=Reset($Path);
+        }
         ForEach($Searches As $Asset)
-          return [$Asset, $Asset->GetSubPath($Path)];
+          return [$Asset, $Asset->GetSubPath($Path), $Path];
+      }
       
       if(!$bNoError)
       {
@@ -269,7 +306,9 @@
         $Log->NoBackTrace();
         $Log->Done();
       }
-      return [null, $Path];
+      if(Is_Array($Path))
+        $Path=Reset($Path);
+      return [null, $Path, $Path];
     }
     
     Function GetRoot()

@@ -31,7 +31,7 @@
       Parent::_Init($Args);
     }
     
-  //Protected Function _GetSearchPathClass() { return ['Cpp/SrcPath', 'Cpp/Include']; }
+  //Static Protected Function _GetSearchPathClass() { return ['Cpp/SrcPath', 'Cpp/Include']; }
     Static Function _ParseParams($Args)
     {
       $Param=$Args['Param'];

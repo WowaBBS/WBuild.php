@@ -2,7 +2,7 @@
   $Loader->Parent_Class('/Builder/Asset/FS/PathBase');
   $Loader->Load_Lib('/FS/Utils');
   $Loader->Using_Module('/FS/IOFS');
-
+  
   class C_Builder_Asset_FS_Path extends C_Builder_Asset_FS_PathBase
   {
     Protected Function _Init(Array $Args)
@@ -39,7 +39,7 @@
    //if($Map) $this->Debug($Map);
       if($Map) $this->Search=['Filter'=>['Map'=>$Map]];
     }
-
+    
     Static Function GetDefMask() { return ''; }
     
     Function GetDirFullPath()
@@ -130,6 +130,8 @@
       return $Res;
     }
     
+    Var $FoundAsset=[];
+    
     Function _SearchAsset($Path, $Type, Array $Args=[])
     {
       $Res=$this->SearchNode($Path, $Args);
@@ -177,7 +179,7 @@
   //Function SearchDir  ($Path) { return SearchNode($Path, ['IsFile'=>false ]); }
   //Function SearchFile ($Path) { return SearchNode($Path, ['IsFile'=>true  ]); }
     
-    Protected Function _IsFile() { return false; }
+    Static Protected Function _IsFile() { return false; }
     
     Var $Cached_Hash='';
     
@@ -222,6 +224,8 @@
     {
       if($this->Cached_Hash)
         return $this->Cached_Hash;
+      // This functional is not used?!
+      $Performance=$this->GetManager()->Performance->Start(['Name'   =>'Md5Dir']);
       $Cache=$this->GetMD5Cache();
       $Res=[];
       ForEach($this->GetFiles() As $Item)

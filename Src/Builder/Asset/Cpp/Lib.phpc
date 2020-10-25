@@ -6,10 +6,7 @@
     Var $FileDepends=[]; //<TODO: Remove
 
   //Var $Name=''; // TODO:
-    Protected Function _GetSearchPathClass()
-    {
-      return ['Cpp/LibPath'];
-    }
+    Static Protected Function _GetSearchPathClass() { return ['Cpp/LibPath']; }
 
     Protected Function _Init(Array $Args)
     {
@@ -23,6 +20,14 @@
       }
     }
 
+    Static Function _AddItem(Array &$Res, Array $Args, $Path)
+    {
+      if(Is_String($Path) && Preg_Match('/^(\w[\w\d]*)\\.lib$/Ssi', $Path, $M))
+        $Path=[$Path, 'lib'.StrToLower($M[1]).'.a'];
+      # $Args['Outer']->Log('Debug', '!!!!')->Debug('lib'.$M[1].'.a');
+      Parent::_AddItem($Res, $Args, $Path);
+    }
+    
     Static Function _AddItems(Array &$Res, Array $Args, Array $Paths)
     {
       $Libs=[];

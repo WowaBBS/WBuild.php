@@ -2,8 +2,36 @@
   $Loader->Load_Lib('/FS/Utils');
   $Loader->Parent_Class('/Builder/Asset/FS/PathBase');
 
+# Function DebugFiles()
+# {
+#   Global $Loader;
+#   ForEach(C_Builder_Asset_FS_File::$AllFilesList As $i)
+#     $Loader->Log('Debug', 'Path: ', $i->GetFullPath(), ' ', $i->GetModule()->GetName());
+#   $Loader->Log('Debug', 'Total: ', Count(C_Builder_Asset_FS_File::$AllFilesList));
+# }
+# Register_Shutdown_Function('DebugFiles');
+  
   class C_Builder_Asset_FS_File extends C_Builder_Asset_FS_PathBase
   {
+  # Static $AllFilesList=[];
+    
+    Protected Function _Init(Array $Args)
+    {
+    # Static::$AllFilesList[]=$this;
+      Parent::_Init($Args);
+    }
+    
+    Protected Function _Remove():bool
+    {
+      return Unlink($this->GetFullPath());
+    }
+    
+    Function InvalidateCache()
+    {
+      $this->Cached_Hash=null;
+      Parent::InvalidateCache();
+    }
+
     Final Function GetFileName()
     {
       return BaseName($this->GetFullPath());
@@ -83,10 +111,17 @@
       return FilePath_GetFileNick($this->GetLocalPath());
     }
 
-    Protected Function _IsFile() { return true; }
+    Static Protected Function _IsFile() { return true; }
     
-    Function GetHash()
+    Var $Cached_Hash=null;
+    
+    Function GetHash() { return $this->Cached_Hash??=$this->_GetHash(); }
+  //Function GetHash() { return $this->_GetHash(); }
+    
+    // TODO: optimize, calculating too long/ Is should be fast without Cached_Hash
+    Protected Function _GetHash()
     {
+      $Performance=$this->GetManager()->Performance->Start(['Name'=>'Md5File']);
       $Cache=$this->GetMD5Cache();
       return $Cache->CalcMD5($this->GetFullPath());
     }
