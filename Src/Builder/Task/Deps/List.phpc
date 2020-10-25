@@ -158,6 +158,11 @@
         'SkipDups'    => true  ,
       ];
       ForEach($this->List As $Item)
+        if($Manager=$Item->Asset->GetManager())
+          $Performance=$Manager->Performance->Start([
+            'Name'   =>'LoadDepends',
+          ]);
+      ForEach($this->List As $Item)
         if($Item->CheckInput)
         {
           $List=$Item->GetLazyDepends($Logger);
@@ -168,6 +173,8 @@
             $LazyItem->Dependend[$Item->GetKey()]=$Item;
           }
         }
+      if($Performance)
+        $Performance->Finish();
     }
 
     Protected Function _Debug_Info(Array &$Res)
