@@ -58,7 +58,7 @@
       $Platform      =$Cs['Platform'      ][$this->Platform      ]; $this->Platform      =$Platform      ->Name;
       
       $Res=new T_Builder_Config();
-      $Res->MergeLeft($Configuration)->MergeLeft($Platform)->MergeContext($this->InitAssets, $Args['Config']?? []);
+      $Res->MergeLeft($Configuration, true)->MergeLeft($Platform, true)->MergeContext($this->InitAssets, $Args['Config']?? []);
     //$Res=(clone $Platform)->MergeWith($Configuration)->MergeContext($this->InitAssets, $Args['Config']?? []);
       if(false)
       {

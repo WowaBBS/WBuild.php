@@ -17,13 +17,13 @@
     {
     }
     
-    Function MergeLeft(T_Builder_Config $Config)
+    Function MergeLeft(T_Builder_Config $Config, $bSimpleConfig=false)
     {
       $this->Depends     =            $this->Depends       +$Config->Depends      ;
       $this->Assets      =Array_Merge($this->Assets        ,$Config->Assets      );
       $this->Config      =Array_Merge($this->Config        ,$Config->Config      );
       $this->ConfigMap   =            $Config->ConfigMap   +$this->ConfigMap      ;
-      $this->SimpleName  =            $this->SimpleName   ?:$Config->SimpleName   ;
+      $this->SimpleName  =            $this->SimpleName   ?($bSimpleConfig? $this->SimpleName.$Config->SimpleName:$this->SimpleName):$Config->SimpleName   ;
       $Props             =            $Config->VS['Props'] +$this->VS['Props']    ;
       $this->VS          =            $Config->VS          +$this->VS             ;
       $this->VS['Props'] =$Props;
