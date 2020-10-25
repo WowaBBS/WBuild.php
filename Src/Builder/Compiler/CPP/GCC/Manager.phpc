@@ -4,5 +4,100 @@
  
   class C_Builder_Compiler_CPP_GCC_Manager extends C_Builder_Compiler_CPP_Base_Manager
   {
+    Var $List=[];
+    
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      $Path='C:/MinGW';
+      if(Is_File($Path.'/bin/g++.exe'))
+        $this->List[]=['Path'=>$Path];
+    }
+    
+    Private Function _Get(&$Info)
+    {
+      return $Info['Instance']??=$this->Create_Object('/Builder/Compiler/CPP/GCC/Instance', ['Info'=>$Info, 'Manager'=>$this]);
+    }
+    
+    Function NormalizeVersion($v)
+    {
+      if($v<0) return [0, $this->NormalizeVersion(-$v)[0]-1];
+      $Res=[];
+      $bLast=false;
+    # ForEach(Static::$Versions As $k=>$I)
+    #   if(($I[4]??0)==$v)
+    #     $Res[]=$I[2];
+    #   else if($Res)
+    #   {
+    #     $Res[]=$I[2];
+    #     $bLast=true;
+    #     break;
+    #   }
+      $Res[]=0;
+      $Res[]=1;
+      $C=Count($Res);
+      if($C===0)
+      {
+        $this->Log('Fatal', 'Visual Studio verion ', $v, ' is incorrect');
+        return [0, 0];
+      }
+      if($bLast)
+        $Res=[$Res[0]*100000,  $Res[$C-1]   *100000-1];
+      else
+        $Res=[$Res[0]*100000, ($Res[$C-1]+1)*100000-1];
+      return $Res;
+    }
+
+    Private Function GccVer($v)
+    {
+      if($v===1) return [1, 1];
+      return $this->NormalizeVersion($v);
+    }
+    
+    Function ParseConfig($Config)
+    {
+      $GCC     =$Config->Value['GCC'     ]?? False;
+      $GCC_Min =$Config->Value['GCC_Min' ]?? False;
+      $GCC_Max =$Config->Value['GCC_Max' ]?? False;
+      
+      If($GCC===False && $GCC_Min===False && $GCC_Max===False)
+        Return False;
+      
+      if($GCC!==False && $GCC!==True)
+        $GCC=$this->GccVer($GCC);
+      else
+        $GCC=[0, 1000000000];
+      
+      if($GCC_Min===False || $GCC_Min===True) $GCC_Min=$GCC[0];
+      if($GCC_Max===False || $GCC_Max===True) $GCC_Max=$GCC[1];
+      
+      $Res=[
+        'Min'    =>$this->GccVer($GCC_Min)[0],
+        'Max'    =>$this->GccVer($GCC_Max)[1],
+        'Win'    =>$Config->Value['Windows' ],
+        'x86'    =>$Config->Value['x86'     ],
+        'arm'    =>$Config->Value['arm'     ],
+        '32b'    =>$Config->Value['32b'     ],
+        '64b'    =>$Config->Value['64b'     ],
+      ];
+      Return $Res;
+    }
+    
+    Function CheckCfg($Cfg, $Item)
+    {
+      return true;
+    }
+    
+    Function Find($Config)
+    {
+      $Cfg=$this->ParseConfig($Config);
+      if($Cfg===False)
+        return null;
+      ForEach($this->List As $Item)
+        if($this->CheckCfg($Cfg, $Item))
+           return $this->_Get($Item);
+      $this->Log('Error', 'GCC compiler not found')->Debug([$Cfg, $this->List]);
+      return null;
+    }
   }
 ?>

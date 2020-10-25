@@ -1,13 +1,13 @@
 <?
   $Loader->Parent_Class('/Builder/Compiler/CPP/Base/Task/Compile');
 
-  class C_Builder_Compiler_CPP_Base_Task_Compile extends C_Builder_Compiler_CPP_Base_Task_Compile
+  class C_Builder_Compiler_CPP_GCC_Task_Compile extends C_Builder_Compiler_CPP_Base_Task_Compile
   {
     Function MakeCompile()
     {
       //TODO: Support Cpp/Pch
       
-      $Params=$this->CreateParams();
+      $Params=$this->Compiler->CreateParams();
     //$Params->Add('/nologo');
       
       ForEach($this->Defines As $Define)
@@ -21,16 +21,15 @@
   
       ForEach($this->Items As $Item)
       {
-        $SrcAsset =$Item['SrcASset' ];
+        $SrcAsset =$Item['SrcAsset' ];
         $ObjAsset =$Item['ObjAsset' ];
-        $Exec     =$Item['Exec'     ];
 
         $Params=$BaseParams->Clone();
       //$Params->Add($ObjAsset->GetFullPath());
         $Params->Add('-c ', $SrcAsset->GetFullPath());
         $Params->Add('-o ', $ObjAsset->GetFullPath());
         
-        $this->Instance->Exec_GPP($Exec, $Params);
+        $this->Compiler->Exec_GPP($this, $Params);
       }
     }
   };

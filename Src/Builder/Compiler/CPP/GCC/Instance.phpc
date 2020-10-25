@@ -8,12 +8,21 @@
     Var $DirVersion='V4x6x2';
     Var $Path='C:\MinGW';
     
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      $Info=$Args['Info'];
+      $this->Info=$Info;
+      $this->Path =$Info['Path' ];
+    }
+    
     Function GetCompilerIdHash() { return $this->Path; }
     
     Function GetPchFile    ($Name) { return       $Name.'.gch' ; }
     Function GetObjFile    ($Name) { return       $Name.'.o'   ; }
     Function GetExeFile    ($Name) { return       $Name.'.exe' ; }
-    Function GetDllFile    ($Name) { return      .$Name.'.dll' ; } // '.so'
+    Function GetDllFile    ($Name) { return       $Name.'.so'  ; } // '.so'
+  # Function GetDllFile    ($Name) { return       $Name.'.dll' ; } // '.so'
     Function GetDllLibFile ($Name) { return 'lib'.$Name.'.a'   ; }
     Function GetLibFile    ($Name) { return       $Name.'.a'   ; }
 
@@ -23,7 +32,56 @@
     
     Function Exec_GPP ($Exec, $Params) { $Exec->Exec($this->Path.'/bin/g++',$Params); }
     Function Exec_Ar  ($Exec, $Params) { $Exec->Exec($this->Path.'/bin/ar' ,$Params); }
+
+    Function CMake_GetGenerator($Asset=null)
+    {
+      return 'Fake MinGW';
+    }
+    
+    Function PrepareExec($Exec)
+    {
+      $Exec->WorkDirectory=$this->Path.'/bin';
+    }
+    
+    Function IsCompiler($Name) { return static::$ShortName===$Name; }
+    Function CompareVersion($Ver)
+    {
+      $Ver=$this->Manager->NormalizeVersion($Ver);
+    # $Current=$this->Info['GccFullVer'];
+    # if($Current<$Ver[0]) return -1;
+    # if($Current>$Ver[1]) return  1;
+                           return  0;
+    }
+    
+    Function GetLibPaths()
+    {
+      return [$this->Path.'/lib/'];
+    }
+    
+    Function GetIncludes()
+    {
+      return [$this->Path.'/include/'];
+    }
+    
+    // _BuildRc
+    Final Function _BuildRc(Array $Args)
+    {
+      $Exec      =$Args['Exec'     ];
+      $RcAsset   =$Args['RcAsset'  ];
+      $ResAsset  =$Args['ResAsset' ];
+      $Includes  =$Args['Includes' ];
+      // TODO:
+    }
    
+    Final Function _BuildResX(Array $Args)
+    {
+      $Exec      =$Args['Exec'      ];
+      $ResXAsset =$Args['ResXAsset' ];
+      $Resources =$Args['Resources' ];
+      $Using     =$Args['Using'     ];
+      // TODO:
+    }
+      
     Protected Function _CreateCompiler(Array $Args)
     {
       return $this->Create_Object('/Builder/Compiler/CPP/GCC/Compiler', $Args);
@@ -55,6 +113,7 @@
       //$Params->Add(' -Wl,-h ',$LibFile->GetFullPath());
       
       $Params->Add('-o ',$OutAsset->GetFullPath());
+      $Params->Add('-static-libgcc -static-libstdc++'); // TODO: Static?
 
       $this->Exec_GPP($Exec, $Params);
     }
@@ -79,7 +138,7 @@
         $Params->Add('-shared');
       if($LibAsset)
         $Params->Add('-Wl,--out-implib,'.$LibAsset->GetFullPath());
-      $this->_Build($BinAsset, $Params);
+      $this->_Build($Args, $Params, $BinAsset); //, $BinType==='Exe');
     }
 
   //$Args['Exec'     ]=$this->Create_Exec();
@@ -103,5 +162,6 @@
  
       $this->Exec_Ar($Exec, $Params);
     }
+
   }
 ?>
