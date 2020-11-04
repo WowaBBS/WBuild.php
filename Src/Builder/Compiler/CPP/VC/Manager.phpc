@@ -73,8 +73,7 @@
     
     Function Compare($a, $b)
     {    
-    //if($a['VcFullVer']!==$b['VcFullVer']) return $a['VcFullVer']>b['VcFullVer'];
-      if($r=$a['VcFullVer']<=>$b['VcFullVer']) return $r<0;
+      if($r=$a['VcFullVer']<=>$b['VcFullVer']) return $r;
       
       Static $CPU=[
         'amd64' =>0,
@@ -82,10 +81,10 @@
         'arm'   =>2,
       ];
 
-      if($r=$CPU[$a['CompilerCPU']]<=>$CPU[$b['CompilerCPU']]) return $r>0;
-      if($r=$CPU[$a['CPU']]<=>$CPU[$b['CPU']]) return $r>0;
-      if($r=$a['Win']<=>$b['Win']) return $r>0;
-      return ($a['VcVars']<=>$b['VcVars'])>0;
+      if($r=$CPU[$a['CompilerCPU']]<=>$CPU[$b['CompilerCPU']]) return $r;
+      if($r=$CPU[$a['CPU']]<=>$CPU[$b['CPU']]) return $r;
+      if($r=$a['Win']<=>$b['Win']) return $r;
+      return $a['VcVars']<=>$b['VcVars'];
     }
     
     Var $List=[];
