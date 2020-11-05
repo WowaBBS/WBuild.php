@@ -29,6 +29,8 @@
       case '-cache'         : $Mode='cache'         ; break;
       case '/imports'       : $Mode='imports'       ; break;
       case '-imports'       : $Mode='imports'       ; break;
+      case '/studio'        : $Mode='studio'        ; break;
+      case '-studio'        : $Mode='studio'        ; break;
       default:
         if($k>0)
           $Loader->Log('Error', 'Arg ', $Arg, ' is unsupported');
@@ -41,12 +43,14 @@
     case 'log'           : $LogFile       =$Arg; $Mode='arg'; break;
     case 'cache'         : $CacheDir      =$Arg; $Mode='arg'; break;
     case 'imports'       : $Imports[]     =$Arg; $Mode='arg'; break;
+    case 'studio'        : $Studio        =$Arg; $Mode='arg'; break;
     }
   }
   
   $Solution_Dir  ??=$BaseDir;
   $Project_Dir   ??=$Solution_Dir;
   $Solution_Name ??='MySolution';
+  $Studio        ??='2010';
 
   $Modules  ??=RealPath(__DIR__.'/../../../../..');
   $LogFile  ??=__FILE__.'.log'; //'./Hook.log'   ;
@@ -76,6 +80,7 @@
     $Analyzer->ProcessBuilder($Manager);
     
     $Solution=$Analyzer->CreateSolution([
+      'Studio'      =>$Studio        ,
       'Name'        =>$Solution_Name ,
       'AbsPath'     =>$Solution_Dir  ,
       'VcxAbsPath'  =>$Project_Dir   ,

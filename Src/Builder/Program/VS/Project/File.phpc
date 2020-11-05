@@ -85,12 +85,13 @@
     {
     //$Res=$this;
       $Proj=$this;
+      $Solution=$this->GetSolution();
       $Configurations=$Proj->GetConfigurations();
       $Res->XML();
       $Res->Tag('Project')->AttrMap([
         'DefaultTargets' =>'Build' ,
       # 'ToolsVersion'   =>'4.0'   ,
-        'ToolsVersion'   =>'15.0'  ,
+        'ToolsVersion'   =>$Solution->ToolsVersion,
         'xmlns'          =>'http://schemas.microsoft.com/developer/msbuild/2003',
       ]);
       
@@ -106,7 +107,7 @@
         
         'Keyword'         =>'MakeFileProj' ,
       # 'RootNamespace'   =>$Proj->Name    ,
-        'PlatformToolset' =>'v141'         , // v142
+        'PlatformToolset' =>$Solution->PlatformToolset,
       # 'MinimumVisualStudioVersion' =>'15.0', // TODO: Understand what is wrong
         'TargetRuntime'   =>'Native'       ,
       ]);

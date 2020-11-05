@@ -3,12 +3,21 @@
   
   class C_Builder_Program_VS_Solution extends C_Object
   {
-  //Var $Version  =11.0;
-    Var $Version  =12.0;
-  //Var $Compiler ='Visual C++ Express 2010';
-    Var $Compiler ='Visual Studio 15';
+  //Var $Version                    = 11.0;
+    Var $Version                    = 12.0;
+    Var $PlatformToolset            = 'v141';
+    Var $ToolsVersion               = '15.0';
+  //Var $Compiler                   = 'Visual C++ Express 2010';
+    Var $Compiler                   = 'Visual Studio 15';
     Var $VisualStudioVersion        = '15.0.27130.2036';
     Var $MinimumVisualStudioVersion = '10.0.40219.1';
+    
+    Static $Studios=[
+    //        [Version ,Compiler           ,PlatformToolset,ToolsVersion ,VisualStudioVersion ,MinimumVisualStudioVersion
+      '2010'=>[11.0    ,'Visual C++ Express 2010'  ,null   ,  '4.0'      ,''                  ,''             ],
+      '2017'=>[12.0    ,'Visual Studio 15'         ,'v141' , '15.0'      ,'15.0.27130.2036'   ,'10.0.40219.1' ],
+      '2019'=>[12.0    ,'Visual Studio Version 16' ,'v142' , '15.0'      , '16.0.30503.244'   ,'10.0.40219.1' ],
+    ];
     
     Var C_Builder_Program_VS_GUIDs $GUIDs;
     Var C_Tmpl_Loader              $Template_Loader;
@@ -32,6 +41,20 @@
     
     Function _Init(Array $Args)
     {
+      $StudioVer=$Args['Studio']?? '2017';
+      $Studio=Static::$Studios[$StudioVer];
+      if(!$Studio)
+        $this->Log('Error', 'Studio version ',$StudioVer, ' is not supported:')->Debug(Array_Keys(Static::$Studios));
+      else
+      {
+        $this->Version                    = $Studio[0];
+        $this->Compiler                   = $Studio[1];
+        $this->PlatformToolset            = $Studio[2];
+        $this->ToolsVersion               = $Studio[3];
+        $this->VisualStudioVersion        = $Studio[4];
+        $this->MinimumVisualStudioVersion = $Studio[5];
+      }
+      
       $this->GUIDs=$this->Get_Singleton('/Builder/Program/VS/GUIDs');
       $TLoader=$this->Create_Object('/Tmpl/Loader');
       $Manager_Args=[
