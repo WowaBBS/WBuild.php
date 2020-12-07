@@ -24,7 +24,7 @@
       echo 'Error', "\n";
       return;
     }
-    $RevDir  =$OutDir.$Project.'-'.$Rev;
+    $RevDir  =$OutDir.$Project.'-'.Preg_Replace('/v(\d+\.\d+\.\d+)/', '$1', $Rev);
     $Loaded  =$RevDir.'/';
     $Md5_File='';
     if(Is_File($ZipFile))
