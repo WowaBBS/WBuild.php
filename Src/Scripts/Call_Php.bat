@@ -4,7 +4,7 @@ call %~dp0Find_Php.bat
 
 setlocal
 
-set PHP_File=%~1
+set Php_File=%~1
 shift
 
 set Args=%1
@@ -17,11 +17,11 @@ if not defined First goto :EndParse
 :EndParse
 
 set Arg=
-set Arg=%Arg% -d memory_limit=256M
-set Arg=%Arg% -d "extension_dir=%PHP_Path%/ext"
-set Arg=%Arg% -c "%PHP_Path%"
-set Arg=%Arg% -f "%PHP_File%"
+set Arg=%Arg% -d memory_limit=512M
+set Arg=%Arg% -d "extension_dir=%Php_Path%/ext"
+set Arg=%Arg% -c "%Php_Path%"
+set Arg=%Arg% -f "%Php_File%"
 
-"%PHP_Path%\php.exe" %Arg% -- %Args%
+"%Php_Path%\php.exe" %Arg% -- %Args%
 
 endlocal
