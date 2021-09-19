@@ -39,7 +39,7 @@
           if(StrPos($Info['Title'], 'Visual Studio')===false) continue;
           if(StrPos($Info['Title'], '2019')===false) continue;
           if(IsSet($Res[$v])) continue;
-          $Res[$v]=$Info+['RegVer'=>'?'];
+          $Res[$v]=$Info+['RegVer'=>'?', 'VerDetect'=>2019];
         }
       return $Res;
     }

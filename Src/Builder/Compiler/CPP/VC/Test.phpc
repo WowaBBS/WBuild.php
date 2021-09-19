@@ -1,0 +1,188 @@
+<?
+  $Loader->Parent_Class('/Object');
+  
+  class C_Builder_Compiler_CPP_VC_Test extends C_Object
+  {
+    Var $VcFile   ;
+    Var $FileSrc  ;
+    Var $PathInfo ;
+    Var $CurrEnv  ;
+    Var $Item     ;
+    Var $FileBat  ;
+    Var $FileObj  ;
+    Var $FileExe  ;
+    Var $FileEnv  ;
+    Var $FileVc   ;
+    
+    Var $Tools    ;
+    Var $Exec     ;
+    Var $ItemEnv  ;
+    
+    Function _Init(Array $Args)
+    {
+      Parent::_Init($Args);
+      $this->VcFile   =$Args['VcFile'   ];
+      $this->FileSrc  =$Args['FileSrc'  ];
+      $this->PathInfo =$Args['PathInfo' ];
+      $this->CurrEnv  =$Args['CurrEnv'  ];
+      $this->Item     =$Args['Item'     ];
+      $this->FileBat  =$Args['FileBat'  ];
+      $this->FileObj  =$Args['FileObj'  ];
+      $this->FileExe  =$Args['FileExe'  ];
+      $this->FileEnv  =$Args['FileEnv'  ];
+      $this->FileVc   =$Args['FileVc'   ];
+    }
+    
+    Function _Done()
+    {
+      $this->Exec->Done();
+      $this->Exec=null;
+      Parent::_Done();
+    }
+    
+    function Exec()
+    {
+      $VcFile   =$this->VcFile   ;
+      $CurrEnv  =$this->CurrEnv  ;
+      
+      $FileSrc  =$this->FileSrc  ;
+      $PathInfo =$this->PathInfo ;
+      
+      $FileBat  =$this->FileBat  ;
+      $FileObj  =$this->FileObj  ;
+      $FileExe  =$this->FileExe  ;
+      $FileEnv  =$this->FileEnv  ;
+      
+    //$this->Log('Log', '>',$File);
+      $Cmd=[
+        "@echo off\n",
+        'call "',$VcFile,'"',"\n",
+      //'MkDir ',$PathObj,"\n",
+        'SET >"',$FileEnv,'"',"\n",
+      //'cl /nologo -c ',$FileSrc,' /Fo: ',$FileObj,"\n",
+        'cl /nologo -c "',$FileSrc,'" /Fo"',$FileObj,'"',"\n",
+        'link /nologo "',$FileObj,'" /OUT:"',$FileExe,'"',"\n",
+      ];
+      $ToolsList=['cl', 'link', 'lib', 'mt', 'rc', 'ResGen'];
+      $Tools=[];
+      ForEach($ToolsList As $ToolItem)
+      {
+        $FileInfo=$PathInfo.'.'.$ToolItem.'.Info.txt' ;
+        $FileHelp=$PathInfo.'.'.$ToolItem.'.Help.txt' ;
+      
+        $Cmd[]=$ToolItem.' /? >'.$FileHelp.' 2>'.$FileInfo."\n";
+        
+        $Tool=[
+          'Cmd'  =>$ToolItem,
+          'Info' =>$FileInfo,
+          'Help' =>$FileHelp,
+        ];
+        $Tools[$ToolItem]=$Tool;
+      }
+      $this->Tools=$Tools;
+      File_Put_Contents($FileBat, implode($Cmd));
+      $Exec=$this->Create_Object('/System/Exec');
+      $Exec->Env=$CurrEnv->GetMap();
+      $Exec->Command=$FileBat.'>nul';
+      $Exec->Execute(False);
+      $this->Exec=$Exec;
+    }
+    
+    Function Wait()
+    {
+      $FileEnv  =$this->FileEnv  ;
+      $CurrEnv  =$this->CurrEnv  ;
+      $FileObj  =$this->FileObj  ;
+
+      $FileVc   =$this->FileVc   ;
+      
+      $this->Exec->Wait();
+
+      // Begin Env
+      $ItemEnv=$this->Create_Object('/System/Env');
+      $ItemEnv->Clear();
+      $ItemEnv->LoadFile($FileEnv);
+    //unlink($FileEnv);
+      $ItemEnv->Minus($CurrEnv);
+      // TODO:
+      static $Removes_PreInit=[
+      //'__DOTNET_ADD_32BIT',         ?
+      //'__DOTNET_PREFERRED_BITNESS', ?
+        '__VSCMD_PREINIT_PATH'    ,
+        '__VSCMD_PREINIT_INCLUDE' ,
+        '__VSCMD_PREINIT_LIB'     ,
+        '__VSCMD_PREINIT_LIBPATH' ,
+        '__VSCMD_PREINIT_VS150COMNTOOLS' ,
+        '__VSCMD_PREINIT_VCToolsVersion' ,
+      ];
+      ForEach($Removes_PreInit As $Remove)
+        $ItemEnv->Remove($Remove);
+      File_Put_Contents($FileVc, $ItemEnv->ToCmd());
+      $this->ItemEnv=$ItemEnv;
+      // End Env
+      
+      return File_Exists($FileObj);
+    }
+    
+    Function Get($Args)
+    {
+      $VcFile   =$this->VcFile   ;
+      
+      $Storage   =$Args['Storage'   ];
+      $VarsInfo  =$Args['VarsInfo'  ];
+      
+      $FileVc   =$this->FileVc   ;
+      $FileObj  =$this->FileObj  ;
+      $Item     =$this->Item     ;
+      
+      $Tools    =$this->Tools    ;
+      $ItemEnv  =$this->ItemEnv  ;
+
+      $Obj_Bin=File_Get_Contents($FileObj);
+      $PreDef=[];
+      preg_match_all('/>>>(.+):(.+);<<</', $Obj_Bin, $Matches, PREG_SET_ORDER);
+      foreach($Matches as $Match)
+        if($Match[1]!==$Match[2])
+          $PreDef[$Match[1]]=$Match[2];
+      
+      $Info=[
+        'From'   =>$VarsInfo  ,
+        'PreDef' =>$PreDef,
+        'Env'    =>$ItemEnv->GetMap(),
+      ];
+      
+    //$MapInfo->Set($VcFile, '', $Info);
+      $ST=$Storage->SetVars($Info);
+    //$this->Log('Log', 'SaveInfo ',$ST->FullPath);
+      $Res=[
+        'VcVarsOrig'  =>$VcFile,
+        'VcVars'      =>$FileVc,
+        'CompilerCPU' =>$Item[1],
+        'CPU'         =>$Item[2],
+        'VcVer'       =>(Int)$PreDef['_MSC_VER'],
+        'VcFullVer'   =>(Int)$PreDef['_MSC_FULL_VER'],
+        'Win'         =>($PreDef['_WIN32']??0)==='1',
+        'Includes'    =>$this->NormPaths($ItemEnv->INCLUDE ->ToArray()),
+        'Lib'         =>$this->NormPaths($ItemEnv->LIB     ->ToArray()),
+        'LibPath'     =>$this->NormPaths($ItemEnv->LIBPATH ->ToArray()),
+        'Path'        =>$this->NormPaths($ItemEnv->PATH    ->ToArray()),
+        'Tools'       =>$Tools,
+        'VerDetect'   =>$VarsInfo['VerDetect']?? null,
+      ];
+      return $Res;
+    }
+    
+    Static Function NormPaths($Paths)
+    {
+      ForEach($Paths As $k=>$Path)
+        if(Is_Dir($Path))
+        {
+          $Path=RealPath($Path);
+          if($Path!==false)
+            $Paths[$k]=$Path;
+        }
+      return $Paths;
+    }
+  };
+
+?>

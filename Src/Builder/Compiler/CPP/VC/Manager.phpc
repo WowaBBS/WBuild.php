@@ -42,6 +42,7 @@
       ['MSVC++' ,[ 14,25 ], 1925 ,[ 16,5] ,2019 ,5 ,'VS2019' ,'Visual Studio 2019 version 16.5'],
       ['MSVC++' ,[ 14,26 ], 1926 ,[ 16,6] ,2019 ,6 ,'VS2019' ,'Visual Studio 2019 version 16.6'],
       ['MSVC++' ,[ 14,27 ], 1927 ,[ 16,7] ,2019 ,7 ,'VS2019' ,'Visual Studio 2019 version 16.7'],
+      ['MSVC++' ,[ 14,28 ], 1928 ,[ 16,8] ,2019 ,8 ,'VS2019' ,'Visual Studio 2019 version 16.8'],
     ];
     
     Private Function LoadInfo(&$Item)
@@ -52,9 +53,34 @@
       $Item['ShowVersion' ]='MSC'.$VcVer;
       $Item['Version'     ]=0;
       $Item['Year'        ]=0;
+      $IsFound=false;
       ForEach(Static::$Versions As $I)
         if($I[2]>=$VcVer)
+        {
+          $IsFound=true;
           Break;
+        }
+      if(!$IsFound)
+      {
+        if($VerDetect=$Item['VerDetect'])
+        {
+          if($VerDetect===2019)
+          {
+            ForEach(Static::$Versions As $I)
+              if(($I[4]??null)===$VerDetect)
+                break;
+            $Diff=$Item['VcVer']-$I[2];
+            $I[1][1] +=$Diff;
+            $I[2]    +=$Diff;
+            $I[3][1] +=$Diff;
+            $I[5]    +=$Diff;
+            $I[7]     =SubStr($I[7], 0, -1).$I[3][1];
+            $this->Log('Log', 'Detected new version of ', $I[7]);
+            Static::$Versions[]=$I;
+          }
+        }
+      }
+          
       if($I)
       {
         // TODO: Send information to my server about another compiler if $I[2]!=$VcVer 

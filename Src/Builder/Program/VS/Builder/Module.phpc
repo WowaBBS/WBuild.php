@@ -186,6 +186,8 @@
     Function AddDepends    ($Created, $IsPublic)
     {
       $AssetInstance =$Created->Instance;
+      if(!$AssetInstance)
+        return;
       $BuilderModule =$AssetInstance->GetModule();
       $DependsModlue =$this->GetManager()->GetModule($BuilderModule);
       $Instance      =$this->GetInstance($Created);

@@ -1,0 +1,12 @@
+<?
+  for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
+
+  $Loader->GetLogger()->Add(__FILE__.'.log');
+  
+  $Args=[
+  ];
+  $Builder=$Loader->Create_Object('/Builder/Manager', $Args);
+  $CppCompiler=$Builder->GetCompiler('CPP');
+  
+  echo 'All tasks were done',"\n";
+?>
