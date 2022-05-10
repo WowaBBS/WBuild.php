@@ -13,6 +13,7 @@
       UnSet($_Param['Managed'      ]);
       UnSet($_Param['DebugPostfix' ]);
       UnSet($_Param['Proxy'        ]);
+      UnSet($_Param['BinExt'       ]);
       $CompileAsset=$Outer->CreateAsset('Cpp/Compile', $_Param);
       $_Param=$Param+['BinType'=>'Exe'];
       UnSet($_Param['OutPath'      ]);

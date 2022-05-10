@@ -55,10 +55,11 @@
 //TODO: $DLL          =$Param['DLL'          ]?? '';
       UnSet($Param['DLL']);
       $this->BinName     =C_Builder_Asset_Cpp_MakeBase::_GetName($Param, $Outer); UnSet($Param['Name']);
-      $this->BinType      =$Param['BinType'      ]?? 'Unsetted' ; UnSet($Param['BinType'      ]);
-      $this->NoEntry      =$Param['NoEntry'      ]??null        ; UnSet($Param['NoEntry'      ]);
-      $this->NoDefaultLib =$Param['NoDefaultLib' ]??null        ; UnSet($Param['NoDefaultLib' ]);
-      $this->Proxy        =$Param['Proxy'        ]??[]          ; UnSet($Param['Proxy'        ]);
+      $this->BinExt       =$Param['BinExt'       ]?? false     ; UnSet($Param['BinExt'       ]);
+      $this->BinType      =$Param['BinType'      ]??'Unsetted' ; UnSet($Param['BinType'      ]);
+      $this->NoEntry      =$Param['NoEntry'      ]?? null      ; UnSet($Param['NoEntry'      ]);
+      $this->NoDefaultLib =$Param['NoDefaultLib' ]?? null      ; UnSet($Param['NoDefaultLib' ]);
+      $this->Proxy        =$Param['Proxy'        ]?? []        ; UnSet($Param['Proxy'        ]);
 
       $bManaged     =$Param['Managed'      ]??false      ; UnSet($Param['Managed'      ]);
       $DebugPostfix =$Param['DebugPostfix' ]??!$bManaged ; UnSet($Param['DebugPostfix' ]);
@@ -83,13 +84,16 @@
       $this->ResAsset     =$Outer->ExtractAssets ('Cpp/Res'       );
       $this->Manifests    =$Outer->ExtractAssets ('Cpp/Manifest'  );
       
-      Switch($this->BinType)
-      {
-      Case 'Exe': $BinPath=$this->Compiler->GetExeFile    ($this->BinName.$_d); break;
-      Case 'Dll': $BinPath=$this->Compiler->GetDllFile    ($this->BinName.$_d); break;
-      Default: $this->Log('Fatal', 'Unknown bin type = ',$this->BinType);
-        $BinPath=$this->BinName.$_d;
-      }
+      if($this->BinExt!==false)
+        $BinPath=$this->BinName.$_d.$this->BinExt;
+      else
+        Switch($this->BinType)
+        {
+        Case 'Exe': $BinPath=$this->Compiler->GetExeFile    ($this->BinName.$_d); break;
+        Case 'Dll': $BinPath=$this->Compiler->GetDllFile    ($this->BinName.$_d); break;
+        Default: $this->Log('Fatal', 'Unknown bin type = ',$this->BinType);
+          $BinPath=$this->BinName.$_d;
+        }
       
     //$this->Debug(['Debug', $BinPath, $bDebug, $Outer->IsDebug(), $_d]);
       

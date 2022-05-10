@@ -40,6 +40,7 @@
         UnSet($_Param['DebugPostfix' ]);
         UnSet($_Param['Proxy'        ]);
         UnSet($_Param['DllCondition' ]);
+        UnSet($_Param['BinExt'       ]);
         $CompileAsset=$Outer->CreateAsset('Cpp/Compile', $_Param);
       }
       
