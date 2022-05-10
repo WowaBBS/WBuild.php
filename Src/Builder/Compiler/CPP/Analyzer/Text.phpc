@@ -159,9 +159,15 @@
       $Contents=File_Get_Contents($FilePath);
       $PreUtf="\xEF\xBB\xBF";
       if(SubStr($Contents, 0, StrLen($PreUtf))===$PreUtf)
-        $Contents=SubStr($Contents, 3);
+        $Contents=SubStr($Contents, StrLen($PreUtf));
       else
         $PreUtf='';
+      $PreUtf16="\xFF\xFE";
+      if(SubStr($Contents, 0, StrLen($PreUtf16))===$PreUtf16)
+      {
+        $Contents=SubStr($Contents, StrLen($PreUtf));
+        $Contents=IConv('UTF-16LE', 'UTF-8', $Contents);
+      }
       
       $C=$Contents;
       $C=$this->Process_Text($Contents);
