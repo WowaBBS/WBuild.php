@@ -75,7 +75,7 @@
       $NoLog   =$Args['NoLog' ]??false;
     //$this->Log('Debug', 'Search:',$Path,' ',$this->GetFullPath());
       $Res=$this->GetSubPath($Path);
-      $Res=NormPath($Res);
+      $Res=NormPath(StrTr($Res, '\\', '/'));
     //$this->Log('Debug', '  ',$Path);
       if($bIsFile? Is_File($Res):Is_Dir($Res))
       {
