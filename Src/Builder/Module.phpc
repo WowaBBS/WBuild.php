@@ -18,6 +18,7 @@
     Var $Prefixes =[];
     Var $SubModules = false;
     Var $VS         = [];
+    Var $PhpFile    =Null;
     
     Var $Assets_Init =[];
     Var $Assets_Php  =[];

@@ -9,6 +9,7 @@
     Var $Includes     = []      ;
     Var $Using        = []      ;
     Var $UsingPath    = []      ;
+    Var $DepUsing     = Null    ; //TODO: Remove?
     Var $EnumCache    = Null    ;
     Var $OutPath      = False   ;
     Var $Outer        = Null    ;

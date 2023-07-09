@@ -3,6 +3,8 @@
 
   class C_Builder_Asset_Net_UsingPath extends C_Builder_Asset_FS_Path
   {
+    Var $IsSystem=False;
+  
     Protected Function _Init(Array $Args)
     {
       $Path=$Args['Path'];
@@ -20,10 +22,8 @@
     
     Static Function GetDefMask() { return '*.dll'; }
     
-    Function IsSystem()
-    {
-      return $this->IsSystem??false;
-    }
+    Function IsSystem() { return $this->IsSystem; }
+    
    #Static Function _CustomParams()
    #{
    #  $Res=Parent::_CustomParams();

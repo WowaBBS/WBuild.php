@@ -6,11 +6,11 @@
 
   class C_Builder_Asset_FS_PathBase extends C_Builder_Asset_Base
   {
-    Var     $LocalPath =''; // TODO: Private
-    Var     $Parent    ;
-    Var     $HasNext   =false;
-    Private $FullPath  ='';
-    // TODO: Var $FileDepends=[];
+    Var     $LocalPath   =''; // TODO: Private
+    Var     $Parent      ;
+    Var     $HasNext     =false;
+    Private $FullPath    ='';
+    Var     $FileDepends =Null;
 
     Function IsSomeAsset($Asset)
     {

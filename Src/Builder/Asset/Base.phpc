@@ -7,8 +7,9 @@
   {
   //Var $AssetClass=''; // TODO: Move into class object;
   //Function GetAssetClass() { return $this->AssetClass; }
-    Var $Asset_Info =null;
-    Var $Outer      =false;
+    Var $Asset_Info =null  ;
+    Var $Outer      =false ;
+    Var $Keys       =null  ;
     
     Protected Function _Init(Array $Args)
     {
@@ -81,6 +82,8 @@
     }
   
     //****************************************************************
+    Var $Tasks=Null;
+    
   //Function GetKey() { return null; }
     Function GetKey() { return $this->Object_Id; }
     

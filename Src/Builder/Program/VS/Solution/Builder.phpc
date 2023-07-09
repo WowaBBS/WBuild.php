@@ -63,9 +63,9 @@
       $this->Log('Fatal', 'Unaceptable behavior');
     }
 
-    Public Function offsetExists     ($k):bool { return Error(); } 
-    Public Function offsetGet        ($k)      { return Error(); }
-    Public Function offsetSet        ($k ,$v)
+    Public Function offsetExists     ($k):Bool  { return Error(); } 
+    Public Function offsetGet        ($k):Mixed { return Error(); }
+    Public Function offsetSet        ($k , $v):Void
     {
       if(!Is_Array($v))
         $v=[$v];
@@ -80,7 +80,7 @@
         $this->WriteLn($k, ' = ', ...$v);
       }
     }
-    Public Function offsetUnset      ($k)      { Error(); }
+    Public Function offsetUnset      (Mixed $k):Void { Error(); }
     
   //****************************************************************
   

@@ -13,6 +13,16 @@
     Var Array $DefAsset  ;
     Var Array $Manifests ;
     
+    Var       $OutPath      ;
+    Var       $BinName      ;
+    Var       $BinExt       ;
+    Var       $BinType      ;
+    Var       $NoEntry      ;
+    Var       $NoDefaultLib ;
+    Var       $Proxy        ;
+    Var       $BinAsset     ;
+    Var       $Exec         ;
+    
     // Output Assets
     Var       $LibAsset  =null;
   

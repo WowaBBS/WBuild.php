@@ -7,6 +7,7 @@
     Var $Tasks_WaitFor = [];
     Var $Tasks_SendTo  = [];
 
+    Var $Task_Asset    = null     ;
     Var $Task_Name     = 'Noname' ;
     Var $Task_State    = 'Init'   ;
     Var $Task_Storage  = null     ;

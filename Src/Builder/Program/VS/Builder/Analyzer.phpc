@@ -9,6 +9,9 @@
     Var $Solution        ;
     Var $ConfigInfo   =[];
     Var $Projects     =[];
+    
+    Var $Configs      =[];
+    Var $Platforms    =[];
   
     // ModuleInstance global data
     Var $Defines      =[];

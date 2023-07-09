@@ -3,8 +3,6 @@
 
   class C_Builder_Asset_Bin_Base extends C_Builder_Asset_FS_File
   {
-    Var $FileDepends=[]; //<TODO: Remove
-  
     Protected Function _Init(Array $Args)
     {
       Parent::_Init($Args);

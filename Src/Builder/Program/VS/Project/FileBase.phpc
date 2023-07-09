@@ -11,6 +11,7 @@
     Protected ?Array  $Configurations =null;
     Protected  Array  $Configs        =[]  ;
     Var        String $FileExt        ='.vcxproj';
+    Var               $DebugConfigMap =Null;
     
     Function _Init(Array $Args)
     {

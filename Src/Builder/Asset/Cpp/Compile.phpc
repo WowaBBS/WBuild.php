@@ -13,6 +13,7 @@
     Var $Includes     ;
     Var $Using        ;
     Var $UsingPath    ;
+    Var $OutPath      ;
 
     Var $Items        ;
     

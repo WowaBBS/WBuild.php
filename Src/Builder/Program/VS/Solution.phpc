@@ -20,6 +20,7 @@
     ];
     
     Var C_Builder_Program_VS_GUIDs $GUIDs;
+    Var                            $GUID ;
     Var C_Tmpl_Loader              $Template_Loader;
 
     Var $Platforms =[];
