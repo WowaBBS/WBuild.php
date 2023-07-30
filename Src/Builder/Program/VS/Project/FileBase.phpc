@@ -21,9 +21,10 @@
       Parent::_Init($Args);
     }
     
-    Function File() { return $this->Id.$this->FileExt; }
+  //Function FileName() { return $this->Id.$this->FileExt; }
+    Function FileName() { return $this->Id_Path.$this->Id_Name.$this->FileExt; }
   
-    Function AbsFilePath() { return $this->AbsPath.$this->File(); }
+    Function AbsFilePath() { return $this->AbsPath.$this->FileName(); }
     Function AbsPath() { return DirName($this->AbsFilePath()).'/'; }
     Function SolutionDir() { return $this->SolutionDir; }
     

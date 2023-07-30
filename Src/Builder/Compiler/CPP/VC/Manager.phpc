@@ -5,44 +5,67 @@
   class C_Builder_Compiler_CPP_VC_Manager extends C_Builder_Compiler_CPP_Base_Manager
   {  
     /// List from https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+    Const IdxType       =0; // Used in DirVersion
+    Const IdxVcVer      =1; // Used in PDB and DirVersion
+    Const IdxMscVer     =2; // Used in LoadInfo() and NormalizeVersion()
+    Const IdxVsVer      =3; // Used In Version
+    Const IdxYear       =4; // Used in LoadInfo() and Year
+    Const IdxMscFullVer =5; // Unused
+    Const IdxId         =6; // Used in DirVersion
+    Const IdxTitle      =7; // Used in ShowVersion
+
     Static $Versions=[      // _MSC_VER
-      ['MSC'    ,[  1,0  ],  100 ,[  1,0]],
-      ['MSC'    ,[  2,0  ],  200 ,[  2,0]],
-      ['MSC'    ,[  3,0  ],  300 ,[  3,0]],
-      ['MSC'    ,[  4,0  ],  400 ,[  4,0]],
-      ['MSC'    ,[  5,0  ],  500 ,[  5,0]],
-      ['MSC'    ,[  6,0  ],  600 ,[  6,0]],
-      ['MSC'    ,[  7,0  ],  700 ,[  7,0]],
-      ['MSVC++' ,[  1,0  ],  800 ,[  1,0]],
-      ['MSVC++' ,[  2,0  ],  900 ,[  2,0]],
-      ['MSVC++' ,[  4,0  ], 1000 ,[  4,0] ,   0 ,0 ,'VS40'   ,'Developer Studio 4.0'],
-      ['MSVC++' ,[  4,2  ], 1020 ,[  4,2] ,   0 ,0 ,'VS42'   ,'Developer Studio 4.2'],
-      ['MSVC++' ,[  5,0  ], 1100 ,[  5,0] ,1997 ,0 ,'VS50'   ,'Visual Studio 97 version 5.0'],
-      ['MSVC++' ,[  6,0  ], 1200 ,[  6,0] ,   0 ,0 ,'VS60'   ,'Visual Studio 6.0 version 6.0'],
-      ['MSVC++' ,[  7,0  ], 1300 ,[  7,0] ,2002 ,0 ,'VS2002' ,'Visual Studio .NET 2002 version 7.0'],
-      ['MSVC++' ,[  7,1  ], 1310 ,[  7,1] ,2003 ,0 ,'VS2003' ,'Visual Studio .NET 2003 version 7.1'],
-      ['MSVC++' ,[  8,0  ], 1400 ,[  8,0] ,2005 ,0 ,'VS2005' ,'Visual Studio 2005 version 8.0'],
-      ['MSVC++' ,[  9,0  ], 1500 ,[  9,0] ,2008 ,0 ,'VS2008' ,'Visual Studio 2008 version 9.0'],
-      ['MSVC++' ,[ 10,0  ], 1600 ,[ 10,0] ,2010 ,0 ,'VS2010' ,'Visual Studio 2010 version 10.0'],
-      ['MSVC++' ,[ 11,0  ], 1700 ,[ 11,0] ,2012 ,0 ,'VS2012' ,'Visual Studio 2012 version 11.0'],
-      ['MSVC++' ,[ 12,0  ], 1800 ,[ 12,0] ,2013 ,0 ,'VS2013' ,'Visual Studio 2013 version 12.0'],
-      ['MSVC++' ,[ 14,0  ], 1900 ,[ 14,0] ,2015 ,0 ,'VS2015' ,'Visual Studio 2015 version 14.0'],
-      ['MSVC++' ,[ 14,1  ], 1910 ,[ 15,0] ,2017 ,0 ,'VS2017' ,'Visual Studio 2017 version 15.0'],
-      ['MSVC++' ,[ 14,11 ], 1911 ,[ 15,3] ,2017 ,3 ,'VS2017' ,'Visual Studio 2017 version 15.3'],
-      ['MSVC++' ,[ 14,12 ], 1912 ,[ 15,5] ,2017 ,5 ,'VS2017' ,'Visual Studio 2017 version 15.5'],
-      ['MSVC++' ,[ 14,13 ], 1913 ,[ 15,6] ,2017 ,6 ,'VS2017' ,'Visual Studio 2017 version 15.6'],
-      ['MSVC++' ,[ 14,14 ], 1914 ,[ 15,7] ,2017 ,7 ,'VS2017' ,'Visual Studio 2017 version 15.7'],
-      ['MSVC++' ,[ 14,15 ], 1915 ,[ 15,8] ,2017 ,8 ,'VS2017' ,'Visual Studio 2017 version 15.8'],
-      ['MSVC++' ,[ 14,16 ], 1916 ,[ 15,9] ,2017 ,9 ,'VS2017' ,'Visual Studio 2017 version 15.9'],
-      ['MSVC++' ,[ 14,20 ], 1920 ,[ 16,0] ,2019 ,0 ,'VS2019' ,'Visual Studio 2019 version 16.0'],
-      ['MSVC++' ,[ 14,21 ], 1921 ,[ 16,1] ,2019 ,1 ,'VS2019' ,'Visual Studio 2019 version 16.1'],
-      ['MSVC++' ,[ 14,22 ], 1922 ,[ 16,2] ,2019 ,2 ,'VS2019' ,'Visual Studio 2019 version 16.2'],
-      ['MSVC++' ,[ 14,23 ], 1923 ,[ 16,3] ,2019 ,3 ,'VS2019' ,'Visual Studio 2019 version 16.3'],
-      ['MSVC++' ,[ 14,24 ], 1924 ,[ 16,4] ,2019 ,4 ,'VS2019' ,'Visual Studio 2019 version 16.4'],
-      ['MSVC++' ,[ 14,25 ], 1925 ,[ 16,5] ,2019 ,5 ,'VS2019' ,'Visual Studio 2019 version 16.5'],
-      ['MSVC++' ,[ 14,26 ], 1926 ,[ 16,6] ,2019 ,6 ,'VS2019' ,'Visual Studio 2019 version 16.6'],
-      ['MSVC++' ,[ 14,27 ], 1927 ,[ 16,7] ,2019 ,7 ,'VS2019' ,'Visual Studio 2019 version 16.7'],
-      ['MSVC++' ,[ 14,28 ], 1928 ,[ 16,8] ,2019 ,8 ,'VS2019' ,'Visual Studio 2019 version 16.8'],
+      ['MSC'    ,[  1,  0      ],  100 ,[  1,  0    ]],
+      ['MSC'    ,[  2,  0      ],  200 ,[  2,  0    ]],
+      ['MSC'    ,[  3,  0      ],  300 ,[  3,  0    ]],
+      ['MSC'    ,[  4,  0      ],  400 ,[  4,  0    ]],
+      ['MSC'    ,[  5,  0      ],  500 ,[  5,  0    ]],
+      ['MSC'    ,[  6,  0      ],  600 ,[  6,  0    ]],
+      ['MSC'    ,[  7,  0      ],  700 ,[  7,  0    ]],
+      ['MSVC++' ,[  1,  0      ],  800 ,[  1,  0    ]],
+      ['MSVC++' ,[  2,  0      ],  900 ,[  2,  0    ]], //4,         5,  6       ,7
+      ['MSVC++' ,[  4,  0      ], 1000 ,[  4,  0    ] ,   0 ,        0, 'VS40'   ,'Developer Studio 4.0'],
+      ['MSVC++' ,[  4,  2      ], 1020 ,[  4,  2    ] ,   0 ,        2, 'VS42'   ,'Developer Studio 4.2'],
+      ['MSVC++' ,[  5,  0      ], 1100 ,[  5,  0    ] ,1997 ,        0, 'VS50'   ,'Visual Studio 97 version 5.0'],
+      ['MSVC++' ,[  6,  0      ], 1200 ,[  6,  0    ] ,   0 ,        0, 'VS60'   ,'Visual Studio 6.0 version 6.0'],
+      ['MSVC++' ,[  7,  0      ], 1300 ,[  7,  0    ] ,2002 ,        0, 'VS2002' ,'Visual Studio .NET 2002 version 7.0'],
+      ['MSVC++' ,[  7,  1      ], 1310 ,[  7,  1    ] ,2003 ,        1, 'VS2003' ,'Visual Studio .NET 2003 version 7.1'],
+      ['MSVC++' ,[  8,  0      ], 1400 ,[  8,  0    ] ,2005 ,        0, 'VS2005' ,'Visual Studio 2005 version 8.0'],
+      ['MSVC++' ,[  9,  0      ], 1500 ,[  9,  0    ] ,2008 ,        0, 'VS2008' ,'Visual Studio 2008 version 9.0'],
+      ['MSVC++' ,[ 10,  0      ], 1600 ,[ 10,  0    ] ,2010 ,        0, 'VS2010' ,'Visual Studio 2010 version 10.0'],
+      ['MSVC++' ,[ 11,  0      ], 1700 ,[ 11,  0    ] ,2012 ,        0, 'VS2012' ,'Visual Studio 2012 version 11.0'],
+      ['MSVC++' ,[ 12,  0      ], 1800 ,[ 12,  0    ] ,2013 ,        0, 'VS2013' ,'Visual Studio 2013 version 12.0'],
+      ['MSVC++' ,[ 14,  0      ], 1900 ,[ 14,  0    ] ,2015 ,        0, 'VS2015' ,'Visual Studio 2015 version 14.0'],
+      ['MSVC++' ,[ 14,  1      ], 1910 ,[ 15,  0    ] ,2017 ,        0, 'VS2017' ,'Visual Studio 2017 version 15.0'],
+      ['MSVC++' ,[ 14, 11      ], 1911 ,[ 15,  3    ] ,2017 ,        3, 'VS2017' ,'Visual Studio 2017 version 15.3'],
+      ['MSVC++' ,[ 14, 12      ], 1912 ,[ 15,  5    ] ,2017 ,        5, 'VS2017' ,'Visual Studio 2017 version 15.5'],
+      ['MSVC++' ,[ 14, 13      ], 1913 ,[ 15,  6    ] ,2017 ,        6, 'VS2017' ,'Visual Studio 2017 version 15.6'],
+      ['MSVC++' ,[ 14, 14      ], 1914 ,[ 15,  7    ] ,2017 ,        7, 'VS2017' ,'Visual Studio 2017 version 15.7'],
+      ['MSVC++' ,[ 14, 15      ], 1915 ,[ 15,  8    ] ,2017 ,        8, 'VS2017' ,'Visual Studio 2017 version 15.8'],
+      ['MSVC++' ,[ 14, 16      ], 1916 ,[ 15,  9    ] ,2017 ,        9, 'VS2017' ,'Visual Studio 2017 version 15.9'],
+      ['MSVC++' ,[ 14, 20      ], 1920 ,[ 16,  0    ] ,2019 ,        0, 'VS2019' ,'Visual Studio 2019 version 16.0'],
+      ['MSVC++' ,[ 14, 21      ], 1921 ,[ 16,  1    ] ,2019 ,        1, 'VS2019' ,'Visual Studio 2019 version 16.1'],
+      ['MSVC++' ,[ 14, 22      ], 1922 ,[ 16,  2    ] ,2019 ,        2, 'VS2019' ,'Visual Studio 2019 version 16.2'],
+      ['MSVC++' ,[ 14, 23      ], 1923 ,[ 16,  3    ] ,2019 ,        3, 'VS2019' ,'Visual Studio 2019 version 16.3'],
+      ['MSVC++' ,[ 14, 24      ], 1924 ,[ 16,  4    ] ,2019 ,        4, 'VS2019' ,'Visual Studio 2019 version 16.4'],
+      ['MSVC++' ,[ 14, 25      ], 1925 ,[ 16,  5    ] ,2019 ,        5, 'VS2019' ,'Visual Studio 2019 version 16.5'],
+      ['MSVC++' ,[ 14, 26      ], 1926 ,[ 16,  6    ] ,2019 ,        6, 'VS2019' ,'Visual Studio 2019 version 16.6'],
+      ['MSVC++' ,[ 14, 27      ], 1927 ,[ 16,  7    ] ,2019 ,        7, 'VS2019' ,'Visual Studio 2019 version 16.7'],
+      ['MSVC++' ,[ 14, 28      ], 1928 ,[ 16,  8    ] ,2019 ,        8, 'VS2019' ,'Visual Studio 2019 version 16.8'],
+      
+      ['MSVC++' ,[ 14, 28      ], 1928 ,[ 16,  8,  1] ,2019 ,192829333, 'VS2019' ,'Visual Studio 2019 version 16.8.1'   ],
+      ['MSVC++' ,[ 14, 28      ], 1928 ,[ 16,  8,  2] ,2019 ,192829334, 'VS2019' ,'Visual Studio 2019 version 16.8.2'   ],
+      ['MSVC++' ,[ 14, 28      ], 1928 ,[ 16,  9,  2] ,2019 ,192829913, 'VS2019' ,'Visual Studio 2019 version 16.9.2'   ],
+      ['MSVC++' ,[ 14, 29      ], 1929 ,[ 16, 11,  2] ,2019 ,192930133, 'VS2019' ,'Visual Studio 2019 version 16.11.2'  ],
+      ['MSVC++' ,[ 14, 29      ], 1929 ,[ 16, 11, 24] ,2019 ,192930148, 'VS2019' ,'Visual Studio 2019 version 16.11.24' ],
+      ['MSVC++' ,[ 14, 30      ], 1930 ,[ 17,  0,  1] ,2022 ,193030705, 'VS2022' ,'Visual Studio 2022 version 17.0.1'   ],
+      ['MSVC++' ,[ 14, 31      ], 1930 ,[ 17,  0,  2] ,2022 ,193030706, 'VS2022' ,'Visual Studio 2022 version 17.0.2'   ],
+      ['MSVC++' ,[ 14, 32      ], 1932 ,[ 17,  2,  2] ,2022 ,193231329, 'VS2022' ,'Visual Studio 2022 version 17.2.2'   ],
+      ['MSVC++' ,[ 14, 33      ], 1933 ,[ 17,  3,  4] ,2022 ,193331630, 'VS2022' ,'Visual Studio 2022 version 17.3.4'   ],
+      ['MSVC++' ,[ 14, 34      ], 1934 ,[ 17,  4,  0] ,2022 ,193400000, 'VS2022' ,'Visual Studio 2022 version 17.4.0'   ],
+      ['MSVC++' ,[ 14, 35      ], 1935 ,[ 17,  5,  0] ,2022 ,193500000, 'VS2022' ,'Visual Studio 2022 version 17.5.0'   ],
+      ['MSVC++' ,[ 14, 36      ], 1936 ,[ 17,  6,  0] ,2022 ,193600000, 'VS2022' ,'Visual Studio 2022 version 17.6.0'   ],
+      ['MSVC++' ,[ 14, 36,32532], 1936 ,[ 17,  6,  2] ,2022 ,193632532, 'VS2022' ,'Visual Studio 2022 version 17.6.2'   ],
     ];
     
     Private Function LoadInfo(&$Item)
@@ -55,7 +78,7 @@
       $Item['Year'        ]=0;
       $IsFound=false;
       ForEach(Static::$Versions As $I)
-        if($I[2]>=$VcVer)
+        if($I[Static::IdxMscVer]>=$VcVer)
         {
           $IsFound=true;
           Break;
@@ -67,15 +90,17 @@
           if($VerDetect===2019)
           {
             ForEach(Static::$Versions As $I)
-              if(($I[4]??null)===$VerDetect)
+              if(($I[Static::IdxYear]??null)===$VerDetect)
                 break;
-            $Diff=$Item['VcVer']-$I[2];
-            $I[1][1] +=$Diff;
-            $I[2]    +=$Diff;
-            $I[3][1] +=$Diff;
-            $I[5]    +=$Diff;
-            $I[7]     =SubStr($I[7], 0, -1).$I[3][1];
-            $this->Log('Log', 'Detected new version of ', $I[7]);
+            $Diff=$Item['VcVer']-$I[Static::IdxMscVer];
+            $I[Static::IdxVcVer  ][1] +=$Diff;
+            $I[Static::IdxMscVer ]    +=$Diff;
+            $I[Static::IdxVsVer  ][1] +=$Diff;
+          //$I[5]    +=$Diff;
+            $Title=Explode(' ', $I[Static::IdxTitle]);
+            $Title[Count($Title)-1]=Implode('.', $I[Static::IdxVsVer]);
+            $I[Static::IdxTitle  ]     =Implode(' ', $Title);
+            $this->Log('Log', 'Detected new version of ', $I[Static::IdxTitle]);
             Static::$Versions[]=$I;
           }
         }
@@ -83,12 +108,12 @@
           
       if($I)
       {
-        // TODO: Send information to my server about another compiler if $I[2]!=$VcVer 
-        $Item['PDB'         ]='v'.$I[1][0].$I[1][1];
-        $Item['DirVersion'  ]=$I[6]??$I[0].$I[1][0].'x'.$I[1][1];
-        $Item['ShowVersion' ]=$I[7]??$Item['ShowVersion' ];
-        $Item['Version'     ]=$I[3];
-        $Item['Year'        ]=$I[4]??0;
+        // TODO: Send information to my server about another compiler if $I[Static::IdxMscVer]!=$VcVer
+        $Item['PDB'         ]='v'.$I[Static::IdxVcVer][0].$I[Static::IdxVcVer][1];
+        $Item['DirVersion'  ]=$I[Static::IdxId    ]??$I[Static::IdxType].$I[Static::IdxVcVer][0].'x'.$I[Static::IdxVcVer][1];
+        $Item['ShowVersion' ]=$I[Static::IdxTitle ]??$Item['ShowVersion' ];
+        $Item['Version'     ]=$I[Static::IdxVsVer ];
+        $Item['Year'        ]=$I[Static::IdxYear  ]??0;
       }
     }
     
@@ -165,14 +190,15 @@
       if($v<20) $v+=2000; // Year
       if($v<2002) return [$v*100000, ($v+1)*100000-1]; //_MSC_VER
       if($v>3000) return [$v, $v]; //_MSC_FULL_VER
+      //If $v is a Year
       $Res=[];
       $bLast=false;
       ForEach(Static::$Versions As $k=>$I)
-        if(($I[4]??0)==$v)
-          $Res[]=$I[2];
+        if(($I[Static::IdxYear]??0)==$v)
+          $Res[]=$I[Static::IdxMscVer];
         else if($Res)
         {
-          $Res[]=$I[2];
+          $Res[]=$I[Static::IdxMscVer];
           $bLast=true;
           break;
         }
@@ -207,7 +233,7 @@
       If($VC===False && $VC_Min===False && $VC_Max===False)
         Return False;
       
-      if($VC!== False && $VC!==True)
+      if($VC!==False && $VC!==True)
         $VC=$this->MsVer($VC);
       else
         $VC=[0, 1000000000];

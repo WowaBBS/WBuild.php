@@ -37,10 +37,21 @@
         if(IsSet($Info['Title']))
         {
           if(StrPos($Info['Title'], 'Visual Studio')===false) continue;
-          if(StrPos($Info['Title'], '2019')===false) continue;
-          if(IsSet($Res[$v])) continue;
-          $Res[$v]=$Info+['RegVer'=>'?', 'VerDetect'=>2019];
+          $v=$Info['Path']?? '';
+          If($v==='') Continue;
+          $k=Path_Key($v);
+          if(IsSet($Res[$k])) continue;
+          if(StrPos($Info['Title'], '2019')!==false)
+          {
+            $Res[$k]=$Info+['RegVer'=>'?', 'VerDetect'=>2019];
+          }
+          Else
+          if(StrPos($Info['Title'], '2022')!==false)
+          {
+            $Res[$k]=$Info+['RegVer'=>'?', 'VerDetect'=>2022];
+          }
         }
+      $this->Log('Debug', 'Find:')->Debug($Res);
       return $Res;
     }
   }

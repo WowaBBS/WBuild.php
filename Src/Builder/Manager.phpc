@@ -18,8 +18,8 @@
         'Debug'       =>['Config'=>['Debug'   ]],
       ],
       'Platform'=>[
-        'Win32'=>['Config'=>['Win32', 'VC'=>2017]],
-        'Win64'=>['Config'=>['Win64', 'VC'=>2017]],
+        'Win32'=>['Config'=>['Win32', 'VC'=>2022]],
+        'Win64'=>['Config'=>['Win64', 'VC'=>2022]],
       ],
     ];
     

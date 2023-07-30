@@ -10,6 +10,8 @@
     Var $Type      ='';
     Var $TypeGUID  ='';
     Var $Folder    =null;
+    Var $Id_Path   ='';
+    Var $Id_Name   ='';
     
     Function _Init(Array $Args)
     {
@@ -21,6 +23,12 @@
       $this->Type     =$Args['Type' ];
       $this->GUID     =$Args['GUID' ]?? $GUIDs->Generate($Solution->GUID_Key.$this->Type.$this->Id);
       $this->TypeGUID =$GUIDs->GetType($this->Type);
+      
+      $Id=$this->Id;
+      $Pos=StrRPos($Id, '/');
+      $this->Id_Path =$Pos===False?  '':SubStr($Id, 0, $Pos+1);
+      $this->Id_Name =$Pos===False? $Id:SubStr($Id,    $Pos+1);
+      
       Parent::_Init($Args);
     }
     
@@ -38,6 +46,7 @@
       if($this->Folder)
         $this->Folder->_RemoveProject($this);
       $this->Folder=$v;
+      $this->FolderLevel=Null;
       if($this->Folder)
         $this->Folder->_AddProject($this);
     }
@@ -49,5 +58,61 @@
     
     Function IsFolder() { return false; }
     Function IsFile() { return false; }
+    
+  //****************************************************************
+  // Collisions
+    
+    Var $Collisions_Level = 0    ;
+    Var $FolderLevel      = Null ;
+    
+  //Function GetSubFolder($i) { return $i<=0? $this:$this->GetFolder()?->GetSubFolder($i-1)?? Null; }
+    Function GetFolderLevel() { return $this->FolderLevel??=($this->GetFolder()?->GetFolderLevel()?? 0)+1; }
+    Function Collisions_GetName() { Return $this->Id_Name; }
+    Function Collisions_SetName($v) { $this->Id_Name=$v; }
+    
+    Function Collisions_UpdateName(&$Collisions)
+    {
+      $this->Collisions_Remove($Collisions);
+      $Name=$this->Collisions_GetName();
+      $Level=++$this->Collisions_Level;
+    //If($Folder=$this->GetSubFolder($Level))
+    //  $Name=$Folder->Collisions_GetName().'_'.$Name;
+      $Path=Explode('/', $this->Id_Path);
+      If($Folder=$Path[Count($Path)-$Level-1]?? False)
+        $Name=$Folder.'_'.$Name;
+      Else
+      {
+        $Level-=$this->GetFolderLevel();
+        $Name=Explode('_', $Name);
+        $Last=Count($Name)-1;
+        If(Is_Numeric($Name[$Last]))
+          $Name[$Last]=$Name[$Last]+1;
+        Else
+          $Name[]=0;
+        $Name=Implode('_', $Name);
+      }
+      $this->Log('Debug', 'Rename ', $this->Id, ' to ', $Name);
+      $this->Collisions_SetName($Name);
+      $this->Collisions_Add($Collisions);
+    }
+    
+    Function Collisions_Add(&$Collisions)
+    {
+      If(!$this->IsFile()) Return;
+      $Name=$this->Collisions_GetName();
+      $this->Log('Debug', 'Collisions_Add: ', $Name);
+      $List=$Collisions[$Name]?? [];
+      $List[$this->Object_Id]=$this;
+      $Collisions[$Name]=$List;
+    }
+
+    Function Collisions_Remove(&$Collisions)
+    {
+      If(!$this->IsFile()) Return;
+      $Name=$this->Collisions_GetName();
+      UnSet($Collisions[$Name][$this->Object_Id]);
+    }
+    
+  //****************************************************************
   }
 ?>

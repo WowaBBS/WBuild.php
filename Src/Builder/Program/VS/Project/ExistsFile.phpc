@@ -11,7 +11,7 @@
       Parent::_Init($Args);
     }
     
-    Function File() { $this->Log('Error', 'UnSupported'); return $this->FileNameExt; } // TODO: Move to base
+    Function FileName() { $this->Log('Error', 'UnSupported'); return $this->FileNameExt; } // TODO: Move to base
     Function AbsFilePath() { return $this->FileNameExt; }
     Function GetDepends() { return []; } // TODO
   }

@@ -22,7 +22,7 @@
     Function IsGenerated() { return true; }
     Function Generate($ProjDir)
     {
-      $Output   =$ProjDir.$this->File();
+      $Output   =$ProjDir.$this->FileName();
     # CreatePath(ExtractFilePath($Output));
       $this->Create_Object('/Builder/Program/VS/Project/Builder', [$Output            ,'Project'=>$this]);
       if($this->Sources)

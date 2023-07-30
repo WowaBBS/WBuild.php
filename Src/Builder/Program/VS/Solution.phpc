@@ -16,7 +16,8 @@
     //        [Version ,Compiler           ,PlatformToolset,ToolsVersion ,VisualStudioVersion ,MinimumVisualStudioVersion
       '2010'=>[11.0    ,'Visual C++ Express 2010'  ,null   ,  '4.0'      ,''                  ,''             ],
       '2017'=>[12.0    ,'Visual Studio 15'         ,'v141' , '15.0'      ,'15.0.27130.2036'   ,'10.0.40219.1' ],
-      '2019'=>[12.0    ,'Visual Studio Version 16' ,'v142' , '15.0'      , '16.0.30503.244'   ,'10.0.40219.1' ],
+      '2019'=>[12.0    ,'Visual Studio Version 16' ,'v142' , '15.0'      ,'16.0.30503.244'    ,'10.0.40219.1' ],
+      '2022'=>[12.0    ,'Visual Studio Version 17' ,'v143' , '15.0'      ,'17.6.33801.468'    ,'10.0.40219.1' ],
     ];
     
     Var C_Builder_Program_VS_GUIDs $GUIDs;
@@ -42,7 +43,7 @@
     
     Function _Init(Array $Args)
     {
-      $StudioVer=$Args['Studio']?? '2017';
+      $StudioVer=$Args['Studio']?? '2022'; //TODO: 2022?
       $Studio=Static::$Studios[$StudioVer];
       if(!$Studio)
         $this->Log('Error', 'Studio version ',$StudioVer, ' is not supported:')->Debug(Array_Keys(Static::$Studios));
@@ -169,8 +170,47 @@
       return $this->Projects[$Id];
     }
     
+    Function Collisions_FixNames()
+    {
+      $Collisions=[];
+      ForEach($this->GetProjects() As $Project)
+        $Project->Collisions_Add($Collisions);
+      
+      $z=True;
+      While($z)
+      {
+        $z=False;
+        ForEach($Collisions As $Id=>$List)
+        {
+          If(Count($List)<2) Continue;
+          $z=True;
+
+          $this->Log('Debug', 'Collizion ', $Id);
+          
+          // Remove lowlevel project
+          $Min=[];
+          ForEach($List As $Project)
+            $Min[]=$Project->GetFolderLevel();
+          $Min=Min($Min);
+          $Count=0;
+          ForEach($List As $Project)
+            If($Project->GetFolderLevel()===$Min)
+              $Count++;
+          If($Count===1)
+            ForEach($List As $Project)
+              If($Project->GetFolderLevel()===$Min)
+                UnSet($List[$Project->Object_Id]);
+          
+          ForEach($List As $Project)
+            $Project->Collisions_UpdateName($Collisions);
+        //Break;
+        }
+      }
+    }
+    
     Function SaveToFiles(String $SlnOutDir, ?String $ProjDir=null)
     {
+      $this->Collisions_FixNames();
       $ProjDir ??=$SlnOutDir;
       $Output=$SlnOutDir.$this->Name.'.sln';
       CreatePath(ExtractFilePath($Output));
