@@ -58,5 +58,20 @@
           $Res[$k]=$v;
       return $Res;
     }
+  //****************************************************************
+  // Debug
+  
+    Protected Function _Debug_Info(Array &$Res)
+    {
+      UnSet($Res['Defines']);
+      $R=$Res['Value'];
+      ForEach($R As $k=>$v)
+        If($v===False)
+          UnSet($R[$k]);
+      $Res['Value']=$R;
+      Parent::_Debug_Info($Res);
+    }
+    
+  //****************************************************************
   }
 ?>

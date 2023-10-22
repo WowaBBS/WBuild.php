@@ -199,7 +199,7 @@
           If($Count===1)
             ForEach($List As $Project)
               If($Project->GetFolderLevel()===$Min)
-                UnSet($List[$Project->Object_Id]);
+                UnSet($List[$Project->Object_GetId()]);
           
           ForEach($List As $Project)
             $Project->Collisions_UpdateName($Collisions);

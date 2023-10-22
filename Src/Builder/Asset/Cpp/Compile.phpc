@@ -34,7 +34,7 @@
         $Includes=$this->Includes;
         ForEach($this->Sources As $Source)
         {
-          $R=$Source->GetHeaders($this->Object_Id, $Includes, null);
+          $R=$Source->GetHeaders($this->Object_GetId(), $Includes, null);
           if(false) //TODO: Remove
           {
             $L=[$Source->GetModule()->GetName()];
@@ -118,7 +118,7 @@
         'Outer'        =>$Outer     ,
         'EnumCache'    =>$EnumCache ,
         'OutPath'      =>$this->OutPath   ,
-        'LazyDepsId'   =>$this->Object_Id , //$PathObjAsset->Object_Id,
+        'LazyDepsId'   =>$this->Object_GetId() , //$PathObjAsset->Object_GetId(),
       ]);
 
       $PathObjAsset->RemoveFromOuter();

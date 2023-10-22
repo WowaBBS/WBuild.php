@@ -21,7 +21,7 @@
       Parent::_Init($Args);
     }
     
-  //Function FileName() { return $this->Id.$this->FileExt; }
+  //Function FileName() { return $this->Proj_Id.$this->FileExt; }
     Function FileName() { return $this->Id_Path.$this->Id_Name.$this->FileExt; }
   
     Function AbsFilePath() { return $this->AbsPath.$this->FileName(); }
@@ -117,7 +117,7 @@
     {
       $Res=$this->Configs[$Key]??=$this->Create_Object('/Builder/Program/VS/Project/Configuration', ['Project'=>$this, 'Key'=>$Key]);
       if($Res->Used)
-        $this->Log('Error', 'Config ', $Key, ' already used in ', $this->Id)->Debug($Res);
+        $this->Log('Error', 'Config ', $Key, ' already used in ', $this->Proj_Id)->Debug($Res);
       return $Res;
     }
     
@@ -153,7 +153,7 @@
         elseIf(!$Config->WasExists && $HasExists && $Key!=='Invalid|Win32')
           $Errors[]='Config '.$Key.' was not exsists';
       If($Errors)
-        $this->Log('Error', 'Config in module ', $this->Id)->Debug([
+        $this->Log('Error', 'Config in module ', $this->Proj_Id)->Debug([
           'Errors'    =>$Errors          ,
           'Configs'   =>$this->Configs   ,
           'ConfigMap' =>$this->ConfigMap ,

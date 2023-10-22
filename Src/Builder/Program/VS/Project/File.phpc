@@ -45,7 +45,7 @@
       {
         if(Is_Object($v))
         {
-          $k=$v->Id;
+          $k=$v->Proj_Id;
           $v=$Def;
         }
         elseIf(Is_String($v))

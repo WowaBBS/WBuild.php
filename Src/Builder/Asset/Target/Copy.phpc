@@ -25,7 +25,7 @@
       
      #ForEach($From As $FromItem)
      #  ForEach($FromItem->GetFileDepends() As $Item)
-     #    $From[$Item->Object_Id]=$Item;
+     #    $From[$Item->Object_GetId()]=$Item;
       $this->CopingAssets=$From=C_Builder_Asset_FS_PathBase::_GetFileDependsR($From);
       $Outer=$this->Outer;
       

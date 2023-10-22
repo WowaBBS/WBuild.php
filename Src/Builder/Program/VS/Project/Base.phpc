@@ -4,7 +4,7 @@
   class C_Builder_Program_VS_Project_Base extends C_Object
   {
     Private $Solution;
-    Var $Id        ='';
+    Var $Proj_Id   ='';
     Var $Name      ='';
     Var $GUID      ='';
     Var $Type      ='';
@@ -18,16 +18,16 @@
       $Solution=$Args['Solution'];
       $GUIDs=$Solution->GUIDs;
       $this->Solution =WeakReference::create($Solution);
-      $this->Id       =$Args['Id'   ];
-      $this->Name     =$Args['Name' ]?? $this->Id;
+      $this->Proj_Id  =$Args['Id'   ];
+      $this->Name     =$Args['Name' ]?? $this->Proj_Id;
       $this->Type     =$Args['Type' ];
-      $this->GUID     =$Args['GUID' ]?? $GUIDs->Generate($Solution->GUID_Key.$this->Type.$this->Id);
+      $this->GUID     =$Args['GUID' ]?? $GUIDs->Generate($Solution->GUID_Key.$this->Type.$this->Proj_Id);
       $this->TypeGUID =$GUIDs->GetType($this->Type);
       
-      $Id=$this->Id;
-      $Pos=StrRPos($Id, '/');
-      $this->Id_Path =$Pos===False?  '':SubStr($Id, 0, $Pos+1);
-      $this->Id_Name =$Pos===False? $Id:SubStr($Id,    $Pos+1);
+      $Proj_Id=$this->Proj_Id;
+      $Pos=StrRPos($Proj_Id, '/');
+      $this->Id_Path =$Pos===False?  '':SubStr($Proj_Id, 0, $Pos+1);
+      $this->Id_Name =$Pos===False? $Id:SubStr($Proj_Id,    $Pos+1);
       
       Parent::_Init($Args);
     }
@@ -91,7 +91,7 @@
           $Name[]=0;
         $Name=Implode('_', $Name);
       }
-      $this->Log('Debug', 'Rename ', $this->Id, ' to ', $Name);
+      $this->Log('Debug', 'Rename ', $this->Proj_Id, ' to ', $Name);
       $this->Collisions_SetName($Name);
       $this->Collisions_Add($Collisions);
     }
@@ -102,7 +102,7 @@
       $Name=$this->Collisions_GetName();
       $this->Log('Debug', 'Collisions_Add: ', $Name);
       $List=$Collisions[$Name]?? [];
-      $List[$this->Object_Id]=$this;
+      $List[$this->Object_GetId()]=$this;
       $Collisions[$Name]=$List;
     }
 
@@ -110,7 +110,7 @@
     {
       If(!$this->IsFile()) Return;
       $Name=$this->Collisions_GetName();
-      UnSet($Collisions[$Name][$this->Object_Id]);
+      UnSet($Collisions[$Name][$this->Object_GetId()]);
     }
     
   //****************************************************************

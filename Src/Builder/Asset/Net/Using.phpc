@@ -30,7 +30,7 @@
     Function UseForObj(Array &$Depends)
     {
       if($this->ShoulBeJoin())
-        $Depends[$this->Object_Id]=$this;
+        $Depends[$this->Object_GetId()]=$this;
     }
   };
 ?>

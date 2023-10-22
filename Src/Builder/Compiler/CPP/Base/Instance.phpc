@@ -79,10 +79,10 @@
     Static Function _AgregateLibs(&$Res, $Libs)
     {
       ForEach($Libs As $Lib)
-        If(!IsSet($Res[$Lib->Object_Id]))
+        If(!IsSet($Res[$Lib->Object_GetId()]))
         {
           Static::_AgregateLibs($Res, $Lib->GetFileDepends('Cpp/Lib'));
-          $Res[$Lib->Object_Id]=$Lib;
+          $Res[$Lib->Object_GetId()]=$Lib;
         }
     }
 
@@ -94,8 +94,8 @@
       $Includes  =$Args['Includes' ];
 
       $LazyDeps=[
-        'Cpp/Id'       =>$Exec->Object_Id ,
-        'Cpp/Includes' =>$Includes        ,
+        'Cpp/Id'       =>$Exec->Object_GetId() ,
+        'Cpp/Includes' =>$Includes             ,
       ];
         
       $Exec->Descr('Build ',$ResAsset->GetLocalPathNick());

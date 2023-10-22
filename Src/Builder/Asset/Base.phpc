@@ -1,7 +1,7 @@
 <?
   $Loader->Parent_Class('/Object');
   $Loader->Load_Type('/Builder/Asset/Info');
-  $Loader->Load_Type('/Builder/CachePath');
+//$Loader->Load_Type('/Builder/CachePath');
  
   class C_Builder_Asset_Base extends C_Object
   {
@@ -85,13 +85,13 @@
     Var $Tasks=Null;
     
   //Function GetKey() { return null; }
-    Function GetKey() { return $this->Object_Id; }
+    Function GetKey() { return $this->Object_GetId(); }
     
     Function AddTask($Task)
     {
       if(!IsSet($this->Tasks))
         $this->Tasks=[];
-      $this->Tasks[$Task->Object_Id]=$Task;
+      $this->Tasks[$Task->Object_GetId()]=$Task;
     }
     
     Static Function CheckEmptyParam($Param)
@@ -178,10 +178,9 @@
       {
         $Tasks=[];
         ForEach($this->Tasks As $Task)
-          $Tasks[]=$Task->Object_Id;
+          $Tasks[]=$Task->Object_GetId();
         $Res['Tasks']=$Tasks;
       }
-    //UnSet($Res['Depends']); // TODO: ???
     }
     
   //****************************************************************
@@ -193,10 +192,10 @@
     //return;
       ForEach($Args As $Item)
         If(!Is_Array($Item))
-          $this->Depends[$Item->Object_Id]=$Item;
+          $this->Depends[$Item->Object_GetId()]=$Item;
         Else ForEach($Item As $I)
           If(!Is_Array($Item))
-            $this->Depends[$I->Object_Id]=$I;
+            $this->Depends[$I->Object_GetId()]=$I;
           else
             $this->DependsOn($I);
     }
@@ -228,7 +227,7 @@
     Function FindFile($File, $Cfg=[])
     {
       static $Load=null;
-      $Load ??=$this->Loader->Load_Class('/Builder/Asset/FS/PathBase');
+      $Load ??=$this->Object_GetLoader()->Load_Class('/Builder/Asset/FS/PathBase');
       return C_Builder_Asset_FS_PathBase::GlobalSearch($File, $this, $Cfg);
     }
   //****************************************************************
@@ -253,10 +252,10 @@
     {
       if(IsSet($this->Tasks))
         ForEach($this->Tasks As $Task)
-          if(!IsSet($Res[$Task->Object_Id]))
+          if(!IsSet($Res[$Task->Object_GetId()]))
           {
             $Task->GetDependsTasks($Res); // TODO: Dynamic?
-            $Res[$Task->Object_Id]=$Task;
+            $Res[$Task->Object_GetId()]=$Task;
           }
     }
     

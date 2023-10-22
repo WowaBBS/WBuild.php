@@ -38,9 +38,9 @@
 
       $FileDepends=[];
      #ForEach($Args['Objects'] As $Item)
-     #  $FileDepends[$Item->Object_Id]=$Item;
+     #  $FileDepends[$Item->Object_GetId()]=$Item;
     # ForEach($Args['Libs'] As $Item)
-    #   $FileDepends[$Item->Object_Id]=$Item;
+    #   $FileDepends[$Item->Object_GetId()]=$Item;
       if($Args['DepUsing'])
         ForEach($Args['Using']As $Item)
           $Item->UseForObj($FileDepends);

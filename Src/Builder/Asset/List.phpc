@@ -45,7 +45,7 @@
     Private Function _OnRemove($Asset)
     {
       if(Is_Null($Asset)) return;
-      $this->Assets_Removed[$Asset->Object_Id]=$Asset;
+      $this->Assets_Removed[$Asset->Object_GetId()]=$Asset;
     }
     
     Private Static Function __Add(&$L, $KeyType, $K, $Asset)
@@ -58,7 +58,7 @@
       {
         $Res=$L[$K];
         UnSet($L[$K]);
-        if($Res->Object_Id===$Asset->Object_Id)
+        if($Res===$Asset)
           $Res=null;
       }
       $L[$K]=$Asset;
@@ -70,7 +70,7 @@
       if(!IsSet($L[$KeyType]))
         return;
       $L=&$L[$KeyType];
-      if(IsSet($L[$K]) && $L[$K]->Object_Id===$Asset->Object_Id)
+      if(IsSet($L[$K]) && $L[$K]===$Asset)
       {
         UnSet($L[$K]);
         return true;
@@ -83,7 +83,7 @@
       if(!IsSet($L[$KeyType]))
         return;
       $L=&$L[$KeyType];
-      return IsSet($L[$K]) && $L[$K]->Object_Id===$Asset->Object_Id;
+      return IsSet($L[$K]) && $L[$K]===$Asset;
     }
     
     Function __AddAsset(String $KeyType, C_Builder_Asset_Base $Asset)

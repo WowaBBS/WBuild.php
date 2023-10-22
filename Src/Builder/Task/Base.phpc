@@ -51,7 +51,7 @@
     
     Function GetDependsTasks(Array &$Res)  // TODO: Dynamic?
     {
-      $Id=$this->Object_Id;
+      $Id=$this->Object_GetId();
       if(IsSet($Res[$Id]))
       {
         if($Res[$Id]===true)
@@ -74,7 +74,7 @@
       $this->Task_CheckState_Init();
       if($this->Tasks_WaitFor)
       {
-        $Id=$this->Object_Id;
+        $Id=$this->Object_GetId();
         ForEach($this->Tasks_WaitFor As $i)
           $i->Tasks_SendTo[$Id]=$this;
         $this->Task_SetState_Wait();
@@ -88,7 +88,7 @@
       $this->Task_CheckState_Init();
       ForEach($DependsTasks As $Depend)
       {
-        if($Depend->Object_Id===$this->Object_Id)
+        if($Depend===$this)
           $this->Log('Fatal', 'The task wait itself');
         if($Depend->Task_State!=='Init')
         {
@@ -101,7 +101,7 @@
           }
           $this->Log('Fatal', 'Depends on task ', $Depend->Task_Name, ' was added without state Init but with state ', $Depend->Task_State);
         }
-        $this->Tasks_WaitFor[$Depend->Object_Id]=$Depend;
+        $this->Tasks_WaitFor[$Depend->Object_GetId()]=$Depend;
       }
     }
     
@@ -230,10 +230,11 @@
       if($StateInfo['Done'])
         return $this->Log('Error', 'UnReachable C_Builder_Task_Base::Task_EventFromTask(1) from ', $Task->Task_Name, ' for task ', $this->Task_Name);
 
-      if(!IsSet($this->Tasks_WaitFor[$Task->Object_Id]))
+      $Id=$Task->Object_GetId();
+      if(!IsSet($this->Tasks_WaitFor[$Id]))
         return $this->Log('Error', 'UnReachable C_Builder_Task_Base::Task_EventFromTask(2)');
         
-      UnSet($this->Tasks_WaitFor[$Task->Object_Id]);
+      UnSet($this->Tasks_WaitFor[$Id]);
       
       if($Task->Task_GetStateInfo()['Failed'])
         return $this->Task_SetState_Rejected();
@@ -244,7 +245,7 @@
     
     Private Function Task_UnbindEvent()
     {
-      $Id=$this->Object_Id;
+      $Id=$this->Object_GetId();
       ForEach($this->Tasks_WaitFor As $i)
         UnSet($i->Tasks_SendTo[$Id]);
     }

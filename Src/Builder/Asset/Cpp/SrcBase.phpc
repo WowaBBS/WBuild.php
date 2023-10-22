@@ -13,7 +13,7 @@
       $Hash=$this->GetHash();
       if($this->Info && $this->Info['Hash']===$Hash)
         return $this->Info;
-      $Src=$this->Loader->Load_Class('/Builder/Compiler/CPP/Analyzer/Cpp');
+      $Src=$this->Object_GetLoader()->Load_Class('/Builder/Compiler/CPP/Analyzer/Cpp');
       $Version=C_Builder_Compiler_CPP_Analyzer_Cpp::$Version;
 
       if($this->Parent)

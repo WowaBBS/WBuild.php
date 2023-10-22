@@ -33,12 +33,12 @@
 
     Function _AddProject($Item)
     {
-      $this->Projects[$Item->Id]=$Item->Id;
+      $this->Projects[$Item->Proj_Id]=$Item->Proj_Id;
     }
 
     Function _RemoveProject($Item)
     {
-      UnSet($this->Projects[$Item->Id]);
+      UnSet($this->Projects[$Item->Proj_Id]);
     }
   }
 ?>

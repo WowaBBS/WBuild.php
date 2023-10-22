@@ -62,7 +62,7 @@
       CreatePath($PathVc   );
       
     //$FileSrc='../test.c';
-      $FileSrc=$this->Loader->_Find_Lib('/Builder/Compiler/CPP/VC/Test.c');
+      $FileSrc=$this->Object_GetLoader()->_Find_Lib('/Builder/Compiler/CPP/VC/Test.c');
       
       $CurrEnv=$this->Create_Object('/System/Env');
       $CurrEnv->LoadCurrent();

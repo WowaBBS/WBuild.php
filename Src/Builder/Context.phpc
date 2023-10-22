@@ -63,12 +63,12 @@
       if(false)
       {
         $ResDeb=(Array)$Res;
-      //UnSet($ResDeb['VS']);
-        UnSet($ResDeb['Type']);
-        UnSet($ResDeb['Name']);
-        UnSet($ResDeb['Abstract']);
-        UnSet($ResDeb['Hidden']);
-        UnSet($ResDeb['Depends']);
+      //UnSet($ResDeb['VS'       ]);
+        UnSet($ResDeb['Type'     ]);
+        UnSet($ResDeb['Name'     ]);
+        UnSet($ResDeb['Abstract' ]);
+        UnSet($ResDeb['Hidden'   ]);
+        UnSet($ResDeb['Depends'  ]);
         $this->Debug(['Context_Init('.$this->Configuration.','.$this->Platform.')'=>$ResDeb]);
       //$this->Debug(['Context_Init', 'Platform'=>$Platform, 'Configuration'=>$Configuration, 'Res'=>$Res]);
       }

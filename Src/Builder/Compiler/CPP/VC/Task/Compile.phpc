@@ -105,7 +105,7 @@
       }
       else
       {
-      //$this->Debug([$this->Object_Id, $this->Dir, 'Fatal', $this->Remove, $this->Items]);
+      //$this->Debug([$this->Object_GetId(), $this->Dir, 'Fatal', $this->Remove, $this->Items]);
         $this->Log('Fatal', 'Unreachable C_Builder_Compiler_CPP_VC_Task_Compile::MakeCompile(3)');
       }
         

@@ -144,8 +144,8 @@
     Function _Init(Array $Args)
     {
       Parent::_Init($Args);
-      $Finder   =$this->Loader->Create_Object('/Builder/Compiler/CPP/VC/Find'   );
-      $Detector =$this->Loader->Create_Object('/Builder/Compiler/CPP/VC/Detect' );
+      $Finder   =$this->Object_GetLoader()->Create_Object('/Builder/Compiler/CPP/VC/Find'   );
+      $Detector =$this->Object_GetLoader()->Create_Object('/Builder/Compiler/CPP/VC/Detect' );
       $MapList  =$this->Manager->Cache->GetMap     ('Compiler/CPP/VS/Dir'   );
       $Check    =$this->Manager->Cache->GetEnumDir ('Compiler/CPP/VS/Info/'  ,['Def'=>['Pad'=>2]]);
     //$MapInfo  =$this->Manager->Cache->GetMap     ('Compiler/CPP/VS/Info'  ,true);
@@ -255,7 +255,7 @@
     
     Function CheckCfg($Cfg, $Item)
     {
-    //$Deb=$this->Loader->Get_Singleton('/Debug/Manager')->Get('Cfg.log');
+    //$Deb=$this->Object_GetLoader()->Get_Singleton('/Debug/Manager')->Get('Cfg.log');
     //$Deb->Debug([$Cfg, $Item]);
     //$this->Log('Debug', 'VcVer  ',$Item['VcVer'],' in [',$Cfg['VC_Min'],'..',$Cfg['VC_Max'],']');
     //$this->Log('Debug', '  Win ',$Item['Win'],' == ',$Cfg['Win']);
@@ -289,7 +289,7 @@
       ForEach($this->List As &$Item)
         if($this->CheckCfg($Cfg, $Item))
            return $this->_Get($Item);
-      $this->Log('Error', 'VC compiler not found')->Debug([$Cfg, $this->List]);
+      $this->Log('Error', 'VC compiler not found')->Debug(['Arg'=>$Config, 'Config'=>$Cfg, 'List'=>$this->List]);
     //$this->Log('Fatal', 'Compiler not found')->Debug([$Cfg, $Config]);
     //$this->Debug([$Cfg, $Config['Value']]);
       return null;

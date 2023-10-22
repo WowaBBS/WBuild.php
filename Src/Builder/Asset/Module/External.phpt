@@ -3,15 +3,15 @@
  
   class T_Builder_Asset_Module_External
   {
-    Var $Id    =0;
+    Var $Ex_Id =0;
     Var $Name  =0;
     Var $Value =null;
     Var $First ='>Uninited';
     
     Function __Construct($ModuleInstance)
     {
-      $this->Id   =$ModuleInstance->Object_Id ;
-      $this->Name =$ModuleInstance->GetModule()->FullName;
+      $this->Ex_Id =$ModuleInstance->Object_GetId();
+      $this->Name  =$ModuleInstance->GetModule()->FullName;
     }
     
     Function Add($v, $Owner, $ToInstance)
@@ -47,7 +47,7 @@
 
   class T_Builder_Asset_Module_External_Smart
   {
-    Var $Id          =0;
+    Var $Ex_Id       =0;
     Var $Name        =0;
     Var $Allow       =[];
     Var $Disallow    =[];
@@ -57,8 +57,8 @@
     
     Function __Construct($ModuleInstance)
     {
-      $this->Id   =$ModuleInstance->Object_Id ;
-      $this->Name =$ModuleInstance->GetModule()->FullName;
+      $this->Ex_Id =$ModuleInstance->Object_GetId() ;
+      $this->Name  =$ModuleInstance->GetModule()->FullName;
     }
     
     Function Add($v, $Owner, $ToInstance)
@@ -73,14 +73,14 @@
       $Rec=$MI->IsExternalModule;
       if(!$Rec)
         $ToInstance->Log('Fatal', 'Module hasn\'t IsExternalModule');
-      $Item=[$Rec->Id=>$Rec];
+      $Item=[$Rec->Ex_Id=>$Rec];
       if($v===null  ) $this->Indifferent +=$Item; else
       if($v===true  ) $this->Allow       +=$Item; else
       if($v===false ) $this->Disallow    +=$Item; else
         $Owner->Log('Fatal', 'Unallowed argument type: ', GetType($v));
         
     # if($this->IsExternalModule!==false && $v!==null)
-    #    $this->Log('Debug', 'SetExternalModule(', $v===true? 'true':($v===false? 'false': 'null'), ', ', $Instance->GetModule()->FullName,') for ', $this->GetModule()->FullName, ' ', $this->Object_Id);
+    #    $this->Log('Debug', 'SetExternalModule(', $v===true? 'true':($v===false? 'false': 'null'), ', ', $Instance->GetModule()->FullName,') for ', $this->GetModule()->FullName, ' ', $this->Object_GetId());
     # if($this->IsExternalModule===true && $v===false)
     #    $this->Log('Error', 'External module ', $Instance->GetModule()->FullName,' make to be internal module ',$this->GetModule()->FullName);
     # if($this->IsExternalModule!==false && $v!==null)

@@ -43,7 +43,7 @@
     
     Function _TaskStateChanged($Task, $OldState, $State)
     {
-      $Id=$Task->Object_Id;
+      $Id=$Task->Object_GetId();
       if(!$this->TasksByState[$OldState][$Id])
         $this->Log('Fatal', 'Task ', $Task->Task_Name, ' hadn\'t ols state ', $OldState);
       else
@@ -67,7 +67,7 @@
     Public Function _Add($Task) // TODO: Private
     {
       $this->NumTasksAdded++;
-      $Id=$Task->Object_Id;
+      $Id=$Task->Object_GetId();
       if(IsSet($this->List[$Id]))
       {
         $this->Log('Error', 'Task ', $Task->Task_Name, ' was already added to task manager');

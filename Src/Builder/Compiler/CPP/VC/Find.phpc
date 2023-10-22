@@ -51,7 +51,7 @@
             $Res[$k]=$Info+['RegVer'=>'?', 'VerDetect'=>2022];
           }
         }
-      $this->Log('Debug', 'Find:')->Debug($Res);
+    //$this->Log('Debug', 'Find:')->Debug($Res);
       return $Res;
     }
   }

@@ -18,7 +18,7 @@
       $PathExe='bin/';
       
     //$FileSrc='../test.c';
-      $FileSrc=$this->Loader->_Find_Lib('/Builder/Compiler/CPP/GCC/Test.c');
+      $FileSrc=$this->Object_GetLoader()->_Find_Lib('/Builder/Compiler/CPP/GCC/Test.c');
       
       $CurrEnv=$this->Create_Object("System/Env");
       $CurrEnv->LoadCurrent();

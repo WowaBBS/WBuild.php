@@ -120,7 +120,7 @@
     Function ParseParams(&$Args)
     {
       if(!$this->Loaded)
-        $this->Loaded=$Args['Outer']->Loader->Load_Class($this->Class); // TODO: $Args['Class']
+        $this->Loaded=$Args['Outer']->Object_GetLoader()->Load_Class($this->Class); // TODO: $Args['Class']
       $List=$this->Loaded::_ParseParams($Args); // TODO: $Args['Class']
       return $List;
     }

@@ -236,7 +236,7 @@
       $Res=[];
       ForEach($Assets As $AssetClass)
         If(Is_Object($AssetClass))
-          $Res[$AssetClass->Object_Id]=$AssetClass;
+          $Res[$AssetClass->Object_GetId()]=$AssetClass;
         else
         {
           $List=$Outer->GetAssetsR($AssetClass);
@@ -353,7 +353,7 @@
       {
       //$this->Log('Debug', $Filter,'===',$v->Asset_Info->Type);
         if($v->Asset_Info->Type===$Filter)
-          $Res[$v->Object_Id]=$v;
+          $Res[$v->Object_GetId()]=$v;
       }
       return $Res;
     }
@@ -374,19 +374,18 @@
         $Adding=$ToAdd;
         $ToAdd=[];
         ForEach($Adding As $AddingItem)
-          $Added[$AddingItem->Object_Id]=$AddingItem;
+          $Added[$AddingItem->Object_GetId()]=$AddingItem;
         
         ForEach($Adding As $AddingItem)
           ForEach($AddingItem->GetFileDepends($Filter) As $Item)
-            if(!IsSet($Added[$Item->Object_Id]))
-              $ToAdd[$Item->Object_Id]=$Item;
+            $ToAdd[$Item->Object_GetId()]??=$Item;
       }
       return $Added;
     }
     
     Static Function __GetFileDependsR(Array &$Res, $Asset, $Filter=false)
     {
-      $Id=$Asset->Object_Id;
+      $Id=$Asset->Object_GetId();
       if(IsSet($Res[$Id]))
         return;
       $Res[$Id]=true; // TODO: Check recurse
@@ -425,7 +424,7 @@
       elseif(Is_Object($v))
       {
       //$this->Log('Debug', 'AddFileDepends ',$v->GetLocalPath(), ' to ' ,$this->GetLocalPath());
-        $this->FileDepends[$v->Object_Id]=$v;
+        $this->FileDepends[$v->Object_GetId()]=$v;
       }
       else
         $this->Log('Fatal', 'Uncceptable type "', GetType($v), '" of depends file');

@@ -1,5 +1,6 @@
 <?
-  class TCachePath
+  // TODO: Remove because unused
+  Class T_Builder_CachePath
   {
     Var $Path ='';
     Var $Add  ='';
