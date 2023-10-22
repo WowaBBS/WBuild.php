@@ -3,6 +3,7 @@
   $OutTasks   ='_Tasks.bat';
   $Modules    ='Test';
 //$Op         ='Build';
+  $LogFile    ='Compile.log';
 
   $Args=[
     'Config'=>['Win32', 'VC'=>-2017],
@@ -22,5 +23,5 @@
       ],
     ],
   ];
-  Require_Once '../../Compile.php7';
+  Require_Once '../../Compile.php8';
 ?>

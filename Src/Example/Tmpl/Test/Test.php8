@@ -3,6 +3,7 @@
   
   Set_Time_Limit(1);
 
+  $Loader->GetLogger()->Add('./Test.log');
   $TLoader=$Loader->Create_Object('/Tmpl/Loader');
   $Manager_Args=Array(
     'Parser'=>Array(

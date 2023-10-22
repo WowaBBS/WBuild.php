@@ -1,6 +1,7 @@
 <?
   for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
  
+  $Loader->GetLogger()->Add('Compile.log');
   $Manager=$Loader->Create_Object('/Builder/Manager', ['Modules'=>['Test']]);
   $Args=[
     'Config'=>['Win32', 'VC'=>-2017],
