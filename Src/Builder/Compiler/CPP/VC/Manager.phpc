@@ -5,6 +5,8 @@
   class C_Builder_Compiler_CPP_VC_Manager extends C_Builder_Compiler_CPP_Base_Manager
   {  
     /// List from https://en.wikipedia.org/wiki/Microsoft_Visual_C%2B%2B
+    // https://dev.to/yumetodo/list-of-mscver-and-mscfullver-8nd
+    // https://learn.microsoft.com/en-us/cpp/preprocessor/predefined-macros?view=msvc-170#:~:text=is%20always%20defined.-,_MSC_VER,-Defined%20as%20an
     Const IdxType       =0; // Used in DirVersion
     Const IdxVcVer      =1; // Used in PDB and DirVersion
     Const IdxMscVer     =2; // Used in LoadInfo() and NormalizeVersion()
@@ -22,10 +24,10 @@
       ['MSC'    ,[  5,  0      ],  500 ,[  5,  0    ]],
       ['MSC'    ,[  6,  0      ],  600 ,[  6,  0    ]],
       ['MSC'    ,[  7,  0      ],  700 ,[  7,  0    ]],
-      ['MSVC++' ,[  1,  0      ],  800 ,[  1,  0    ]],
+      ['MSVC++' ,[  1,  0      ],  800 ,[  1,  0    ]],#Year
       ['MSVC++' ,[  2,  0      ],  900 ,[  2,  0    ]], //4,         5,  6       ,7
       ['MSVC++' ,[  4,  0      ], 1000 ,[  4,  0    ] ,   0 ,        0, 'VS40'   ,'Developer Studio 4.0'],
-      ['MSVC++' ,[  4,  2      ], 1020 ,[  4,  2    ] ,   0 ,        2, 'VS42'   ,'Developer Studio 4.2'],
+      ['MSVC++' ,[  4,  2      ], 1020 ,[  4,  2    ] ,   0 ,        0, 'VS42'   ,'Developer Studio 4.2'],
       ['MSVC++' ,[  5,  0      ], 1100 ,[  5,  0    ] ,1997 ,        0, 'VS50'   ,'Visual Studio 97 version 5.0'],
       ['MSVC++' ,[  6,  0      ], 1200 ,[  6,  0    ] ,   0 ,        0, 'VS60'   ,'Visual Studio 6.0 version 6.0'],
       ['MSVC++' ,[  7,  0      ], 1300 ,[  7,  0    ] ,2002 ,        0, 'VS2002' ,'Visual Studio .NET 2002 version 7.0'],
@@ -58,6 +60,7 @@
       ['MSVC++' ,[ 14, 28      ], 1928 ,[ 16,  9,  2] ,2019 ,192829913, 'VS2019' ,'Visual Studio 2019 version 16.9.2'   ],
       ['MSVC++' ,[ 14, 29      ], 1929 ,[ 16, 11,  2] ,2019 ,192930133, 'VS2019' ,'Visual Studio 2019 version 16.11.2'  ],
       ['MSVC++' ,[ 14, 29      ], 1929 ,[ 16, 11, 24] ,2019 ,192930148, 'VS2019' ,'Visual Studio 2019 version 16.11.24' ],
+      ['MSVC++' ,[ 14, 29      ], 1929 ,[ 16, 11, 27] ,2019 ,192930151, 'VS2019' ,'Visual Studio 2019 version 16.11.27' ],
       ['MSVC++' ,[ 14, 30      ], 1930 ,[ 17,  0,  1] ,2022 ,193030705, 'VS2022' ,'Visual Studio 2022 version 17.0.1'   ],
       ['MSVC++' ,[ 14, 31      ], 1930 ,[ 17,  0,  2] ,2022 ,193030706, 'VS2022' ,'Visual Studio 2022 version 17.0.2'   ],
       ['MSVC++' ,[ 14, 32      ], 1932 ,[ 17,  2,  2] ,2022 ,193231329, 'VS2022' ,'Visual Studio 2022 version 17.2.2'   ],
@@ -66,6 +69,8 @@
       ['MSVC++' ,[ 14, 35      ], 1935 ,[ 17,  5,  0] ,2022 ,193500000, 'VS2022' ,'Visual Studio 2022 version 17.5.0'   ],
       ['MSVC++' ,[ 14, 36      ], 1936 ,[ 17,  6,  0] ,2022 ,193600000, 'VS2022' ,'Visual Studio 2022 version 17.6.0'   ],
       ['MSVC++' ,[ 14, 36,32532], 1936 ,[ 17,  6,  2] ,2022 ,193632532, 'VS2022' ,'Visual Studio 2022 version 17.6.2'   ],
+      ['MSVC++' ,[ 14, 36,32532], 1936 ,[ 17,  6,  4] ,2022 ,193632535, 'VS2022' ,'Visual Studio 2022 version 17.6.4'   ],
+      ['MSVC++' ,[ 14, 37,32822], 1937 ,[ 17,  7,  0] ,2023 ,193732822, 'VS2022' ,'Visual Studio 2022 version 17.7.0'   ],
     ];
     
     Private Function LoadInfo(&$Item)
@@ -211,7 +216,7 @@
       if($bLast)
         $Res=[$Res[0]*100000,  $Res[$C-1]   *100000-1];
       else
-        $Res=[$Res[0]*100000, ($Res[$C-1]+1)*100000-1];
+        $Res=[$Res[0]*100000, (IntDiv($Res[$C-1], 10)+1)*1000000-1]; //Future versions of Visual Studios
       return $Res;
     }
     
