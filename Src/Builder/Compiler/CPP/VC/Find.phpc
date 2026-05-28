@@ -13,7 +13,51 @@
 
     function Find($Manager)
     {
+      $Res=[];
       $this->Log('Log', 'Search installed Visual Studios');
+       
+      $this->Find_Installer($Res);
+      If($Res) Return $Res; //&& $Forse
+      
+      $this->Find_Regestry($Res);
+      $this->Find_Programs($Res, $Manager);
+      
+    //$this->Log('Debug', 'Find:')->Debug($Res);
+      return $Res;
+    }
+    
+    Function Find_Installer(Array &$Res)
+    {
+      $VsWhere =GetEnv('ProgramFiles(x86)').'\\Microsoft Visual Studio\\Installer\\vswhere.exe';
+      If(!Is_File($VsWhere)) Return;
+      
+      $this->Log('Log', '   Installer...');
+      
+      $Cmd='"'.$VsWhere.'" -all -format json';
+      $Json = Shell_Exec($Cmd);
+      $Instances = Json_DeCode($Json, True);
+      ForEach($Instances as $Item)
+      {
+          $Name    =$Item['displayName'         ];
+          $Version =$Item['installationVersion' ];
+          $Path    =$Item['installationPath'    ];
+          $Catalog =$Item['catalog']?? [];
+          
+          $productLineVersion = $Catalog['productLineVersion']?? '';
+          $Year=$this->DetectYear($Name)
+            ?? (StrLen($productLineVersion)==4? $productLineVersion: Null)
+            ?? '?';
+          $Res[Path_Key($Path)]=[
+            'Path'      =>Path_Simplify($Path),
+            'RegVer'    =>'?', 
+            'VerDetect' =>$Year,
+          ]; //explode('.', $k)
+      }
+    }
+    
+    Function Find_Regestry(Array &$Res)
+    {
+      $this->Log('Log', '   Regestry...');
       $Reg=$this->Create_Object('/System/Reg');
       $List=$Reg->SearchParam(
         [
@@ -23,7 +67,6 @@
          'HKCU\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\SxS\VS7',
         ]
       );
-      $Res=[];
       ForEach($List As $Item)
         ForEach($Item As $k=>$v)
           $Res[Path_Key($v)]=[
@@ -32,27 +75,32 @@
           ]; //explode('.', $k)
         //$Res[$v]=['Path'=>$v, 'RegVer'=>[(int)$Ver, (int)$Ver2]];
       $Reg->Done();
+    }
+
+    Function Find_Programs(Array &$Res, $Manager)
+    {
+      $this->Log('Log', '   Programs...');
       // 'E:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community' => 'Visual Studio Community 2019',
       ForEach($Manager->Manager->GetInstalledPrograms() As $Key=>$Info)
-        if(IsSet($Info['Title']))
+        If(IsSet($Info['Title']))
         {
           if(StrPos($Info['Title'], 'Visual Studio')===false) continue;
           $v=$Info['Path']?? '';
           If($v==='') Continue;
           $k=Path_Key($v);
-          if(IsSet($Res[$k])) continue;
-          if(StrPos($Info['Title'], '2019')!==false)
-          {
-            $Res[$k]=$Info+['RegVer'=>'?', 'VerDetect'=>2019];
-          }
-          Else
-          if(StrPos($Info['Title'], '2022')!==false)
-          {
-            $Res[$k]=$Info+['RegVer'=>'?', 'VerDetect'=>2022];
-          }
+          If(IsSet($Res[$k])) continue;
+          
+          If($Year=$this->DetectYear($Info['Title']))
+            $Res[$k]=$Info+['RegVer'=>'?', 'VerDetect'=>$Year];
         }
-    //$this->Log('Debug', 'Find:')->Debug($Res);
-      return $Res;
+    }
+
+    Function DetectYear($Str)
+    { // 2019, 2022, 2026,
+      For($Year=2011, $Max=Date("Y")+2; $Year<$Max; $Year++)
+        If(StrPos($Str, $Year)!==false)
+          Return $Year;
+      Return Null;
     }
   }
 ?>
