@@ -31,7 +31,7 @@
     Function UpdateConfigParams($Params)
     {
       if($this->Used)
-        $this->Log('Error', 'Config already used')->Debug($this);
+        $this->Log('Error', 'Config already used')->Dump($this);
       $this->Include       =$Params['Solution'  ];
       $this->Condition     =$Params['Condition' ];
       $this->Configuration =$Params['Config'    ];

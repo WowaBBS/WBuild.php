@@ -93,7 +93,7 @@
         {
           if($this->IsGenerated())
           {
-            $this->Log('Error', 'Not found old solution key ', $New)->Debug($List);
+            $this->Log('Error', 'Not found old solution key ', $New)->Dump($List);
             continue;
           }
           $Solution=$New;

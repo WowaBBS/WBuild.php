@@ -11,7 +11,7 @@
   $C->DependsTasks($B, $D);
   
  #$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('debug.log');
- #$Deb->Debug($Manager);
+ #$Deb->Dump($Manager);
   
   $Manager->Execute();
   

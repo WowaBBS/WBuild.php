@@ -48,7 +48,7 @@
       $Src=$this->Create_Object('/Builder/Compiler/CPP/Analyzer/Cpp');
       $Src->NoLog=$NoLog;
       $Src->Process_FilePath($this->GetFullPath());
-    //$Src->Debug([
+    //$Src->Dump([
     //  'Warnings'=>$Src->Warnings,
     //  'Includes'=>$Src->Includes,
     //]);

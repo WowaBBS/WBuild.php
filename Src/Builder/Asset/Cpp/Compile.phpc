@@ -40,7 +40,7 @@
             $L=[$Source->GetModule()->GetName()];
             ForEach($R As $i)
               $L[]=$i->GetFullPath().' -> '.$i->GetModule()->GetName();
-            $this->Debug([$Source->GetFullPath()=>$L]);
+            $this->Dump([$Source->GetFullPath()=>$L]);
           }
           $Res[]=$R;
         }

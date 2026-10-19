@@ -14,7 +14,7 @@
         $Outer=$Outer->Outer;
       
       $Deb=$Outer->Get_Singleton('/Debug/Manager')->Get('Assets.log');
-    //$Deb->Debug($Param);
+    //$Deb->Dump($Param);
     
       if($Desr)
         $Deb->WriteLn($Desr.':');
@@ -22,12 +22,12 @@
       ForEach($Outer->Assets_List As $Type=>$List)
         ForEach($List As $Id=>$Asset)
           $Res[$Type][]=$Id;
-      $Deb->Debug($Res);
+      $Deb->Dump($Res);
       $Res=[];
       ForEach($Outer->Assets_Public As $Type=>$List)
         ForEach($List As $Id=>$Asset)
           $Res[$Type][]=$Id;
-      $Deb->Debug($Res);
+      $Deb->Dump($Res);
       return [];
     }
   };

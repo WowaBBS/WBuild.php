@@ -67,7 +67,7 @@
           $Loader->Log('Error', 'Unknown depends item ', $DependsName, ' used from ', $Name);
       $this->MergeLeft($Cur);
       if($Map)
-        $Loader->Log('Error', 'Unknown ', $Type, ' "', $Name, '" extra params:')->Debug($Map);
+        $Loader->Log('Error', 'Unknown ', $Type, ' "', $Name, '" extra params:')->Dump($Map);
       return $this;
     }
   };

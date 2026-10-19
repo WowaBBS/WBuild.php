@@ -17,7 +17,7 @@
     {
       $Ver=$this->Manager->NormalizeVersion($Ver);
       $Current=$this->Info['VcFullVer'];
-    //$this->Debug([$Current, $Ver]);
+    //$this->Dump([$Current, $Ver]);
       if($Current<$Ver[0]) return -1;
       if($Current>$Ver[1]) return  1;
                            return  0;
@@ -73,7 +73,7 @@
     {
       Parent::_Init($Args);
       $Info=$Args['Info'];
-    //$this->Debug($Info);
+    //$this->Dump($Info);
       $this->Info=$Info;
       $this->DirVersion =$Info['DirVersion' ];
       $this->VCVars     =$Info['VcVars'     ];
@@ -302,7 +302,7 @@
       {
         $PDB=FilePath_GetPathNick($OutAsset->GetLocalPath()).'.pdb';
         $PdbAsset=$Outer->CreateAsset('FS/File', ['Path'=>$PDB, '>Create'=>true, '>Parent'=>$OutAsset->Parent]); //TODO: Private
-       #$this->Debug([
+       #$this->Dump([
        #  $OutAsset->Parent->GetFullPath(),
        #  $PdbAsset->Parent->GetFullPath(),
        #  $OutAsset->GetFullPath(),

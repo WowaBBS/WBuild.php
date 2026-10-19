@@ -40,7 +40,7 @@
   
     function Detect($Vars)
     {
-    //$this->Log('Debug', 'Detect:')->Debug($Vars);
+    //$this->Log('Debug', 'Detect:')->Dump($Vars);
       $VcPath  =$Vars['Info']['Path'];
     //$Cache   =$Vars['Cache']->GetEnumDir('');
       $Check   =$Vars['Check'];

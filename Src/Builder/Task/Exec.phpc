@@ -190,7 +190,7 @@
     {
     # echo 'IsExec=', (bool)$this->Exec, "\n";
     # echo 'Alive=', $this->Exec->Is_Alive(), "\n";
-    # $this->Debug($this->Exec->GetStatus());
+    # $this->Dump($this->Exec->GetStatus());
       if(!$First)
       {
         if($this->Exec && $this->Exec->Is_Alive())
@@ -207,8 +207,8 @@
       {
         $Item=$this->Exec_List[$this->Exec_Idx];
         $this->Exec_Idx++;
-      //$this->Debug($this->Exec_List);
-      //$this->Debug($Item);
+      //$this->Dump($this->Exec_List);
+      //$this->Dump($Item);
         if(!$this->Exec)
         {
           $this->Log('Fatal', 'Task ', $this->Task_Name, ' haven\'t exec object for item: ', $Item);

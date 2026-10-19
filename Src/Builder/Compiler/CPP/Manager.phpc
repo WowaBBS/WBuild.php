@@ -23,7 +23,7 @@
       ForEach($this->List As $Item)
         if($Res=$Item->Find($Config))
           return $Res;
-      $this->Log('Error', 'Compiler not found')->Debug([$Config]);
+      $this->Log('Error', 'Compiler not found')->Dump([$Config]);
       return null;
     }
     

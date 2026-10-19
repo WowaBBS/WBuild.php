@@ -71,7 +71,7 @@
   $Loader->GetLogger()->Get('Console')->SetLogLevel('Log');
 
   if(!GetEnv('PATH')) // TODO: Remove
-    $Loader->Log('Error', 'No env path found')->Debug([$argv, $_ENV]);
+    $Loader->Log('Error', 'No env path found')->Dump([$argv, $_ENV]);
  
   $Args=[
     'Modules'=>[$Modules],

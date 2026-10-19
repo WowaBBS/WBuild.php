@@ -22,7 +22,7 @@
     {
       if(Is_String($Path) && Preg_Match('/^(\w[\w\d]*)\\.lib$/Ssi', $Path, $M))
         $Path=[$Path, 'lib'.StrToLower($M[1]).'.a'];
-      # $Args['Outer']->Log('Debug', '!!!!')->Debug('lib'.$M[1].'.a');
+      # $Args['Outer']->Log('Debug', '!!!!')->Dump('lib'.$M[1].'.a');
       Parent::_AddItem($Res, $Args, $Path);
     }
     

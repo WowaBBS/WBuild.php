@@ -105,7 +105,7 @@
           $BinPath=$this->BinName.$_d;
         }
       
-    //$this->Debug(['Debug', $BinPath, $bDebug, $Outer->IsDebug(), $_d]);
+    //$this->Dump(['Debug', $BinPath, $bDebug, $Outer->IsDebug(), $_d]);
       
       $PathBinAsset=$Outer->CreateAsset('Bin/Path', $this->OutPath.'Bin');
       $this->BinAsset=$Outer->CreateAsset   ('Bin/'.$this->BinType, [
@@ -128,7 +128,7 @@
             '>Create'=>1,
           ]);
         else
-          $this->Log('Error', 'Unknown lib asset')->Debug($LibAsset);
+          $this->Log('Error', 'Unknown lib asset')->Dump($LibAsset);
       }
       
       $this->Compiler->BuildBin([

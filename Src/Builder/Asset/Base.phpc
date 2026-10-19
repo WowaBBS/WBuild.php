@@ -99,7 +99,7 @@
       if(!Count($Param)) return;
 
       Global $Loader;
-      $Loader->Log('Error', 'Invalid parameters')->BackTrace()->Debug($Param);
+      $Loader->Log('Error', 'Invalid parameters')->BackTrace()->Dump($Param);
     }
     
     Static Function _ParseParams($Args)

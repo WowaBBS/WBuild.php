@@ -112,11 +112,11 @@
             $Item['Asset_Info']=Self::GetSubInfo($Item['Type'], $Args['Asset_Info']);
           else
           {
-            $this->Debug($List);
+            $this->Dump($List);
             $this->Log('Error', 'Haven`t Type');
             UnSet($Args['Outer']);
-            $this->Debug($Args);
-            $this->Log('Fatal', '')->Debug($Args);
+            $this->Dump($Args);
+            $this->Log('Fatal', '')->Dump($Args);
           }
         $Asset_Info=$Item['Asset_Info'];
         $Obj=$this->Create_Object($Asset_Info->Class, $Item);
@@ -153,7 +153,7 @@
         $Asset_Info=Self::GetTypeInfo('Sub'); // TODO: Static var
 
        #$Deb=$this->Get_Singleton('/Debug/Manager')->Get('Asset_Sub.log');
-       #$Deb->Debug($Param);
+       #$Deb->Dump($Param);
       }
       $Args['Outer'      ]=$this       ; // Only for static methods
       $Args['Asset_Info' ]=$Asset_Info ;
@@ -317,8 +317,8 @@
           $Added[$k]=Array_Values($l);
         $Deb=$this->Get_Singleton('/Debug/Manager')->Get('Asset_AddFrom.log');
       //if(!IsSet($Added['List']))
-      //$Deb->Debug($Added);
-        $Deb->Debug($List);
+      //$Deb->Dump($Added);
+        $Deb->Dump($List);
       }
       ForEach($List As $KeyType=>$l)
         ForEach($l As $v)

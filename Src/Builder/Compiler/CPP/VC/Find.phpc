@@ -22,7 +22,7 @@
       $this->Find_Regestry($Res);
       $this->Find_Programs($Res, $Manager);
       
-    //$this->Log('Debug', 'Find:')->Debug($Res);
+    //$this->Log('Debug', 'Find:')->Dump($Res);
       return $Res;
     }
     

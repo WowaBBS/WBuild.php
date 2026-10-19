@@ -38,7 +38,7 @@
             $Map['*']=0;
         }
       }
-   //if($Map) $this->Debug($Map);
+   //if($Map) $this->Dump($Map);
       if($Map) $this->Search=['Filter'=>['Map'=>$Map]];
     }
     
@@ -109,7 +109,7 @@
               $Logger->Log('Error', 'Different paths:', "\n", //'Fatal', 
                 '   Used=',$Path,"\n",
                 '   Real=',$RealPath
-              )->File($InFile); //->Debug($Real);
+              )->File($InFile); //->Dump($Real);
           }
         }
           
@@ -233,7 +233,7 @@
       ForEach($this->GetFiles() As $Item)
         $Res[$Item->GetLocalPath()]=$Cache->CalcMD5($Item->GetFullPath());
       KSort($Res, SORT_NATURAL);
-    //$this->Debug($Res);
+    //$this->Dump($Res);
       $Res=Implode(':', Array_Keys($Res)).'='.
         Implode(';', Array_Values($Res));
       $Res=md5($Res);

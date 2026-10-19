@@ -46,7 +46,7 @@
       $StudioVer=$Args['Studio']?? '2022'; //TODO: 2022?
       $Studio=Static::$Studios[$StudioVer];
       if(!$Studio)
-        $this->Log('Error', 'Studio version ',$StudioVer, ' is not supported:')->Debug(Array_Keys(Static::$Studios));
+        $this->Log('Error', 'Studio version ',$StudioVer, ' is not supported:')->Dump(Array_Keys(Static::$Studios));
       else
       {
         $this->Version                    = $Studio[0];

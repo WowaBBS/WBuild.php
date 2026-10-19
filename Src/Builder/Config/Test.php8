@@ -6,14 +6,14 @@
     $Loader=$Ctx['Loader'];
     $Deb=$Ctx['Deb'];
     $C=$Loader->Create_Object('/Builder/Config/Set', ['Config'=>$Config]);
-    $Deb->Debug($Config);
-    $Deb->Debug($C->GetContextId());
+    $Deb->Dump($Config);
+    $Deb->Dump($C->GetContextId());
     if($Check)
     {
        $Defines=$Loader->Get_Singleton('/Builder/Config/Defines');
        $Check=$Defines->ValidateSet($Check);
-       $Deb->Debug($Check);
-       $Deb->Debug($C->Check($Check));
+       $Deb->Dump($Check);
+       $Deb->Dump($C->Check($Check));
     }
     $Deb->WriteLn('----------');
     $C->Done();

@@ -297,10 +297,10 @@
     Function CheckCfg($Cfg, $Item)
     {
     //$Deb=$this->Object_GetLoader()->Get_Singleton('/Debug/Manager')->Get('Cfg.log');
-    //$Deb->Debug([$Cfg, $Item]);
+    //$Deb->Dump([$Cfg, $Item]);
     //$this->Log('Debug', 'VcVer  ',$Item['VcVer'],' in [',$Cfg['VC_Min'],'..',$Cfg['VC_Max'],']');
     //$this->Log('Debug', '  Win ',$Item['Win'],' == ',$Cfg['Win']);
-    //$this->Debug([$Cfg['VC_Min'], $Cfg['VC_Max'], $Item['VcFullVer']]);
+    //$this->Dump([$Cfg['VC_Min'], $Cfg['VC_Max'], $Item['VcFullVer']]);
       if($Cfg['VC_Min']> $Item['VcFullVer']) return false;
       if($Cfg['VC_Max']<=$Item['VcFullVer']) return false;
       if((bool)$Cfg['Win']!=(bool)$Item['Win']) return false;
@@ -330,9 +330,9 @@
       ForEach($this->List As &$Item)
         if($this->CheckCfg($Cfg, $Item))
            return $this->_Get($Item);
-      $this->Log('Error', 'VC compiler not found')->Debug(['Arg'=>$Config, 'Config'=>$Cfg, 'List'=>$this->List]);
-    //$this->Log('Fatal', 'Compiler not found')->Debug([$Cfg, $Config]);
-    //$this->Debug([$Cfg, $Config['Value']]);
+      $this->Log('Error', 'VC compiler not found')->Dump(['Arg'=>$Config, 'Config'=>$Cfg, 'List'=>$this->List]);
+    //$this->Log('Fatal', 'Compiler not found')->Dump([$Cfg, $Config]);
+    //$this->Dump([$Cfg, $Config['Value']]);
       return null;
     }
   }   

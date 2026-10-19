@@ -33,7 +33,7 @@
     {
       if($Old=$this->Depends[$Name]?? [])
         if($Old!==$Vars)
-          $this->Log('Error', 'Depends ', $Name, ' already exists')->Debug([$Old, $Vars])->BackTrace();
+          $this->Log('Error', 'Depends ', $Name, ' already exists')->Dump([$Old, $Vars])->BackTrace();
       $this->Depends[$Name]=$Vars;
     }
     
@@ -59,7 +59,7 @@
         }
         else
         {
-          $this->Log('Error', 'Unknown format of depends')->Debug([$k=>$v]);
+          $this->Log('Error', 'Unknown format of depends')->Dump([$k=>$v]);
           continue;
         }
         

@@ -9,7 +9,7 @@
     {
       parent::_Init($Args);
     //$Deb=$this->Get_Singleton('/Debug/Manager')->Get('Not.log');
-    //$Deb->Debug($Args['Param']);
+    //$Deb->Dump($Args['Param']);
       $this->Condition=$this->Create($Args['Param']);
     }
     

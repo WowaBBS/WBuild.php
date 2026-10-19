@@ -29,7 +29,7 @@
   $B2 =Create($Manager ,'B2'  ,[$C21, $C22, $C23, $C24, $C25, $C26], 4);
   
  #$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('debug.log');
- #$Deb->Debug($Manager);
+ #$Deb->Dump($Manager);
   
   $Manager->Execute();
   

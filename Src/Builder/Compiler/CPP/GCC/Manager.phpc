@@ -96,7 +96,7 @@
       ForEach($this->List As $Item)
         if($this->CheckCfg($Cfg, $Item))
            return $this->_Get($Item);
-      $this->Log('Error', 'GCC compiler not found')->Debug([$Cfg, $this->List]);
+      $this->Log('Error', 'GCC compiler not found')->Dump([$Cfg, $this->List]);
       return null;
     }
   }

@@ -69,8 +69,8 @@
         UnSet($ResDeb['Abstract' ]);
         UnSet($ResDeb['Hidden'   ]);
         UnSet($ResDeb['Depends'  ]);
-        $this->Debug(['Context_Init('.$this->Configuration.','.$this->Platform.')'=>$ResDeb]);
-      //$this->Debug(['Context_Init', 'Platform'=>$Platform, 'Configuration'=>$Configuration, 'Res'=>$Res]);
+        $this->Dump(['Context_Init('.$this->Configuration.','.$this->Platform.')'=>$ResDeb]);
+      //$this->Dump(['Context_Init', 'Platform'=>$Platform, 'Configuration'=>$Configuration, 'Res'=>$Res]);
       }
       
       $this->ConfigMap  =$Res->ConfigMap ;
@@ -84,13 +84,13 @@
     # ForEach($Res->Config As $Config)
     #   $this->Config->Set($Config);
       $this->Config->Set($Res->Config);
-    //$this->Debug(['Context_Init('.$this->Configuration.','.$this->Platform.').Debug'=>$this->Config->Value['Debug']]);
+    //$this->Dump(['Context_Init('.$this->Configuration.','.$this->Platform.').Debug'=>$this->Config->Value['Debug']]);
       $this->ContextId=$this->_GetContextId(); //< TODO: Remove?
       $this->InitId=$this->_GetInitId();
       
     # UnSet($Args['Manager']);
     # UnSet($Args['Outer']);
-    # $this->Debug([
+    # $this->Dump([
     #   'Args'=>$Args,
     #   'Config'=>$Res,
     # ]);
@@ -102,7 +102,7 @@
     
     Function Get_Context($Context)
     {
-    //$this->Debug(['Get_Context', $Context, $this->ConfigMap]);
+    //$this->Dump(['Get_Context', $Context, $this->ConfigMap]);
       if(!Is_Array($Context))
         $Context=$this->ConfigMap[$Context]?? $Context;
       if($Context===true)

@@ -1,7 +1,7 @@
 <?
   for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
  
-  $Loader->GetLogger()->Add('Compile.log');
+  $Loader->GetLogger()->ScriptLog();
   $Manager=$Loader->Create_Object('/Builder/Manager', ['Modules'=>['Test']]);
   $Args=[
     'Config'=>['Win32', 'VC'=>-2017],
@@ -23,7 +23,7 @@
   ];
   $Context=$Manager->Create_Context($Args);
 //$Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Context.deb');
-//$Deb->Debug($Context->GetContextId());
+//$Deb->Dump($Context->GetContextId());
 //$Instance=$Manager->Modules->Get('WSound')->CreateInstance($Context);
   $Instance=$Manager->Modules->Get('Target')->CreateInstance($Context);
 //$Instance=$Manager->Modules->Get('TestPCH')->CreateInstance($Context);
@@ -32,8 +32,8 @@
   ForEach($Tasks As $k=>$v)
     $Res=Array_Merge($Res, $v->List);
   $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('_Tasks.bat');
-//$Deb->Debug($Instance->Public);
-//$Deb->Debug($Tasks);
+//$Deb->Dump($Instance->Public);
+//$Deb->Dump($Tasks);
   $Res=Implode("\r\n", $Res);
   $Deb->Write($Res);
 //$Modules->Exec();

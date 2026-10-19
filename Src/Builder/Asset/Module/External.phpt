@@ -96,7 +96,7 @@
     Protected Function Freeze($By)
     {
       $Summary= $this->Allow;
-    //$By->Debug($this->Indifferent);
+    //$By->Dump($this->Indifferent);
       ForEach($this->Indifferent As $k=>$v)
         if($v->Get($By))
           $Summary[$k]=$v;

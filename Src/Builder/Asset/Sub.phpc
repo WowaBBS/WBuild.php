@@ -16,7 +16,7 @@
       if(IsSet($Args['Debug']['Sub']))
       {
         $Deb=$Outer->Get_Singleton('/Debug/Manager')->Get('Asset_Sub.log');
-        $Deb->Debug(['Param'=>$Param, 'Asset'=>$New]);
+        $Deb->Dump(['Param'=>$Param, 'Asset'=>$New]);
       }
       $New->RemoveFromOuter();
       $Outer->AddFrom($New, null, IsSet($Args['Debug']['AddFrom']));

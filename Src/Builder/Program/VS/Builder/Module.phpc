@@ -79,7 +79,7 @@
       $FilePath=$Created->GetFullPath();
       if(!$Created->Parent)
       {
-        $this->Log('Error', 'No parent for file ', $FilePath)->Debug($Created);
+        $this->Log('Error', 'No parent for file ', $FilePath)->Dump($Created);
         return;
       }
       $Parent=$Created->Parent->GetFullPath();
@@ -133,7 +133,7 @@
       $this->SourcePath [$Key]=$FullPath;
       if($Created->HasKey('External'))
         return;
-    //$this->Debug([$Created->GetModule()->GetName(), $this->ModuleName, $Created->GetFullPath()]);
+    //$this->Dump([$Created->GetModule()->GetName(), $this->ModuleName, $Created->GetFullPath()]);
       if($Created->GetModule()->GetName()!==$this->ModuleName)
         return;
       ForEach($Created->GetSubAssets('Cpp/Header') As $Asset)
@@ -305,7 +305,7 @@
         }
         if($IsDifferent)
           $this->Log('Error', 'Keymap has different ToKey values for module ', $this->ModuleName)
-            ->Debug($this->ConfigMap);
+            ->Dump($this->ConfigMap);
         $VsProject->DebugConfigMap=$this->ConfigMap;
         $VsProject->ConfigMap['Map']=$ConfigMap;
       }

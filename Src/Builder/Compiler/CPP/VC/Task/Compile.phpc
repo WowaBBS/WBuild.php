@@ -24,9 +24,9 @@
         $L=[];
         ForEach($this->Items As $Item)
           $L[]=$Item['SrcAsset']->ToDebugInfo();
-        $this->Debug($L);
+        $this->Dump($L);
         if(!$this->Outer)
-          $this->Debug($this);
+          $this->Dump($this);
       }
       
       $Params=$this->Compiler->CreateParams();
@@ -46,7 +46,7 @@
       $PdbName=$this->Compiler->Info['PDB'];
       CreatePath($PdbPath);
     //"Debug\vc100.pdb"
-    //$this->Debug($this->Info['PDB']);
+    //$this->Dump($this->Info['PDB']);
       $PdbFile=$PdbPath.'/'.$PdbName.$this->EnumCache->AllocNum($Hash, $PdbName, ['Pad'=>1, 'NoZero'=>true, 'Split'=>'_']).'.pdb';
 
       $Params->Add('/Fd"',$PdbFile,'"');
@@ -105,7 +105,7 @@
       }
       else
       {
-      //$this->Debug([$this->Object_GetId(), $this->Dir, 'Fatal', $this->Remove, $this->Items]);
+      //$this->Dump([$this->Object_GetId(), $this->Dir, 'Fatal', $this->Remove, $this->Items]);
         $this->Log('Fatal', 'Unreachable C_Builder_Compiler_CPP_VC_Task_Compile::MakeCompile(3)');
       }
         

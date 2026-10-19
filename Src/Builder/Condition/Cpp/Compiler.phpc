@@ -91,7 +91,7 @@
               $this->Log('Fatal', 'Unknown comparation ',$C[0]);
             }
           }
-        //$this->Debug([$Cmp, $C, $b]);
+        //$this->Dump([$Cmp, $C, $b]);
         
           if($b)
             return true;
