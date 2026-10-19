@@ -11,9 +11,9 @@
       parent::_Init($Args);
     }
  
-    Protected Function _Done()
+    Protected Function _Dispose()
     {
-      parent::_Done();
+      parent::_Dispose();
     }
     
     Protected $Installed=[];
@@ -51,7 +51,7 @@
           $Res[$Key]=['Path'=>Path_Simplify($InstallLocation)];
         if($DisplayName!==false) $Res[$Key]['Title']=$DisplayName;
       }
-      $Reg->Done();
+      $Reg->Dispose();
       $this->Installed=$Res;
       return $this->Installed;
     }

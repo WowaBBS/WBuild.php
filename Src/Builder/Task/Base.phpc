@@ -499,7 +499,7 @@
       if($this->Task_Logger)
       {
         $this->Task_Logger->Task_Magic($this->NeedShowLog('Log')? $this->GetLogger():null);
-        $this->Task_Logger->Done();
+        $this->Task_Logger->Dispose();
         $this->Task_Logger=null;
       }
     }
@@ -520,7 +520,7 @@
           $this->Task_Vars_Update(false);
           $Storage->SetVars($this->Task_Vars);
         }
-        $Storage->Done();
+        $Storage->Dispose();
         $this->Task_Vars=null;
       }
       $this->Tasks_Manager->OnTaskDone($this);

@@ -176,21 +176,21 @@
         #   $Deb[]=$Task_WaitFor->Exec_Descr;
         # $this->Dump($Deb);
         }
-        $Log->Done();
+        $Log->Dispose();
       }
       if($this->TasksByState['Init'])
       {
         $Log=$this->Log('Error', 'Some tasks in init status yet:');
         ForEach($this->TasksByState['Init']As $Task)
           $Log('  ', $Task->Task_Name);
-        $Log->Done();
+        $Log->Dispose();
       }
       $Log=$this->Log('Log', 'All tasks done:');
       ForEach($this->TasksByState As $Type=>$List)
         if(Count($List)>0)
           $Log('  ', Str_Pad($Type, 9), ' : ', Count($List));
       $Log('  ', Str_Pad('Total', 9), ' : ', $this->NumTasksAdded);
-      $Log->Done();
+      $Log->Dispose();
     }
 
     public static function getNumberOfLogicalCPUCores()

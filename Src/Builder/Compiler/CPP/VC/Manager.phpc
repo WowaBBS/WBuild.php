@@ -216,9 +216,9 @@
       //break; // TODO: Remove
       }
         
-      $Finder   ->Done();
-      $Detector ->Done();
-    //$MapInfo  ->Done();
+      $Finder   ->Dispose();
+      $Detector ->Dispose();
+    //$MapInfo  ->Dispose();
       ForEach($Res As &$Item)
         $this->LoadInfo($Item);
       UASort($Res, [$this, 'Compare']);

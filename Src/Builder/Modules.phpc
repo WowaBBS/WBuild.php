@@ -124,12 +124,12 @@
       return $Res;
     }
     
-    Protected Function _Done()
+    Protected Function _Dispose()
     {
       ForEach($this->Modules As $Module)
-        $Module->Done();
+        $Module->Dispose();
       $this->Modules=[];
-      parent::_Done();
+      parent::_Dispose();
     }
     
   # Function Create_Context($Args)

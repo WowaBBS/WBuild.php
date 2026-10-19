@@ -167,7 +167,7 @@
           $Log('  ', ...$Item);
         else
           $Log('  ', $Item);
-      $Log->Done();
+      $Log->Dispose();
       
       return False;
     }

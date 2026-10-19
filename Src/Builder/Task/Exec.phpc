@@ -272,7 +272,7 @@
           $this->Log('Error', 'Task ', $this->Task_Name, ' was terminated');
           $this->Exec->Terminate();
         }
-        $this->Exec->Done();
+        $this->Exec->Dispose();
       }
       Parent::Task_OnDone();
     }

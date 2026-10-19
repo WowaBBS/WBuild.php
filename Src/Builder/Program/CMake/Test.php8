@@ -5,5 +5,5 @@
 //$List=$ResGen::_Search();
  //Var_Dump($List);
   echo $ResGen->Get();
-  $ResGen->Done();
+  $ResGen->Dispose();
 ?>

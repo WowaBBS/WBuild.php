@@ -61,7 +61,7 @@
       ];
       $this->Info=$Vars;
       $Storage->SetVars($Vars);
-      $Storage->Done();
+      $Storage->Dispose();
       return $Vars;
     }
     

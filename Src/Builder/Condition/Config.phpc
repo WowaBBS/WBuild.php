@@ -11,7 +11,7 @@
       parent::_Init($Args);
       $OS_Defines=$this->Get_Singleton('/Builder/Config/Defines');
       $this->Values=$OS_Defines->ValidateSet($Args['Param']);
-    //$OS_Defines->Done();
+    //$OS_Defines->Dispose();
       
       if(IsSet($Args['Debug']['If']))
       {

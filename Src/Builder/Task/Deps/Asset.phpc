@@ -58,7 +58,7 @@
       ForEach($this->DepensOn As $Item)
         if($Item->WasChanged)
           $Log('    ', $Item->GetKey(), ' ', $Item->GetLogChangingType());
-      $Log->Done();
+      $Log->Dispose();
     }
     
     Function OnChanged($OldHash, $NewHash)

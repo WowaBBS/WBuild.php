@@ -45,13 +45,13 @@
         $this->SetConfigurationsMap(include $Args['Configurations']);
     }
  
-    Protected Function _Done()
+    Protected Function _Dispose()
     {
-      $this->Modules->Done();
+      $this->Modules->Dispose();
       $this->Modules=null;
-      $this->Performance->Done();
+      $this->Performance->Dispose();
       $this->Mutex_Close();
-      parent::_Done();
+      parent::_Dispose();
     }
     
     Function SetConfigurationsMap($Cs)
@@ -215,7 +215,7 @@
     Function Mutex_Close()
     {
       $this->Mutex->Close();
-      $this->Mutex->Done();
+      $this->Mutex->Dispose();
       $this->Mutex=null;
     }
     

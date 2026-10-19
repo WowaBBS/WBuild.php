@@ -101,7 +101,7 @@
         ForEach($Res As $Item)
           $Log('  ',$Item['SrcAsset']->GetFullPath());
         $Log('    in module ', $this->GetModule()->GetName());
-        $Log->Done();
+        $Log->Dispose();
         while(Count($Res)>1)
           Array_Shift($Res);
       }

@@ -33,11 +33,11 @@
       $this->FileVc   =$Args['FileVc'   ];
     }
     
-    Function _Done()
+    Function _Dispose()
     {
-      $this->Exec->Done();
+      $this->Exec->Dispose();
       $this->Exec=null;
-      Parent::_Done();
+      Parent::_Dispose();
     }
     
     function Exec()

@@ -104,6 +104,6 @@
     $Manager->UnLock();
   }
   
-  $Manager->Done();
-  $Loader->Done();
+  $Manager->Dispose();
+  $Loader->Dispose();
 ?>

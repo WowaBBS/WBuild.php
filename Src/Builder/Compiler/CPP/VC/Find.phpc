@@ -74,7 +74,7 @@
             'RegVer' =>$k,
           ]; //explode('.', $k)
         //$Res[$v]=['Path'=>$v, 'RegVer'=>[(int)$Ver, (int)$Ver2]];
-      $Reg->Done();
+      $Reg->Dispose();
     }
 
     Function Find_Programs(Array &$Res, $Manager)

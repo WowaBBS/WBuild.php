@@ -134,8 +134,8 @@
       $Condition_Factory=$this->Get_Singleton('/Builder/Condition/Factory');
       $Condition=$Condition_Factory->Create($Condition);
       $z=$Condition->CheckAsset($this, $Args);
-      $Condition->Done();
-    //$Condition_Factory->Done();
+      $Condition->Dispose();
+    //$Condition_Factory->Dispose();
       return $z;
     }
       

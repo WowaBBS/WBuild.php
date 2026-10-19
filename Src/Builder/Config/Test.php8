@@ -16,7 +16,7 @@
        $Deb->Dump($C->Check($Check));
     }
     $Deb->WriteLn('----------');
-    $C->Done();
+    $C->Dispose();
   }
 
   $Deb=$Loader->Get_Singleton('/Debug/Manager')->Get('Test.log');

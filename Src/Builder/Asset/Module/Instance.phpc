@@ -46,7 +46,7 @@
       ForEach($List As $Depends)
         $Log('    ', $Depends->Name);
       $Log('  from ',$this->Module->FullName);
-      $Log->Done();
+      $Log->Dispose();
       return null;
     }
     
@@ -110,12 +110,12 @@
       $Log=$this->Log('Log', 'Added tasks:');
       ForEach($Tasks As $k=>$Task)
         $Log('  ',$Task->Task_Name);
-      $Log->Done();
+      $Log->Dispose();
       ForEach($Tasks As $k=>$Task)
         $Manager->_Add($Task);
       $Performance->Finish();
       $Manager->Execute();
-      $Manager->Done();
+      $Manager->Dispose();
     }
     
     Function SetExternalModule($v, $Instance) { $this->IsExternalModule->Add($v, $Instance, $this); }

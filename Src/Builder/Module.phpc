@@ -154,11 +154,11 @@
       return null;
     }
  
-    Protected Function _Done()
+    Protected Function _Dispose()
     {
       $this->Modules=null;
-    //$this->Config->Done();
-      parent::_Done();
+    //$this->Config->Dispose();
+      parent::_Dispose();
     }
 
     Function GetMD5Cache($FullPath)
