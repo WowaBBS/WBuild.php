@@ -50,6 +50,8 @@
       $this->Modules->Dispose();
       $this->Modules=null;
       $this->Performance->Dispose();
+      $this->Cache->Dispose();
+      $this->Cache=null;
       $this->Mutex_Close();
       parent::_Dispose();
     }

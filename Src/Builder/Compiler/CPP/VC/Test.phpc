@@ -35,8 +35,10 @@
     
     Function _Dispose()
     {
-      $this->Exec->Dispose();
-      $this->Exec=null;
+      $this->Exec    ?->Dispose(); $this->Exec    =null;
+    //$this->CurrEnv ?->Dispose(); $this->CurrEnv =null; // The Removing is in Detect
+      $this->ItemEnv ?->Dispose(); $this->ItemEnv =null;
+      
       Parent::_Dispose();
     }
     

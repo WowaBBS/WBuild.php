@@ -1,12 +1,16 @@
 <?
   for($F=__FILE__; $F;) if(@include($F=DirName($F)).'/Using.php') break;
 
-  $Loader->GetLogger()->Add(__FILE__.'.log');
+  $Loader->GetLogger()->ScriptLog();
   
   $Args=[
   ];
   $Builder=$Loader->Create_Object('/Builder/Manager', $Args);
   $CppCompiler=$Builder->GetCompiler('CPP');
   
-  echo 'All tasks were done',"\n";
+  $Loader->Log('Log' ,'All tasks were done');
+  
+  $CppCompiler->Dispose();
+  $Builder->Dispose();
+  $Loader->Dispose();
 ?>

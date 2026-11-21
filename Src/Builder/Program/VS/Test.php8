@@ -114,7 +114,7 @@
     ],
   ];
 
-  $Loader->GetLogger()->Add(__FILE__.'.log');
+  $Loader->GetLogger()->ScriptLog();
   $Solution=$Loader->Create_Object('/Builder/Program/VS/Solution', $Data);
   $Solution->SaveToFiles($SlnOutDir, $VcxOutDir);
 ?>

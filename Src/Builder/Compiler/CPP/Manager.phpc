@@ -16,6 +16,14 @@
       $this->GetCompiler('GCC' );
     }
     
+    Function _Dispose()
+    {
+      ForEach($this->List As $Item)
+        $Item->Dispose();
+      $this->List=[];
+      Parent::_Dispose();
+    }
+    
     Function Find($Config)
     {
       if(Is_Array($Config))
